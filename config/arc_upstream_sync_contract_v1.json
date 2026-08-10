@@ -1,0 +1,97 @@
+{
+  "schema_version": "1.1",
+  "updated_at": "2026-08-06T17:18:00+08:00",
+  "upstream": {
+    "workspace": "CIRCLE",
+    "path": "/Users/wein/Library/CloudStorage/SynologyDrive-AI/Codex/CIRCLE/projects/2026-07_Arc_Chain/programme/verified-milestone-close",
+    "runtime": "runtime/current_state.json",
+    "queue": "runtime/active_queue.json",
+    "exchange": "exchange/arc-circle-product-exchange-v3.json",
+    "dispatch_contract": "design/arc-erp-continuous-session-dispatch-v1.md",
+    "product_contract": "design/arc-erp-product-construction-contract-v3.md",
+    "baseline_manifest": "config/upstream_arc_source_manifest.json"
+  },
+  "sync_mode": "continuous_reviewed_semantic_delta_only",
+  "owners": {
+    "governance_and_snapshot_integrity": "01_Config",
+    "delta_classification_product_definition_and_acceptance": "03_Base",
+    "accepted_implementation_chain_evidence_and_publication": "02_Build"
+  },
+  "persistent_goal": {
+    "enabled": true,
+    "rule": "After every accepted atomic batch, immediately select the next safe eligible Base-native product or engineering batch. Calendar, status readback, tests and unchanged upstream observations are not stop conditions while safe local work exists.",
+    "counted_turn_required_deltas": [
+      "durable_file_or_implementation_or_evidence_delta",
+      "reproducible_test_or_interaction_or_validation_delta",
+      "acceptance_state_or_typed_handoff_delta"
+    ],
+    "zero_delta_failure": "Planning-only, audit-only, unchanged readback or status narration counts as zero_delta_failure and the exact batch must be redispatched."
+  },
+  "supervision": {
+    "interval_minutes": 15,
+    "healthy_rule": "If the owning Session is active and producing all three deltas, remain quiet.",
+    "recovery_rule": "If idle, stopped, or zero-delta, redispatch the exact current batch. Diagnose one blocker once, persist it, then rotate to the next safe eligible batch."
+  },
+  "freeze_and_review": {
+    "declared_write_set_required": true,
+    "immutable_manifest_required": ["sources", "dependencies", "tests", "evidence", "exact_exchange_packet"],
+    "independent_review": {"model": "gpt-5.6-sol", "reasoning": "medium", "required_after": ["atomic_batch", "correction_batch"]},
+    "luna_self_acceptance_forbidden": true,
+    "review_drift_action": "block_and_refreeze"
+  },
+  "latest_upstream_authority": {
+    "r19": {
+      "status": "independent_sol_medium_pass",
+      "reviewed_at": "2026-08-06T16:19:00+08:00",
+      "artifact": "/Users/wein/Library/CloudStorage/SynologyDrive-AI/Codex/CIRCLE/projects/2026-07_Arc_Chain/programme/verified-milestone-close/artifacts/v3-a12-r19-sol-medium-pass-20260806.json",
+      "sha256": "cd9190ebc7a1c8645e3b9e13675348548ac6d2610b0aa474eebeeedb5120872b",
+      "verdict": "pass",
+      "findings": {"P0": 0, "P1": 0, "P2": 0},
+      "external_actions": 0,
+      "workspace_writes": 0,
+      "exchange_packet": "arc-erp-product-construction-v3-2-a12-r19-sol-medium-pass-no-eligible-local-batch-v1"
+    },
+    "p6": {
+      "status": "independent_sol_medium_pass_readonly_p5_readiness_open",
+      "batch": "P6-CURRENT-PRODUCT-RELEASE-DELTA-AND-FIVE-SURFACE-EVIDENCE-FREEZE-V1",
+      "release_id": "verified-milestone-close-current-r19-p6-v1",
+      "reviewed_at": "2026-08-06T16:50:13+08:00",
+      "artifact": "/Users/wein/Library/CloudStorage/SynologyDrive-AI/Codex/CIRCLE/projects/2026-07_Arc_Chain/programme/verified-milestone-close/artifacts/p6-current-product-release-sol-medium-pass-20260806.json",
+      "sha256": "d678f696237b3c9d8ddbf61bcbdf7c4a3a844fedac867e2e7ea257c77e1b509f",
+      "verdict": "pass",
+      "findings": {"P0": 0, "P1": 0, "P2": 0},
+      "external_actions": 0,
+      "exchange_packet": "arc-erp-p6-current-product-release-sol-medium-pass-p5-readiness-open-v1",
+      "circle_only_next_batch": "P5-CURRENT-PRODUCT-FIVE-SURFACE-READINESS-PREFLIGHT-V1",
+      "base_use": "independently reviewed product input only; create a separate Base eight-surface readiness candidate and require current official readback plus 02_Build revalidation; no external authority or completion claim is inherited"
+    }
+  },
+  "candidate_domains": [
+    "settlement_case_and_receipt_matching",
+    "erp_accounting_and_reconciliation",
+    "frappe_bridge_and_authoritative_readback",
+    "operator_workflows_and_failure_recovery",
+    "current_release_bom_and_interaction_evidence",
+    "evidence_manifests_and_release_validation"
+  ],
+  "excluded_from_sync": [
+    ".git", "node_modules", "cache", "artifacts", "__pycache__", "*.pyc", "*.lock",
+    "Arc/Circle chain semantics and runtime counters", "wallet ledgers and owner gates",
+    "Circle Console or Encode publication claims", "credentials and local machine state"
+  ],
+  "promotion_gates": [
+    "The delta has a stable source path, immutable reviewed inputs and a declared Base write set.",
+    "Arc network, wallet, Circle Console and chain assumptions are removed or quarantined.",
+    "Base official network, Base Account/Smart Wallet, x402, B20, receipt and finality semantics are revalidated.",
+    "Existing Base-native tests remain green and new behavior has focused reproducible tests.",
+    "03_Base creates one typed candidate packet; fresh independent Sol/medium accepts it before 02_Build consumption.",
+    "No upstream file directly overwrites Base release identity, daily runtime, queue, counters, owner gate or publication evidence."
+  ],
+  "base_evidence_strictness": {
+    "counted_chain_transaction": "Primary Base Account/Smart Wallet, unique Base Mainnet state change, wallet_getCallsStatus confirmed, receipt status 0x1, target and semantics bound, configured finality satisfied, dedup and replay lock passed.",
+    "testnet": "Base Sepolia and Vibenet are product/test evidence only and never count toward the daily 30.",
+    "business_boundary": "Chain success never implies ERP posting, business close or publication-platform attribution.",
+    "publication_unit": "All eight Base platforms must prove the same current release_id, fingerprint and BOM; historical or partial receipts count zero."
+  },
+  "invalidation": "Any upstream change after a captured delta requires a new review packet; never silently recopy the mutable CIRCLE working tree."
+}

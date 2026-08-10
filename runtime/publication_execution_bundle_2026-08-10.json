@@ -1,0 +1,171 @@
+{
+  "schema_version": "base-erp-publication-execution-bundle-v1",
+  "bundle_id": "base-erp-b08-runtime-rebind-publication-execution-bundle-20260810-v1",
+  "generated_at_cst": "2026-08-10T22:45:54+08:00",
+  "execution_mode": "local_reproducible_preparation_only",
+  "public_write_authorized": false,
+  "counting": {
+    "external_trace_units": 0,
+    "public_update_units": 0,
+    "credit_rule": "Only owner-visible current receipts for the same release identity count; this bundle is not a receipt."
+  },
+  "release_binding": {
+    "release_candidate": "runtime/release_candidate_2026-08-10.json",
+    "release_id": "base-erp-b08-runtime-rebind-20260810-v1",
+    "release_fingerprint": "e74d42db13d896c149414e58054585502b9679dcaafab39cd544f5f5735bc188",
+    "bom_fingerprint": "4f0a55281eb864657a4057d47ced32c1f56bb7a0d825ed39c46beb70a39afaef",
+    "bom_manifest_sha256": "4f0a55281eb864657a4057d47ced32c1f56bb7a0d825ed39c46beb70a39afaef",
+    "bom_files_verified": true,
+    "bom_paths": [
+      "config/base_erp_product_contract_v1.json",
+      "config/release_identity_and_exposure_contract_v1.json",
+      "package.json",
+      "runtime/current_state.json",
+      "runtime/runtime_authority.json",
+      "src/base-erp-scenario-router.mjs",
+      "test/base-erp-scenario-router.test.mjs"
+    ],
+    "artifact_excluded_from_own_bom": true
+  },
+  "runtime_snapshot": {
+    "source": "projects/2026-06_Base_Guild_Onchain_Score/runtime/current_run.json",
+    "mutable": true,
+    "runtime_sha256": "00c287a63f061a1bc4c721095fb9208f2aa2e4acde13f7713c3b3edce950419d",
+    "run_id": "02_Build-20260810-204108",
+    "date_cst": "2026-08-10",
+    "status": "running",
+    "cursor_source": "top-level cursor when non-empty, otherwise resume.cursor",
+    "cursor": "Same-day real-candidate queue exhausted below hard floor; keep runtime running and resume on the next date. Before any new action, re-read the owner ledger and generate a fresh official queue. Do not fill the deficit with research, observations, duplicate lifecycle evidence or replayed releases.",
+    "writer_idle_authority": {
+      "path": "runtime/runtime_authority.json",
+      "schema_version": "base-erp-runtime-authority-v1",
+      "runtime_sha256": "00c287a63f061a1bc4c721095fb9208f2aa2e4acde13f7713c3b3edce950419d",
+      "writer_idle": true,
+      "record_sha256": "245e0502fb4b9641d0a7802f831e4685aa93b08878e9c3d9179785f728a0081a"
+    },
+    "invalidation": "Any byte change to current_run.json or any authority-record hash/cursor/writer-idle drift invalidates this snapshot and requires fresh Build revalidation."
+  },
+  "identity": {
+    "basename_display": "gaysonloser.base.eth",
+    "primary_base_account_display": "0xBa36D092dB2999bb1FaBbaf281AC956A97189C25",
+    "identity_status": "configured_display_only_unverified_until_platform_readback"
+  },
+  "deployment_artifact": {
+    "project_root": "projects/2026-08_Base_ERP_Settlement_Workbench",
+      "reproducible_commands": [
+        "npm test",
+        "node --test --test-name-pattern='B08' test/base-erp-scenario-router.test.mjs",
+        "node --test --test-name-pattern='wallet_getCapabilities|wallet_sendCalls' test/base-erp-scenario-router.test.mjs"
+      ],
+      "observed_validation": {
+        "full_suite": "55/55",
+        "b08_focused": "6/6",
+        "wallet_atomic_focused": "4/4",
+        "release_integrity": "identity valid; actual BOM files verified; no chain evidence supplied"
+      },
+    "source_entry": "src/base-erp-scenario-router.mjs",
+    "test_entry": "test/base-erp-scenario-router.test.mjs",
+    "runtime_authority_entry": "runtime/runtime_authority.json"
+  },
+  "execution_gate": {
+    "required_before_any_public_write": [
+      "owner-visible authenticated target for the exact platform",
+      "same release_id/release_fingerprint/bom_fingerprint bound in the target",
+      "current workspace fail-closed gate permits the specific platform write",
+      "for wallet lanes only: live Base MCP namespace, one help probe, get_wallets primary_base_account confirmation and one native owner review window"
+    ],
+    "current_gate": "blocked_no_public_write",
+    "base_mcp": "probe_passed/15; x402 initiate transport returned HTTP 502 before requestId; no OAuth refresh",
+    "owner_gate": "not_observed",
+    "receipts": null
+  },
+  "platform_targets": [
+    {
+      "platform": "github",
+      "target": {"repository": null, "branch": null},
+      "canonical_surface": "https://github.com/",
+      "write_operation": "create_or_update_current_release_artifact",
+      "payload_template": {"release_id": "base-erp-b08-runtime-rebind-20260810-v1", "release_fingerprint": "e74d42db13d896c149414e58054585502b9679dcaafab39cd544f5f5735bc188", "bom_fingerprint": "4f0a55281eb864657a4057d47ced32c1f56bb7a0d825ed39c46beb70a39afaef", "artifact_path": "runtime/release_candidate_2026-08-10.json"},
+      "required_auth": "owner-authenticated repository with write permission",
+      "status": "blocked_target_and_write_permission_unresolved",
+      "receipt": null
+    },
+    {
+      "platform": "render",
+      "target": {"service": null, "environment": null},
+      "canonical_surface": "https://dashboard.render.com/",
+      "write_operation": "deploy_exact_release_artifact",
+      "payload_template": {"release_id": "base-erp-b08-runtime-rebind-20260810-v1", "release_fingerprint": "e74d42db13d896c149414e58054585502b9679dcaafab39cd544f5f5735bc188", "bom_fingerprint": "4f0a55281eb864657a4057d47ced32c1f56bb7a0d825ed39c46beb70a39afaef", "source_artifact": "projects/2026-08_Base_ERP_Settlement_Workbench"},
+      "required_auth": "owner-authenticated Render service and deploy permission",
+      "status": "blocked_current_release_service_unresolved",
+      "receipt": null
+    },
+    {
+      "platform": "base_app",
+      "target": {"app_id": null, "slug": null},
+      "canonical_surface": "https://base.app/",
+      "write_operation": "publish_current_release_metadata",
+      "payload_template": {"name": "Base ERP Settlement Workbench", "release_id": "base-erp-b08-runtime-rebind-20260810-v1", "release_fingerprint": "e74d42db13d896c149414e58054585502b9679dcaafab39cd544f5f5735bc188", "bom_fingerprint": "4f0a55281eb864657a4057d47ced32c1f56bb7a0d825ed39c46beb70a39afaef", "identity": {"basename": "gaysonloser.base.eth", "account": "0xBa36D092dB2999bb1FaBbaf281AC956A97189C25"}},
+      "required_auth": "owner-authenticated Base App publisher surface",
+      "status": "blocked_current_release_target_unresolved",
+      "receipt": null
+    },
+    {
+      "platform": "base_dashboard",
+      "target": {"app_id": null},
+      "canonical_surface": "https://dashboard.base.org/apps",
+      "write_operation": "register_or_update_current_release",
+      "payload_template": {"release_id": "base-erp-b08-runtime-rebind-20260810-v1", "release_fingerprint": "e74d42db13d896c149414e58054585502b9679dcaafab39cd544f5f5735bc188", "bom_fingerprint": "4f0a55281eb864657a4057d47ced32c1f56bb7a0d825ed39c46beb70a39afaef", "builder_identity": "gaysonloser.base.eth"},
+      "required_auth": "owner-authenticated Base Dashboard app owner",
+      "status": "blocked_login_and_target_unresolved",
+      "receipt": null
+    },
+    {
+      "platform": "base_dev",
+      "target": {"registration": null},
+      "canonical_surface": "https://base.dev/",
+      "write_operation": "register_current_release_builder_code_metadata",
+      "payload_template": {"release_id": "base-erp-b08-runtime-rebind-20260810-v1", "release_fingerprint": "e74d42db13d896c149414e58054585502b9679dcaafab39cd544f5f5735bc188", "bom_fingerprint": "4f0a55281eb864657a4057d47ced32c1f56bb7a0d825ed39c46beb70a39afaef", "identity": "gaysonloser.base.eth"},
+      "required_auth": "owner-authenticated Base.dev registration",
+      "status": "blocked_login_and_target_unresolved",
+      "receipt": null
+    },
+    {
+      "platform": "talent",
+      "target": {"profile": null, "project": null},
+      "canonical_surface": "https://talent.app/~/dashboard",
+      "write_operation": "publish_current_release_project",
+      "payload_template": {"title": "Base ERP Settlement Workbench", "release_id": "base-erp-b08-runtime-rebind-20260810-v1", "release_fingerprint": "e74d42db13d896c149414e58054585502b9679dcaafab39cd544f5f5735bc188", "bom_fingerprint": "4f0a55281eb864657a4057d47ced32c1f56bb7a0d825ed39c46beb70a39afaef"},
+      "required_auth": "owner-authenticated Talent profile/project write access",
+      "status": "blocked_security_checkpoint_and_target_unresolved",
+      "receipt": null
+    },
+    {
+      "platform": "guild",
+      "target": {"guild": "base", "role": null},
+      "canonical_surface": "https://guild.xyz/base",
+      "write_operation": "publish_or_update_current_release_evidence",
+      "payload_template": {"guild": "base", "release_id": "base-erp-b08-runtime-rebind-20260810-v1", "release_fingerprint": "e74d42db13d896c149414e58054585502b9679dcaafab39cd544f5f5735bc188", "bom_fingerprint": "4f0a55281eb864657a4057d47ced32c1f56bb7a0d825ed39c46beb70a39afaef"},
+      "required_auth": "owner-authenticated Guild membership/admin surface",
+      "status": "blocked_sign_in_and_join_surface_unresolved",
+      "receipt": null
+    },
+    {
+      "platform": "basename_base_org",
+      "target": {"basename": "gaysonloser.base.eth"},
+      "canonical_surface": "https://www.base.org/name/gaysonloser",
+      "write_operation": "publish_current_release_reference_without_claiming_identity_proof",
+      "payload_template": {"basename": "gaysonloser.base.eth", "release_id": "base-erp-b08-runtime-rebind-20260810-v1", "release_fingerprint": "e74d42db13d896c149414e58054585502b9679dcaafab39cd544f5f5735bc188", "bom_fingerprint": "4f0a55281eb864657a4057d47ced32c1f56bb7a0d825ed39c46beb70a39afaef"},
+      "required_auth": "owner-authenticated Basename/base.org write surface",
+      "status": "blocked_read_only_profile_no_current_release_receipt",
+      "receipt": null
+    }
+  ],
+  "receipt_schema": {
+    "required_fields": ["platform", "receipt_id", "release_id", "release_fingerprint", "bom_fingerprint", "current", "historical", "synthetic", "evidence_origin", "proof_ref"],
+    "current_release_only": true,
+    "historical_credit": 0,
+    "partial_credit": 0,
+    "synthetic_credit": 0
+  }
+}

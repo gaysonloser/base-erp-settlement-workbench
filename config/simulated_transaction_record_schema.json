@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "base-erp-simulated-transaction-record-v1",
+  "title": "Base ERP simulated transaction record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_id",
+    "scenario",
+    "network",
+    "chain_id",
+    "wallet",
+    "business_reference",
+    "simulated",
+    "evidence_level",
+    "count_eligible",
+    "transaction_hash",
+    "broadcast_status",
+    "erp_status",
+    "assumptions"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "record_id": {"type": "string", "minLength": 1},
+    "scenario": {
+      "enum": [
+        "smart_wallet_receivable",
+        "smart_wallet_payable",
+        "smart_wallet_refund",
+        "x402_service_settlement",
+        "b20_inventory_lifecycle",
+        "programmable_contract_settlement",
+        "treasury_swap_reconciliation",
+        "agentic_workflow_evidence"
+      ]
+    },
+    "network": {"enum": ["base_mainnet", "base_sepolia", "base_vibenet"]},
+    "chain_id": {"enum": [8453, 84532, 84538453]},
+    "wallet": {"type": "string", "pattern": "^0x[0-9a-fA-F]{40}$"},
+    "business_reference": {"type": "string", "minLength": 1},
+    "simulated": {"const": true},
+    "evidence_level": {"const": "L0"},
+    "count_eligible": {"const": false},
+    "transaction_hash": {"type": "null"},
+    "broadcast_status": {"const": "not_broadcast"},
+    "erp_status": {"enum": ["fixture_only", "draft_simulation", "posting_simulation"]},
+    "assumptions": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+  }
+}

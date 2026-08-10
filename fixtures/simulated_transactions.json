@@ -1,0 +1,157 @@
+{
+  "schema_version": "1.0",
+  "records": [
+    {
+      "schema_version": "1.0",
+      "record_id": "sim-base-erp-receivable-001",
+      "scenario": "smart_wallet_receivable",
+      "network": "base_sepolia",
+      "chain_id": 84532,
+      "wallet": "0xba36d092db2999bb1fabbaf281ac956a97189c25",
+      "business_reference": "SIM-AR-0001",
+      "simulated": true,
+      "evidence_level": "L0",
+      "count_eligible": false,
+      "transaction_hash": null,
+      "broadcast_status": "not_broadcast",
+      "erp_status": "draft_simulation",
+      "assumptions": [
+        "No wallet request was created and no transaction was broadcast.",
+        "The record tests ERP mapping only and can never enter the daily 30 count."
+      ]
+    },
+    {
+      "schema_version": "1.0",
+      "record_id": "sim-base-erp-payable-mainnet-001",
+      "scenario": "smart_wallet_payable",
+      "network": "base_mainnet",
+      "chain_id": 8453,
+      "wallet": "0xba36d092db2999bb1fabbaf281ac956a97189c25",
+      "business_reference": "SIM-AP-0001",
+      "simulated": true,
+      "evidence_level": "L0",
+      "count_eligible": false,
+      "transaction_hash": null,
+      "broadcast_status": "not_broadcast",
+      "erp_status": "draft_simulation",
+      "assumptions": [
+        "Mainnet is selected only to exercise the counting boundary; no Smart Wallet review or broadcast occurred.",
+        "A payable requires a later unique receipt and authoritative ERP readback before any production claim."
+      ]
+    },
+    {
+      "schema_version": "1.0",
+      "record_id": "sim-base-erp-refund-sepolia-001",
+      "scenario": "smart_wallet_refund",
+      "network": "base_sepolia",
+      "chain_id": 84532,
+      "wallet": "0xba36d092db2999bb1fabbaf281ac956a97189c25",
+      "business_reference": "SIM-REFUND-0001",
+      "simulated": true,
+      "evidence_level": "L0",
+      "count_eligible": false,
+      "transaction_hash": null,
+      "broadcast_status": "not_broadcast",
+      "erp_status": "draft_simulation",
+      "assumptions": [
+        "Refund destination, amount and authorization are fixture inputs only.",
+        "Base Sepolia evidence can never satisfy the Mainnet daily interaction floor."
+      ]
+    },
+    {
+      "schema_version": "1.0",
+      "record_id": "sim-base-erp-x402-sepolia-001",
+      "scenario": "x402_service_settlement",
+      "network": "base_sepolia",
+      "chain_id": 84532,
+      "wallet": "0xba36d092db2999bb1fabbaf281ac956a97189c25",
+      "business_reference": "SIM-X402-0001",
+      "simulated": true,
+      "evidence_level": "L0",
+      "count_eligible": false,
+      "transaction_hash": null,
+      "broadcast_status": "not_broadcast",
+      "erp_status": "draft_simulation",
+      "assumptions": [
+        "The 402 requirement, maxPayment cap, authorization and fulfillment are not live requests.",
+        "Payment evidence and service fulfillment remain separate until a real receipt and matching ERP case exist."
+      ]
+    },
+    {
+      "schema_version": "1.0",
+      "record_id": "sim-base-erp-b20-vibenet-001",
+      "scenario": "b20_inventory_lifecycle",
+      "network": "base_vibenet",
+      "chain_id": 84538453,
+      "wallet": "0xba36d092db2999bb1fabbaf281ac956a97189c25",
+      "business_reference": "SIM-B20-0001",
+      "simulated": true,
+      "evidence_level": "L0",
+      "count_eligible": false,
+      "transaction_hash": null,
+      "broadcast_status": "not_broadcast",
+      "erp_status": "draft_simulation",
+      "assumptions": [
+        "B20 role, cap, pause and policy fields are experimental fixtures on Vibenet only.",
+        "No B20Factory call, mint, role mutation or production claim is authorized by this record."
+      ]
+    },
+    {
+      "schema_version": "1.0",
+      "record_id": "sim-base-erp-contract-sepolia-001",
+      "scenario": "programmable_contract_settlement",
+      "network": "base_sepolia",
+      "chain_id": 84532,
+      "wallet": "0xba36d092db2999bb1fabbaf281ac956a97189c25",
+      "business_reference": "SIM-CONTRACT-0001",
+      "simulated": true,
+      "evidence_level": "L0",
+      "count_eligible": false,
+      "transaction_hash": null,
+      "broadcast_status": "not_broadcast",
+      "erp_status": "draft_simulation",
+      "assumptions": [
+        "Target address, calldata hash and event expectations are placeholders for local routing tests.",
+        "Compilation or deployment preparation is not a receipt and cannot enter daily counts."
+      ]
+    },
+    {
+      "schema_version": "1.0",
+      "record_id": "sim-base-erp-swap-mainnet-001",
+      "scenario": "treasury_swap_reconciliation",
+      "network": "base_mainnet",
+      "chain_id": 8453,
+      "wallet": "0xba36d092db2999bb1fabbaf281ac956a97189c25",
+      "business_reference": "SIM-SWAP-0001",
+      "simulated": true,
+      "evidence_level": "L0",
+      "count_eligible": false,
+      "transaction_hash": null,
+      "broadcast_status": "not_broadcast",
+      "erp_status": "draft_simulation",
+      "assumptions": [
+        "Asset pair, amount, quote and slippage are fixture values and no swap tool was called.",
+        "A future swap requires one reviewed Mainnet packet, unique final receipt and balance/ERP reconciliation."
+      ]
+    },
+    {
+      "schema_version": "1.0",
+      "record_id": "sim-base-erp-agent-workflow-sepolia-001",
+      "scenario": "agentic_workflow_evidence",
+      "network": "base_sepolia",
+      "chain_id": 84532,
+      "wallet": "0xba36d092db2999bb1fabbaf281ac956a97189c25",
+      "business_reference": "SIM-AGENT-0001",
+      "simulated": true,
+      "evidence_level": "L0",
+      "count_eligible": false,
+      "transaction_hash": null,
+      "broadcast_status": "not_broadcast",
+      "erp_status": "draft_simulation",
+      "assumptions": [
+        "This is a product workflow fixture only; Agentic Wallet is absent and no agent wallet was opened.",
+        "Workflow evidence does not establish payment, settlement or ERP posting without an independent receipt and readback."
+      ]
+    }
+  ]
+}

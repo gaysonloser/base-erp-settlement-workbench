@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.1",
+  "updated_at": "2026-08-06T16:45:00+08:00",
+  "project": "Base ERP Settlement Workbench",
+  "public_identity": {
+    "basename": "gaysonloser.base.eth",
+    "primary_base_account": "0xBa36D092dB2999bb1FaBbaf281AC956A97189C25",
+    "identity_source": "projects/2026-06_Base_Guild_Onchain_Score/config/base_wallet_registry.json",
+    "exposure_allowed": true,
+    "release_time_verification_required": true,
+    "claim_boundary": "Show the configured public identity and address. Do not claim current Basename resolution, platform verification, score movement or ownership changes without release-time official readback."
+  },
+  "required_release_fields": [
+    "project_name",
+    "material_outcome",
+    "basename",
+    "primary_base_account",
+    "network",
+    "release_fingerprint",
+    "git_commit",
+    "render_url",
+    "contract_addresses_or_not_applicable_reason",
+    "transaction_receipts_or_not_yet_available",
+    "erp_readback_level",
+    "evidence_level",
+    "limitations"
+  ],
+  "required_platforms": [
+    "GitHub",
+    "Render",
+    "Base App",
+    "Base Dashboard",
+    "Base.dev",
+    "Talent",
+    "Guild",
+    "Basename/base.org"
+  ],
+  "current_release_evidence": {
+    "required_identity": ["release_id", "release_fingerprint", "bom_fingerprint"],
+    "required_artifacts": ["current_release_delta", "immutable_release_bom", "interaction_evidence", "eight_surface_evidence_map", "acceptance_state"],
+    "historical_receipt_guard": "A receipt created for an earlier release_id, fingerprint or BOM is historical context only and cannot prove the current publication unit.",
+    "platform_independence": "Each of the eight required platforms is an independent evidence gate. Missing, stale, inferred or cross-copied evidence makes the publication unit count zero.",
+    "candidate_boundary": "A locally complete release candidate remains non-public and non-counting until independent Sol/medium acceptance and the exact owner-visible external gate."
+  },
+  "attribution_rules": {
+    "builder_code": "Use a project Builder Code where the current Base implementation supports it; verify attribution in base.dev before claiming it.",
+    "base_app_profile": "Use the wallet-address profile deeplink or current supported Base App surface; do not rely on deprecated mini-app methods.",
+    "basename": "Display gaysonloser.base.eth with the full wallet address. Setting or changing a primary Basename is a separate owner-approved transaction.",
+    "cross_platform_consistency": "Every platform row for one publication unit must share the same material outcome and release fingerprint."
+  },
+  "forbidden_claims": [
+    "simulated transaction presented as a real receipt",
+    "testnet receipt presented as a Base Mainnet transaction",
+    "partial platform bundle presented as a completed publication unit",
+    "Basename ownership or resolution inferred only from workspace configuration",
+    "Arc/Circle result presented as a Base result without Base-native implementation evidence",
+    "historical platform receipt presented as evidence for the current release",
+    "chain success presented as ERP posting, business close or eight-platform completion"
+  ]
+}

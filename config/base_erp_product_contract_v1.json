@@ -1,0 +1,100 @@
+{
+  "schema_version": "1.0",
+  "updated_at": "2026-08-04T22:52:54+08:00",
+  "product": "Base ERP Settlement Workbench",
+  "primary_base_account": "0xBa36D092dB2999bb1FaBbaf281AC956A97189C25",
+  "session_mapping": {
+    "product_and_knowledge": "03_Base",
+    "engineering_chain_and_publication": "02_Build",
+    "governance": "01_Config"
+  },
+  "release_identity_contract": "config/release_identity_and_exposure_contract_v1.json",
+  "arc_upstream_sync_contract": "config/arc_upstream_sync_contract_v1.json",
+  "networks": {
+    "base_mainnet": {"chain_id": 8453, "purpose": "owner-gated production evidence"},
+    "base_sepolia": {"chain_id": 84532, "purpose": "ordinary testnet product validation"},
+    "base_vibenet": {"chain_id": 84538453, "purpose": "experimental B20 validation only"}
+  },
+  "scenario_lanes": [
+    "smart_wallet_receivable",
+    "smart_wallet_payable",
+    "smart_wallet_refund",
+    "x402_service_settlement",
+    "b20_inventory_lifecycle",
+    "programmable_contract_settlement",
+    "treasury_swap_reconciliation",
+    "agentic_workflow_evidence"
+  ],
+  "base_hotspot_rules": {
+    "smart_wallet": "Use the configured Base Account and wallet_sendCalls/capability readback when available; one visible owner review per request; a receipt is not sufficient without finality and state-change evidence.",
+    "x402": "Persist the HTTP 402 requirement, max payment, signed authorization, fulfillment and receipt separately; accept Base Mainnet/Base Sepolia only; payment does not prove invoice meaning.",
+    "b20": "Begin on Base Vibenet and capture role, cap, pause, policy and permit semantics; do not market experimental evidence as production.",
+    "contract": "Bind programmable settlement to the selected network, target contract and method semantics; require a successful final state-change receipt before ERP projection.",
+    "swap": "Use Base Mainnet only; Base Docs states Base MCP swaps are not supported on testnets, so Base Sepolia is a rehearsal rejection rather than a swap route.",
+    "agentic": "Use agentic workflow orchestration and Base/CDP tools only as product mechanisms; Agentic Wallet is not configured and cannot replace the Base Account.",
+    "test_iteration": "Use Base Sepolia for ordinary integration rehearsal and Vibenet only for experimental chain features; revalidate before every promotion."
+  },
+  "official_source_matrix": {
+    "base_account_smart_wallet": [
+      "https://docs.base.org/base-account/overview/what-is-base-account",
+      "https://docs.base.org/base-account/reference/onchain-contracts/smart-wallet",
+      "https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_getTransactionReceipt",
+      "https://docs.base.org/base-account/reference/core/provider-rpc-methods/wallet_sendCalls"
+    ],
+    "x402": ["https://docs.base.org/agents/guides/x402-payments"],
+    "b20": [
+      "https://docs.base.org/get-started/launch-b20-token",
+      "https://docs.base.org/base-chain/specs/upgrades/beryl/b20"
+    ],
+    "networks": ["https://docs.base.org/base-chain/quickstart/connecting-to-base"],
+    "contracts": ["https://docs.base.org/base-chain/network-information/base-contracts"],
+    "swap": ["https://docs.base.org/agents/guides/swap-tokens"]
+  },
+  "scenario_network_policy": {
+    "smart_wallet_receivable": ["base_mainnet", "base_sepolia"],
+    "smart_wallet_payable": ["base_mainnet", "base_sepolia"],
+    "smart_wallet_refund": ["base_mainnet", "base_sepolia"],
+    "x402_service_settlement": ["base_mainnet", "base_sepolia"],
+    "b20_inventory_lifecycle": ["base_vibenet"],
+    "programmable_contract_settlement": ["base_mainnet", "base_sepolia"],
+    "treasury_swap_reconciliation": ["base_mainnet"],
+    "agentic_workflow_evidence": ["base_mainnet", "base_sepolia"]
+  },
+  "acceptance_requirements": [
+    "Every case has one supported scenario/network pair and an explicit chainId.",
+    "A receipt must be successful, unique, final and prove a state-changing execution; pending, reverted, reorged or read-only evidence fails closed.",
+    "ERP readback must be authoritative, posted and bound to the same caseId and fingerprint; chain success alone never posts or closes ERP.",
+    "B20 evidence remains experimental on Base Vibenet; swap evidence is rejected on Base Sepolia; x402 evidence is limited to Base Mainnet/Base Sepolia.",
+    "Local tests and simulation remain L0/L1; no packet promotes to L2/L3 without the required external receipt and deterministic readback."
+  ],
+  "evidence_levels": {
+    "L0": "fixture or simulation; no external truth",
+    "L1": "reproducible local implementation and tests",
+    "L2": "unique successful testnet receipt plus deterministic product readback",
+    "L3": "unique Base Mainnet Smart Wallet receipt, authoritative ERP readback and complete publication evidence"
+  },
+  "publication_platforms": [
+    "GitHub",
+    "Render",
+    "Base App",
+    "Base Dashboard",
+    "Base.dev",
+    "Talent",
+    "Guild",
+    "Basename/base.org"
+  ],
+  "counting_boundary": {
+    "daily_transaction_floor": 30,
+    "transaction_owner": "projects/2026-06_Base_Guild_Onchain_Score/runtime/current_run.json",
+    "eligible": "unique successful Base Mainnet state-change receipt from the configured Base Account / Smart Wallet",
+    "ineligible": ["simulation", "test", "testnet receipt", "read-only RPC", "Git commit", "deployment attempt", "ERP draft without chain receipt", "platform navigation"],
+    "publication_rule": "Only complete all-required-platform bundles count under the existing 02_Build contract."
+  },
+  "simulation_boundary": {
+    "schema": "config/simulated_transaction_record_schema.json",
+    "fixture": "fixtures/simulated_transactions.json",
+    "purpose": "ERP mapping, reconciliation and failure-mode rehearsal only",
+    "hard_invariants": ["simulated=true", "evidence_level=L0", "count_eligible=false", "transaction_hash=null", "broadcast_status=not_broadcast"]
+  },
+  "external_action_policy": "Only 02_Build may act after current-task live discovery, accepted typed handoff and the existing owner gates."
+}

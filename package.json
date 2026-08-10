@@ -1,0 +1,13 @@
+{
+  "name": "base-erp-settlement-workbench",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Receipt-first Base Smart Wallet and ERP settlement workbench.",
+  "scripts": {
+    "test": "node --test test/base-erp-scenario-router.test.mjs test/portfolio-and-simulation-contract.test.mjs test/base-neutral-receipt-controls.test.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

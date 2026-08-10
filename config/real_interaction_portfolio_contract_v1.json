@@ -1,0 +1,264 @@
+{
+  "schema_version": "1.0",
+  "$id": "base-erp-real-interaction-portfolio-v1",
+  "updated_at": "2026-08-04T23:07:00+08:00",
+  "project": "Base ERP Settlement Workbench",
+  "purpose": "Next-CST-date interaction planning only; this artifact is not a runtime queue and cannot authorize a wallet request.",
+  "activation": {
+    "mode": "planning_only",
+    "runtime_queue_registration": false,
+    "current_run_date_cst": "2026-08-04",
+    "eligible_from": "next_cst_date_after_current_run",
+    "daily_runtime": "projects/2026-06_Base_Guild_Onchain_Score/runtime/current_run.json",
+    "must_revalidate_live_manifest": true,
+    "must_revalidate_owner_surface": true
+  },
+  "identity": {
+    "basename": "gaysonloser.base.eth",
+    "primary_base_account": "0xBa36D092dB2999bb1FaBbaf281AC956A97189C25",
+    "full_address_required_in_release": true,
+    "identity_source": "config/release_identity_and_exposure_contract_v1.json",
+    "release_identity_rule": "Every release row displays the Basename and full primary address; current resolution or ownership requires release-time official readback."
+  },
+  "global_execution_rules": {
+    "primary_identity_only": true,
+    "eoa_fallback": "disabled",
+    "agentic_wallet": "absent_disabled",
+    "basehub": "disabled",
+    "deepseek": "absent",
+    "one_visible_review_per_action": true,
+    "owner_final_click_required": true,
+    "daily_30_counting_authority": "projects/2026-06_Base_Guild_Onchain_Score/runtime/current_run.json",
+    "daily_30_eligible_receipt": "Unique successful Base Mainnet state-changing receipt from the configured Base Account / Smart Wallet only.",
+    "testnet_and_vibenet_counting": "Always false for the daily 30 floor.",
+    "simulation_counting": "Always false; simulation is L0 and not_broadcast.",
+    "erp_readback_boundary": "ERP posting or settlement closure requires an authoritative readback bound to the same caseId and fingerprint; chain receipt alone is not ERP meaning."
+  },
+  "deduplication": {
+    "replay_lock_key": [
+      "primary_base_account",
+      "chain_id",
+      "target",
+      "calldata_hash",
+      "value",
+      "business_reference"
+    ],
+    "duplicate_rule": "A consumed or resolved fingerprint cannot be retried or counted unless the owner contract proves a new independent business outcome.",
+    "pending_rule": "A transaction hash, request id, or pending receipt never releases the replay lock or increments a counter.",
+    "receipt_identity_rule": "Receipt transactionHash, chainId, sender, target/action and final state change must match the locked packet."
+  },
+  "publication_bundle": {
+    "required_platforms": [
+      "github",
+      "render",
+      "base_app",
+      "base_dashboard",
+      "base_dev",
+      "talent",
+      "guild",
+      "basename_base_org"
+    ],
+    "same_outcome_required": true,
+    "same_release_fingerprint_required": true,
+    "attribution": {
+      "basename": "gaysonloser.base.eth",
+      "primary_base_account": "0xBa36D092dB2999bb1FaBbaf281AC956A97189C25"
+    },
+    "partial_bundle_count": 0,
+    "x_twitter": "read_only_research_input; never a publication platform or counter"
+  },
+  "lanes": [
+    {
+      "id": "base_mainnet_state_change",
+      "category": "Base Mainnet contract/payment state change",
+      "networks": ["base_mainnet"],
+      "chain_ids": [8453],
+      "daily_30_eligible": true,
+      "purpose": "Meaningful primary Smart Wallet contract, payment, registry or settlement state change with a unique receipt.",
+      "counting": {
+        "eligible_when": [
+          "primary Base Account / Smart Wallet sender matches exactly",
+          "chainId=8453",
+          "receipt status is success and final",
+          "stateChange=true, unique=true, reorged=false",
+          "target, calldata hash, value and action semantics match the locked packet"
+        ],
+        "not_eligible_when": ["read-only RPC", "pending hash", "simulation", "duplicate lifecycle", "partial publication"]
+      },
+      "cost_risk": {
+        "controls": ["owner-confirmed value ceiling", "owner-confirmed gas ceiling", "one call per review"],
+        "risks": ["irreversible state change", "gas loss on revert", "wrong target or calldata", "ERP meaning inferred without readback"]
+      },
+      "receipt": {
+        "required": ["transactionHash", "chainId", "status", "finality", "stateChange", "unique", "reorged"],
+        "success_values": {"status": "success", "finality": "final", "stateChange": true, "unique": true, "reorged": false}
+      },
+      "erp_readback": {
+        "required_for_business_closure": true,
+        "binding": ["caseId", "fingerprint", "documentId", "authoritative=true", "status=posted"]
+      },
+      "stop_conditions": [
+        "Base MCP namespace or trusted Smart Wallet provider unavailable",
+        "primary identity or Base Mainnet capability mismatch",
+        "exact target/calldata/value/gas packet unresolved",
+        "owner-visible review surface missing, blank or spinner-only",
+        "receipt pending, null, reverted, non-final, reorged or non-unique",
+        "duplicate/replay-locked fingerprint",
+        "ERP readback missing or bound to another case"
+      ]
+    },
+    {
+      "id": "base_sepolia_product_evidence",
+      "category": "Base Sepolia product rehearsal",
+      "networks": ["base_sepolia"],
+      "chain_ids": [84532],
+      "daily_30_eligible": false,
+      "purpose": "Validate product routing, receipt parsing and ERP failure modes without claiming a Mainnet interaction.",
+      "counting": {
+        "eligible_when": [],
+        "always_excluded_from": ["daily_30", "daily_10_public_bundle"]
+      },
+      "cost_risk": {
+        "controls": ["testnet-only value ceiling", "no production promotion from test receipt"],
+        "risks": ["testnet semantics diverge from production", "faucet or test asset assumptions", "false Mainnet attribution"]
+      },
+      "receipt": {
+        "required": ["transactionHash", "chainId", "status", "finality", "stateChange"],
+        "promotion_rule": "Use as L2 evidence only after deterministic product readback."
+      },
+      "erp_readback": {
+        "required_for_business_closure": true,
+        "binding": ["caseId", "fingerprint"],
+        "level": "L2"
+      },
+      "stop_conditions": [
+        "Any attempt to count the testnet receipt toward daily 30",
+        "network or wallet identity mismatch",
+        "unsupported contract or swap route",
+        "receipt not final or product readback nondeterministic"
+      ]
+    },
+    {
+      "id": "vibenet_b20_experiment",
+      "category": "Base Vibenet B20 experiment",
+      "networks": ["base_vibenet"],
+      "chain_ids": [84538453],
+      "daily_30_eligible": false,
+      "purpose": "Experiment with B20 roles, cap, pause, policy and permit semantics on the experimental network only.",
+      "counting": {
+        "eligible_when": [],
+        "always_excluded_from": ["daily_30", "production_claims", "public_bundle_without_experimental_label"]
+      },
+      "cost_risk": {
+        "controls": ["experimental asset cap", "no production liquidity or user-facing claim", "one reviewed lifecycle step"],
+        "risks": ["preview-network changes", "experimental precompile behavior", "irreversible role/policy mutation"]
+      },
+      "receipt": {
+        "required": ["transactionHash", "chainId=84538453", "status", "finality", "stateChange", "event/readback match"],
+        "promotion_rule": "L2/L0 experimental evidence only; never a Mainnet receipt."
+      },
+      "erp_readback": {
+        "required_for_business_closure": true,
+        "binding": ["caseId", "fingerprint", "role/cap/policy readback"],
+        "level": "L2_experimental"
+      },
+      "stop_conditions": [
+        "Network is not Vibenet",
+        "B20Factory or feature capability is not confirmed",
+        "role/cap/pause/policy semantics are ambiguous",
+        "experimental result is about to be presented as production evidence"
+      ]
+    },
+    {
+      "id": "x402_independent_authorization",
+      "category": "x402 service settlement",
+      "networks": ["base_mainnet", "base_sepolia"],
+      "chain_ids": [8453, 84532],
+      "daily_30_eligible": "conditional",
+      "purpose": "Keep HTTP 402 requirement, maxPayment, authorization, fulfillment and receipt as separate evidence objects.",
+      "counting": {
+        "eligible_when": [
+          "the payment itself is a unique successful Base Mainnet Smart Wallet state change",
+          "the payment packet passes the same receipt and dedup rules as the Mainnet lane"
+        ],
+        "always_excluded": ["402 response alone", "quote alone", "signed authorization without broadcast", "Sepolia payment"]
+      },
+      "cost_risk": {
+        "controls": ["caller-supplied maxPayment", "resource URL and merchant binding", "one owner approval"],
+        "risks": ["paid request is irreversible", "wrong resource or merchant", "authorization replay", "fulfillment mismatch"]
+      },
+      "receipt": {
+        "required": ["http402_requirement", "maxPayment", "authorization", "fulfillment", "transactionHash_or_null", "chainId", "status"],
+        "promotion_rule": "Payment receipt and HTTP fulfillment are separate; neither substitutes for ERP meaning."
+      },
+      "erp_readback": {
+        "required_for_business_closure": true,
+        "binding": ["caseId", "fingerprint", "resource", "merchant", "fulfillment"]
+      },
+      "stop_conditions": [
+        "maxPayment or merchant/resource binding is missing",
+        "authorization is stale, reused or exceeds cap",
+        "payment receipt is pending or not final",
+        "fulfillment cannot be bound to the same request"
+      ]
+    },
+    {
+      "id": "contract_deploy_or_call",
+      "category": "contract deployment or contract call",
+      "networks": ["base_mainnet", "base_sepolia"],
+      "chain_ids": [8453, 84532],
+      "daily_30_eligible": "mainnet_only",
+      "purpose": "Separate deployment identity, call calldata, emitted events and ERP settlement readback.",
+      "counting": {
+        "eligible_when": ["Base Mainnet", "primary Smart Wallet", "unique final successful state-changing receipt"],
+        "always_excluded": ["compile/deploy attempt", "testnet receipt", "constructor simulation", "eventless pending hash"]
+      },
+      "cost_risk": {
+        "controls": ["bytecode and constructor hash lock", "target and calldata hash lock", "gas/value ceiling"],
+        "risks": ["wrong bytecode", "constructor side effects", "irreversible deployment", "revert gas loss"]
+      },
+      "receipt": {
+        "required": ["transactionHash", "chainId", "status", "finality", "contractAddress_or_target", "stateChange", "events"]
+      },
+      "erp_readback": {
+        "required_for_business_closure": true,
+        "binding": ["caseId", "fingerprint", "deployedAddress_or_target", "authoritative readback"]
+      },
+      "stop_conditions": [
+        "bytecode, constructor or target hash changes after review",
+        "network mismatch",
+        "receipt status is not final success",
+        "contract readback or ERP binding is missing"
+      ]
+    },
+    {
+      "id": "swap",
+      "category": "treasury swap reconciliation",
+      "networks": ["base_mainnet"],
+      "chain_ids": [8453],
+      "daily_30_eligible": "conditional",
+      "purpose": "Perform only a reviewed Mainnet swap with explicit assets, amount, slippage and treasury reconciliation.",
+      "counting": {
+        "eligible_when": ["unique final successful Smart Wallet Mainnet state change", "exact quote/call and slippage packet match"],
+        "always_excluded": ["quote", "simulation", "testnet swap", "partial fill without final receipt/readback"]
+      },
+      "cost_risk": {
+        "controls": ["owner-confirmed fromAsset/toAsset", "amount ceiling", "slippage ceiling", "one approval"],
+        "risks": ["price movement", "slippage", "low liquidity", "approval or routing side effects"]
+      },
+      "receipt": {
+        "required": ["transactionHash", "chainId=8453", "status", "finality", "stateChange", "token/event readback"]
+      },
+      "erp_readback": {
+        "required_for_business_closure": true,
+        "binding": ["caseId", "fingerprint", "before/after asset balances", "authoritative ERP reconciliation"]
+      },
+      "stop_conditions": [
+        "testnet or unsupported chain",
+        "quote, slippage or asset identity changes",
+        "liquidity or gas risk exceeds owner ceiling",
+        "token balance/readback does not match the reviewed outcome"
+      ]
+    }
+  ]
+}

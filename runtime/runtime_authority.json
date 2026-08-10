@@ -1,0 +1,9 @@
+{
+  "schema_version": "base-erp-runtime-authority-v1",
+  "source": "projects/2026-06_Base_Guild_Onchain_Score/runtime/current_run.json",
+  "runtime_sha256": "00c287a63f061a1bc4c721095fb9208f2aa2e4acde13f7713c3b3edce950419d",
+  "writer_idle": true,
+  "observed_at": "2026-08-10T14:45:54.300Z",
+  "event_id": "base-erp-runtime-rebind-20260810-p7",
+  "record_sha256": "245e0502fb4b9641d0a7802f831e4685aa93b08878e9c3d9179785f728a0081a"
+}

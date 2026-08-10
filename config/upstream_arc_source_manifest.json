@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.0",
+  "captured_at": "2026-08-04T17:30:00+08:00",
+  "source_workspace": "CIRCLE",
+  "source_project": "projects/2026-07_Arc_Chain/programme/verified-milestone-close",
+  "source_state": "working_tree_without_initial_commit; selected current files copied read-only",
+  "source_contract": "design/arc-erp-product-construction-contract-v3.md",
+  "source_contract_sha256": "e67c37c17071d8119870521b3f3126ed04c7e9ceb6eab1af4066fc66bfd84ce8",
+  "source_package_sha256": "7aa8e7cecb9d06ab69337c8c8c433b5fab676784ca84bf7fffd29128d24e4cca",
+  "snapshot_file_count": 298,
+  "snapshot_tree_sha256": "4663071257af73514ee0c0e21980d1db434f18af941cd9938dd9c0eb3685fc27",
+  "snapshot_path": "projects/2026-08_Base_ERP_Settlement_Workbench/upstream/arc_erp_v3_2",
+  "included": [
+    "src",
+    "test",
+    "web",
+    "frappe_app",
+    "arc_erp_bridge",
+    "fixtures",
+    "scripts",
+    "arc-erp-product-construction-contract-v3.md",
+    "package.json",
+    "foundry.toml",
+    "LICENSE"
+  ],
+  "excluded": [
+    ".git",
+    "node_modules",
+    "cache",
+    "artifacts",
+    "compiled Python caches",
+    "CIRCLE runtime and wallet ledgers",
+    "Arc/Circle exchange runtime"
+  ],
+  "invalidation_rules": [
+    "Arc chain, wallet, Circle Console, Encode and Programme claims are historical source context only.",
+    "Every network, contract, token, API and ecosystem assertion must be revalidated against current Base official sources before implementation or publication.",
+    "No upstream owner gate, receipt, counter or external authorization transfers into BASE."
+  ]
+}
