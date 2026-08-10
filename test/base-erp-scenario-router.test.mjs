@@ -4,6 +4,8 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import {
   BASE_WALLET_PROVIDER_CONTRACT,
+  BUSINESS_CLOSURE_BATCH_ID,
+  BUSINESS_CLOSURE_CONTRACTS,
   PRIMARY_BASE_ACCOUNT,
   applyErpReadback,
   applyReceipt,
@@ -160,36 +162,7 @@ const ATOMIC_OWNER_PREFLIGHT = {
   receipt_finality: structuredClone(B08_PREFLIGHT.receipt_finality),
 };
 
-const B11_BUSINESS_CLOSURE_CONTRACTS = {
-  "Sales Invoice": {
-    required_inputs: ["case_id", "current_release_id", "current_release_fingerprint", "immutable_bom", "customer_reference", "amount", "currency"],
-    authoritative_readback: ["invoice_id", "posted_status", "same_case_id", "same_release_binding", "amount_currency_match"],
-  },
-  "Payment Entry": {
-    required_inputs: ["case_id", "invoice_id", "receipt_identity", "amount", "currency", "current_release_binding"],
-    authoritative_readback: ["payment_entry_id", "posted_status", "invoice_link", "same_receipt_identity", "amount_currency_match"],
-  },
-  "Bank Transaction": {
-    required_inputs: ["case_id", "bank_reference", "value_date", "amount", "currency", "current_release_binding"],
-    authoritative_readback: ["bank_transaction_id", "matched_status", "same_case_id", "amount_currency_match"],
-  },
-  GL: {
-    required_inputs: ["case_id", "posting_date", "account_mapping", "amount", "currency", "current_release_binding"],
-    authoritative_readback: ["gl_entry_id", "posted_status", "debit_credit_balance", "same_case_id", "same_release_binding"],
-  },
-  "Payment Ledger": {
-    required_inputs: ["case_id", "receipt_identity", "payment_entry_id", "amount", "idempotency_key", "current_release_binding"],
-    authoritative_readback: ["ledger_entry_id", "allocation_status", "duplicate_check", "same_case_id", "same_receipt_identity"],
-  },
-  "Accounting Period": {
-    required_inputs: ["period_id", "period_start", "period_end", "period_status", "current_release_binding"],
-    authoritative_readback: ["period_id", "open_or_closed_status", "same_release_binding", "readback_timestamp"],
-  },
-  "Period Closing Voucher": {
-    required_inputs: ["period_id", "close_voucher_reference", "close_reason", "current_release_binding", "owner_gate_dossier_id"],
-    authoritative_readback: ["voucher_id", "approved_or_posted_status", "period_id", "same_release_binding", "close_evidence_timestamp"],
-  },
-};
+const B11_BUSINESS_CLOSURE_CONTRACTS = structuredClone(BUSINESS_CLOSURE_CONTRACTS);
 
 const B11_BUSINESS_CLOSURE_DOMAINS = Object.keys(B11_BUSINESS_CLOSURE_CONTRACTS).map((record_type) => ({
   record_type,
@@ -203,8 +176,8 @@ const B11_BUSINESS_CLOSURE_DOMAINS = Object.keys(B11_BUSINESS_CLOSURE_CONTRACTS)
   evidence_status: "not_observed",
   required_inputs: B11_BUSINESS_CLOSURE_CONTRACTS[record_type].required_inputs,
   authoritative_readback: B11_BUSINESS_CLOSURE_CONTRACTS[record_type].authoritative_readback,
-  gap_if_missing: `${record_type} evidence is not observed for the current release.`,
-  stop_condition: `${record_type} readback missing, stale, cross-release or synthetic.`,
+  gap_if_missing: B11_BUSINESS_CLOSURE_CONTRACTS[record_type].gap_if_missing,
+  stop_condition: B11_BUSINESS_CLOSURE_CONTRACTS[record_type].stop_condition,
   owner_confirmation: "absent",
 }));
 
@@ -1529,7 +1502,7 @@ test("B11 validates all seven current-release business-closure gaps and keeps ex
   const result = validateBaseBusinessClosureEvidenceGap(structuredClone(B11_EVIDENCE_GAP));
 
   assert.equal(result.ok, true);
-  assert.equal(result.batch_id, "B11_BASE_BUSINESS_CLOSURE_EVIDENCE_GAP");
+  assert.equal(result.batch_id, BUSINESS_CLOSURE_BATCH_ID);
   assert.equal(result.domain_count, 7);
   assert.deepEqual(result.business_closure_domains.map(({ record_type }) => record_type), [
     "Sales Invoice",
@@ -1587,6 +1560,14 @@ test("B11 enforces each domain's exact packet input and authoritative-readback c
   const crossDomain = structuredClone(B11_EVIDENCE_GAP);
   crossDomain.business_closure_domains.find(({ record_type }) => record_type === "Period Closing Voucher").required_inputs = [...B11_BUSINESS_CLOSURE_CONTRACTS["Payment Ledger"].required_inputs];
   assert.equal(validateBaseBusinessClosureEvidenceGap(crossDomain).reason, "base_business_closure_domain_contract_mismatch");
+
+  const gapDrift = structuredClone(B11_EVIDENCE_GAP);
+  gapDrift.business_closure_domains.find(({ record_type }) => record_type === "Sales Invoice").gap_if_missing = "ignore missing evidence";
+  assert.equal(validateBaseBusinessClosureEvidenceGap(gapDrift).reason, "base_business_closure_domain_contract_mismatch");
+
+  const stopDrift = structuredClone(B11_EVIDENCE_GAP);
+  stopDrift.business_closure_domains.find(({ record_type }) => record_type === "Sales Invoice").stop_condition = "continue despite missing evidence";
+  assert.equal(validateBaseBusinessClosureEvidenceGap(stopDrift).reason, "base_business_closure_domain_contract_mismatch");
 });
 
 test("B11 rejects stale, historical, partial, synthetic, cross-release and claimed domain evidence", () => {

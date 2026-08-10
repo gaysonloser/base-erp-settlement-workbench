@@ -25,6 +25,69 @@
     "treasury_swap_reconciliation",
     "agentic_workflow_evidence"
   ],
+  "business_closure_contract": {
+    "batch_id": "B11_BASE_BUSINESS_CLOSURE_EVIDENCE_GAP_CURRENT_RELEASE",
+    "record_types": [
+      "Sales Invoice",
+      "Payment Entry",
+      "Bank Transaction",
+      "GL",
+      "Payment Ledger",
+      "Accounting Period",
+      "Period Closing Voucher"
+    ],
+    "domains": [
+      {
+        "record_type": "Sales Invoice",
+        "required_inputs": ["case_id", "current_release_id", "current_release_fingerprint", "immutable_bom", "customer_reference", "amount", "currency"],
+        "authoritative_readback": ["invoice_id", "posted_status", "same_case_id", "same_release_binding", "amount_currency_match"],
+        "gap_if_missing": "Invoice meaning and amount binding are unproven; no ERP posting or close inference.",
+        "stop_condition": "Any missing, stale, cross-case or synthetic document readback."
+      },
+      {
+        "record_type": "Payment Entry",
+        "required_inputs": ["case_id", "invoice_id", "receipt_identity", "amount", "currency", "current_release_binding"],
+        "authoritative_readback": ["payment_entry_id", "posted_status", "invoice_link", "same_receipt_identity", "amount_currency_match"],
+        "gap_if_missing": "A chain receipt cannot be treated as an ERP payment entry.",
+        "stop_condition": "No authoritative posted readback or cross-binding mismatch."
+      },
+      {
+        "record_type": "Bank Transaction",
+        "required_inputs": ["case_id", "bank_reference", "value_date", "amount", "currency", "current_release_binding"],
+        "authoritative_readback": ["bank_transaction_id", "matched_status", "same_case_id", "amount_currency_match"],
+        "gap_if_missing": "Bank reconciliation remains unproven and cannot close the payment case.",
+        "stop_condition": "Unmatched, stale, duplicate or synthetic bank evidence."
+      },
+      {
+        "record_type": "GL",
+        "required_inputs": ["case_id", "posting_date", "account_mapping", "amount", "currency", "current_release_binding"],
+        "authoritative_readback": ["gl_entry_id", "posted_status", "debit_credit_balance", "same_case_id", "same_release_binding"],
+        "gap_if_missing": "Document or receipt success does not prove a GL posting.",
+        "stop_condition": "Unbalanced, unposted, cross-case or non-authoritative GL readback."
+      },
+      {
+        "record_type": "Payment Ledger",
+        "required_inputs": ["case_id", "receipt_identity", "payment_entry_id", "amount", "idempotency_key", "current_release_binding"],
+        "authoritative_readback": ["ledger_entry_id", "allocation_status", "duplicate_check", "same_case_id", "same_receipt_identity"],
+        "gap_if_missing": "Replay, duplicate consequence or amount drift remains unresolved.",
+        "stop_condition": "Any duplicate, ambiguous allocation or missing persistent ledger readback."
+      },
+      {
+        "record_type": "Accounting Period",
+        "required_inputs": ["period_id", "period_start", "period_end", "period_status", "current_release_binding"],
+        "authoritative_readback": ["period_id", "open_or_closed_status", "same_release_binding", "readback_timestamp"],
+        "gap_if_missing": "A payment or GL entry has no proven period context.",
+        "stop_condition": "Period status is missing, stale, conflicting or not authoritative."
+      },
+      {
+        "record_type": "Period Closing Voucher",
+        "required_inputs": ["period_id", "close_voucher_reference", "close_reason", "current_release_binding", "owner_gate_dossier_id"],
+        "authoritative_readback": ["voucher_id", "approved_or_posted_status", "period_id", "same_release_binding", "close_evidence_timestamp"],
+        "gap_if_missing": "Business close remains open/unknown even when receipt and ERP posting are present.",
+        "stop_condition": "No authoritative voucher, no owner confirmation or any release/period mismatch."
+      }
+    ]
+  },
   "base_hotspot_rules": {
     "smart_wallet": "Use the configured Base Account and wallet_sendCalls/capability readback when available; one visible owner review per request; a receipt is not sufficient without finality and state-change evidence.",
     "x402": "Persist the HTTP 402 requirement, max payment, signed authorization, fulfillment and receipt separately; accept Base Mainnet/Base Sepolia only; payment does not prove invoice meaning.",

@@ -54,45 +54,55 @@ const RELEASE_PLATFORMS = Object.freeze([
   "guild",
   "basename_base_org",
 ]);
-const BUSINESS_CLOSURE_RECORD_TYPES = Object.freeze([
-  "Sales Invoice",
-  "Payment Entry",
-  "Bank Transaction",
-  "GL",
-  "Payment Ledger",
-  "Accounting Period",
-  "Period Closing Voucher",
-]);
-const BUSINESS_CLOSURE_CONTRACTS = Object.freeze({
-  "Sales Invoice": Object.freeze({
-    required_inputs: Object.freeze(["case_id", "current_release_id", "current_release_fingerprint", "immutable_bom", "customer_reference", "amount", "currency"]),
-    authoritative_readback: Object.freeze(["invoice_id", "posted_status", "same_case_id", "same_release_binding", "amount_currency_match"]),
-  }),
-  "Payment Entry": Object.freeze({
-    required_inputs: Object.freeze(["case_id", "invoice_id", "receipt_identity", "amount", "currency", "current_release_binding"]),
-    authoritative_readback: Object.freeze(["payment_entry_id", "posted_status", "invoice_link", "same_receipt_identity", "amount_currency_match"]),
-  }),
-  "Bank Transaction": Object.freeze({
-    required_inputs: Object.freeze(["case_id", "bank_reference", "value_date", "amount", "currency", "current_release_binding"]),
-    authoritative_readback: Object.freeze(["bank_transaction_id", "matched_status", "same_case_id", "amount_currency_match"]),
-  }),
-  GL: Object.freeze({
-    required_inputs: Object.freeze(["case_id", "posting_date", "account_mapping", "amount", "currency", "current_release_binding"]),
-    authoritative_readback: Object.freeze(["gl_entry_id", "posted_status", "debit_credit_balance", "same_case_id", "same_release_binding"]),
-  }),
-  "Payment Ledger": Object.freeze({
-    required_inputs: Object.freeze(["case_id", "receipt_identity", "payment_entry_id", "amount", "idempotency_key", "current_release_binding"]),
-    authoritative_readback: Object.freeze(["ledger_entry_id", "allocation_status", "duplicate_check", "same_case_id", "same_receipt_identity"]),
-  }),
-  "Accounting Period": Object.freeze({
-    required_inputs: Object.freeze(["period_id", "period_start", "period_end", "period_status", "current_release_binding"]),
-    authoritative_readback: Object.freeze(["period_id", "open_or_closed_status", "same_release_binding", "readback_timestamp"]),
-  }),
-  "Period Closing Voucher": Object.freeze({
-    required_inputs: Object.freeze(["period_id", "close_voucher_reference", "close_reason", "current_release_binding", "owner_gate_dossier_id"]),
-    authoritative_readback: Object.freeze(["voucher_id", "approved_or_posted_status", "period_id", "same_release_binding", "close_evidence_timestamp"]),
-  }),
-});
+function loadBusinessClosureProductContract() {
+  const productContract = JSON.parse(readFileSync(new URL("../config/base_erp_product_contract_v1.json", import.meta.url), "utf8"));
+  const contract = productContract?.business_closure_contract;
+  if (!contract || typeof contract !== "object" || Array.isArray(contract)) throw new TypeError("business_closure_contract is missing from the product contract");
+  if (typeof contract.batch_id !== "string" || contract.batch_id.trim() === "") throw new TypeError("business_closure_contract.batch_id must be a non-empty string");
+  if (!Array.isArray(contract.record_types) || !Array.isArray(contract.domains) || contract.record_types.length === 0 || contract.record_types.length !== contract.domains.length) {
+    throw new TypeError("business_closure_contract record_types/domains must be parallel non-empty arrays");
+  }
+  const recordTypes = contract.record_types.map((recordType, index) => {
+    if (typeof recordType !== "string" || recordType.trim() === "") throw new TypeError(`business_closure_contract.record_types[${index}] must be a non-empty string`);
+    return recordType.trim();
+  });
+  if (new Set(recordTypes).size !== recordTypes.length) throw new TypeError("business_closure_contract.record_types must be unique");
+  const domains = contract.domains.map((domain, index) => {
+    if (!domain || typeof domain !== "object" || Array.isArray(domain)) throw new TypeError(`business_closure_contract.domains[${index}] must be an object`);
+    const recordType = typeof domain.record_type === "string" ? domain.record_type.trim() : "";
+    if (recordType !== recordTypes[index]) throw new TypeError(`business_closure_contract.domains[${index}] record_type order mismatch`);
+    const requiredInputs = domain.required_inputs;
+    const authoritativeReadback = domain.authoritative_readback;
+    if (!Array.isArray(requiredInputs) || requiredInputs.length === 0 || !Array.isArray(authoritativeReadback) || authoritativeReadback.length === 0) {
+      throw new TypeError(`business_closure_contract.${recordType} inputs/readback must be non-empty arrays`);
+    }
+    const normalizeList = (values, field) => values.map((value, valueIndex) => {
+      if (typeof value !== "string" || value.trim() === "") throw new TypeError(`business_closure_contract.${recordType}.${field}[${valueIndex}] must be a non-empty string`);
+      return value.trim();
+    });
+    const gapIfMissing = typeof domain.gap_if_missing === "string" ? domain.gap_if_missing.trim() : "";
+    const stopCondition = typeof domain.stop_condition === "string" ? domain.stop_condition.trim() : "";
+    if (!gapIfMissing || !stopCondition) throw new TypeError(`business_closure_contract.${recordType} gap/stop semantics are required`);
+    return Object.freeze({
+      required_inputs: Object.freeze(normalizeList(requiredInputs, "required_inputs")),
+      authoritative_readback: Object.freeze(normalizeList(authoritativeReadback, "authoritative_readback")),
+      gap_if_missing: gapIfMissing,
+      stop_condition: stopCondition,
+    });
+  });
+  const contracts = Object.fromEntries(recordTypes.map((recordType, index) => [recordType, domains[index]]));
+  return Object.freeze({
+    batch_id: contract.batch_id.trim(),
+    record_types: Object.freeze(recordTypes),
+    domains: Object.freeze(domains),
+    contracts: Object.freeze(contracts),
+  });
+}
+
+const BUSINESS_CLOSURE_PRODUCT_CONTRACT = loadBusinessClosureProductContract();
+export const BUSINESS_CLOSURE_BATCH_ID = BUSINESS_CLOSURE_PRODUCT_CONTRACT.batch_id;
+export const BUSINESS_CLOSURE_RECORD_TYPES = BUSINESS_CLOSURE_PRODUCT_CONTRACT.record_types;
+export const BUSINESS_CLOSURE_CONTRACTS = BUSINESS_CLOSURE_PRODUCT_CONTRACT.contracts;
 const RELEASE_DIGEST_PATTERN = /^[0-9a-f]{64}$/i;
 const RELEASE_TRANSACTION_PATTERN = /^0x[0-9a-f]{64}$/i;
 const RELEASE_FINGERPRINT_BASIS_ALGORITHMS = Object.freeze({
@@ -981,6 +991,8 @@ export function validateBaseBusinessClosureEvidenceGap(input = {}) {
       const gapIfMissing = typeof domain.gap_if_missing === "string" ? domain.gap_if_missing.trim() : "";
       const stopCondition = typeof domain.stop_condition === "string" ? domain.stop_condition.trim() : "";
       if (!gapIfMissing || !stopCondition) return failClosed("base_business_closure_domain_contract_missing", { record_type: recordType, field: "gap_if_missing_or_stop_condition" });
+      if (gapIfMissing !== contract.gap_if_missing) return failClosed("base_business_closure_domain_contract_mismatch", { record_type: recordType, field: "gap_if_missing" });
+      if (stopCondition !== contract.stop_condition) return failClosed("base_business_closure_domain_contract_mismatch", { record_type: recordType, field: "stop_condition" });
       normalizedDomains.push({
         record_type: recordType,
         release_id: release.release_id,
@@ -1057,7 +1069,7 @@ export function validateBaseBusinessClosureEvidenceGap(input = {}) {
     return Object.freeze({
       ok: true,
       fail_closed: false,
-      batch_id: "B11_BASE_BUSINESS_CLOSURE_EVIDENCE_GAP",
+      batch_id: BUSINESS_CLOSURE_BATCH_ID,
       current_release: { ...release },
       business_closure_domains: normalizedDomains,
       domain_count: normalizedDomains.length,
