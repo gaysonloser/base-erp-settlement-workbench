@@ -3,7 +3,7 @@
   "updated_at": "2026-08-06T17:18:00+08:00",
   "upstream": {
     "workspace": "CIRCLE",
-    "path": "/Users/wein/Library/CloudStorage/SynologyDrive-AI/Codex/CIRCLE/projects/2026-07_Arc_Chain/programme/verified-milestone-close",
+    "path": "upstream://circle/2026-07_Arc_Chain/verified-milestone-close",
     "runtime": "runtime/current_state.json",
     "queue": "runtime/active_queue.json",
     "exchange": "exchange/arc-circle-product-exchange-v3.json",
@@ -43,7 +43,7 @@
     "r19": {
       "status": "independent_sol_medium_pass",
       "reviewed_at": "2026-08-06T16:19:00+08:00",
-      "artifact": "/Users/wein/Library/CloudStorage/SynologyDrive-AI/Codex/CIRCLE/projects/2026-07_Arc_Chain/programme/verified-milestone-close/artifacts/v3-a12-r19-sol-medium-pass-20260806.json",
+      "artifact": "upstream://circle/verified-milestone-close/artifacts/v3-a12-r19-sol-medium-pass-20260806.json",
       "sha256": "cd9190ebc7a1c8645e3b9e13675348548ac6d2610b0aa474eebeeedb5120872b",
       "verdict": "pass",
       "findings": {"P0": 0, "P1": 0, "P2": 0},
@@ -56,7 +56,7 @@
       "batch": "P6-CURRENT-PRODUCT-RELEASE-DELTA-AND-FIVE-SURFACE-EVIDENCE-FREEZE-V1",
       "release_id": "verified-milestone-close-current-r19-p6-v1",
       "reviewed_at": "2026-08-06T16:50:13+08:00",
-      "artifact": "/Users/wein/Library/CloudStorage/SynologyDrive-AI/Codex/CIRCLE/projects/2026-07_Arc_Chain/programme/verified-milestone-close/artifacts/p6-current-product-release-sol-medium-pass-20260806.json",
+      "artifact": "upstream://circle/verified-milestone-close/artifacts/p6-current-product-release-sol-medium-pass-20260806.json",
       "sha256": "d678f696237b3c9d8ddbf61bcbdf7c4a3a844fedac867e2e7ea257c77e1b509f",
       "verdict": "pass",
       "findings": {"P0": 0, "P1": 0, "P2": 0},

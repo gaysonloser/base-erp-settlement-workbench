@@ -731,6 +731,13 @@ test("B04 rejects historical release receipts and fingerprint drift", () => {
   const missingRuntimeBinding = buildReleaseFixture();
   delete missingRuntimeBinding.runtime_binding;
   assert.equal(validateReleaseIntegrity({ currentRelease: missingRuntimeBinding }).reason, "release_runtime_binding_missing");
+
+  const missingRuntimeAuthority = buildReleaseFixture();
+  delete missingRuntimeAuthority.runtime_binding.authority_record;
+  const missingAuthorityResult = validateReleaseIntegrity({ currentRelease: missingRuntimeAuthority });
+  assert.equal(missingAuthorityResult.ok, false);
+  assert.equal(missingAuthorityResult.fail_closed, true);
+  assert.equal(missingAuthorityResult.reason, "release_runtime_binding_invalid");
 });
 
 test("B04 requires eight independent current receipts with one shared material outcome", () => {

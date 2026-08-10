@@ -2,9 +2,9 @@
 
 This project ports the CIRCLE Arc-to-ERP V3.2 settlement workbench into a Base-native product. The frozen upstream snapshot is retained under `upstream/arc_erp_v3_2/`; it is evidence and reusable implementation material, not a Base truth source.
 
-Current local validation (`2026-08-10` 02_Build revalidation): `55 total / 55 pass`; all six B08 preflight/runtime-authority drift checks and all seven B11 business-closure evidence checks pass against the live 2026-08-10 daily runtime. This is local evidence only and grants no wallet, ERP mutation, publication or execution authority.
+Current local validation (`2026-08-11` release revalidation): `72 total / 72 pass`; the Base scenario, receipt-control, portfolio/simulation, B08 preflight, B11 business-closure, eight-surface publication, and deployable HTTP-product checks all pass. This is local evidence only and does not substitute for a chain receipt, ERP readback, or current public-platform receipt.
 
-The B08 revalidation adds `readCurrentBaseRuntimeBinding` as the canonical source of the current 02_Build runtime hash, run id, date and cursor. The release candidate is recorded in `runtime/release_candidate_2026-08-10.json`; its eight-platform and chain receipts remain unobserved, so it is not a publication unit or daily count.
+The B08 revalidation adds `readCurrentBaseRuntimeBinding` as the canonical source of the current 02_Build runtime hash, run id, date and cursor. The release candidate is recorded in `runtime/release_candidate_2026-08-10.json`; current-release chain, ERP, and eight-platform receipts remain independently gated, so local readiness alone is not a publication unit or daily count.
 
 ## Product boundary
 
