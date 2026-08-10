@@ -1,7 +1,7 @@
 {
   "schema_version": "base-erp-publication-execution-bundle-v1",
-  "bundle_id": "base-erp-b08-runtime-rebind-publication-execution-bundle-20260810-v1",
-  "generated_at_cst": "2026-08-10T23:22:38+08:00",
+  "bundle_id": "base-erp-public-product-publication-execution-bundle-20260810-v1",
+  "generated_at_cst": "2026-08-10T23:39:18+08:00",
   "execution_mode": "local_reproducible_preparation_only",
   "public_write_authorized": false,
   "counting": {
@@ -11,20 +11,25 @@
   },
   "release_binding": {
     "release_candidate": "runtime/release_candidate_2026-08-10.json",
-    "release_id": "base-erp-b08-runtime-rebind-20260810-v1",
-    "release_fingerprint": "c7e883b9074ca3ff4a1b07a5c8797e1c74e23b3111fe0348e4d7cf338a91defa",
-    "bom_fingerprint": "f26de3c86e07a5b43ab63f1ff8eb10af48a2fc7d653d0490b278dd61fc524f63",
-    "bom_manifest_sha256": "f26de3c86e07a5b43ab63f1ff8eb10af48a2fc7d653d0490b278dd61fc524f63",
+    "release_id": "base-erp-public-product-20260810-v1",
+    "release_fingerprint": "9779a75db6b10b918b2a5ba2c7eb1aac4117e71391ce942b2dfa7bad77f1672f",
+    "bom_fingerprint": "d7c37cc3134dc10c18b47827522ee52ec15b1357a656bed63b37c5fd143ac45f",
+    "bom_manifest_sha256": "d7c37cc3134dc10c18b47827522ee52ec15b1357a656bed63b37c5fd143ac45f",
     "bom_files_verified": true,
     "bom_paths": [
       "config/base_erp_product_contract_v1.json",
       "config/release_identity_and_exposure_contract_v1.json",
+      "package-lock.json",
       "package.json",
+      "render.yaml",
       "runtime/current_state.json",
       "src/base-erp-scenario-router.mjs",
-      "test/base-erp-scenario-router.test.mjs"
+      "src/server.mjs",
+      "test/base-erp-scenario-router.test.mjs",
+      "test/server.test.mjs"
     ],
-    "artifact_excluded_from_own_bom": true
+    "artifact_excluded_from_own_bom": true,
+    "immutable_bom_sha256": "d7c37cc3134dc10c18b47827522ee52ec15b1357a656bed63b37c5fd143ac45f"
   },
   "runtime_snapshot": {
     "source": "projects/2026-06_Base_Guild_Onchain_Score/runtime/current_run.json",
@@ -51,20 +56,27 @@
   },
   "deployment_artifact": {
     "project_root": "projects/2026-08_Base_ERP_Settlement_Workbench",
-      "reproducible_commands": [
-        "npm test",
-        "node --test --test-name-pattern='B08' test/base-erp-scenario-router.test.mjs",
-        "node --test --test-name-pattern='wallet_getCapabilities|wallet_sendCalls' test/base-erp-scenario-router.test.mjs"
-      ],
-      "observed_validation": {
-        "full_suite": "55/55",
-        "b08_focused": "6/6",
-        "wallet_atomic_focused": "4/4",
-        "release_integrity": "identity valid; actual BOM files verified; no chain evidence supplied"
-      },
+    "reproducible_commands": [
+      "npm test",
+      "node --test --test-name-pattern='B08' test/base-erp-scenario-router.test.mjs",
+      "node --test --test-name-pattern='wallet_getCapabilities|wallet_sendCalls' test/base-erp-scenario-router.test.mjs",
+      "npm ci",
+      "npm start"
+    ],
+    "observed_validation": {
+      "full_suite": "72/72",
+      "b08_focused": "6/6",
+      "wallet_atomic_focused": "4/4",
+      "release_integrity": "identity valid; actual BOM files verified; no chain evidence supplied",
+      "http_integration": "healthz/release.json/root/404/405/HEAD pass with clean shutdown; full commit env injected for ready smoke"
+    },
     "source_entry": "src/base-erp-scenario-router.mjs",
     "test_entry": "test/base-erp-scenario-router.test.mjs",
-    "runtime_authority_entry": "runtime/runtime_authority.json"
+    "runtime_authority_entry": "runtime/runtime_authority.json",
+    "server_entry": "src/server.mjs",
+    "integration_test_entry": "test/server.test.mjs",
+    "render_config": "render.yaml",
+    "package_lock": "package-lock.json"
   },
   "execution_gate": {
     "required_before_any_public_write": [
@@ -81,87 +93,163 @@
   "platform_targets": [
     {
       "platform": "github",
-      "target": {"repository": null, "branch": null},
+      "target": {
+        "repository": null,
+        "branch": null
+      },
       "canonical_surface": "https://github.com/",
       "write_operation": "create_or_update_current_release_artifact",
-      "payload_template": {"release_id": "base-erp-b08-runtime-rebind-20260810-v1", "release_fingerprint": "c7e883b9074ca3ff4a1b07a5c8797e1c74e23b3111fe0348e4d7cf338a91defa", "bom_fingerprint": "f26de3c86e07a5b43ab63f1ff8eb10af48a2fc7d653d0490b278dd61fc524f63", "artifact_path": "runtime/release_candidate_2026-08-10.json"},
+      "payload_template": {
+        "release_id": "base-erp-public-product-20260810-v1",
+        "release_fingerprint": "9c36c0d1bb6c034202408031c07865490f3495c65c46544846fdbef5a6f58a20",
+        "bom_fingerprint": "d7c37cc3134dc10c18b47827522ee52ec15b1357a656bed63b37c5fd143ac45f",
+        "artifact_path": "runtime/release_candidate_2026-08-10.json"
+      },
       "required_auth": "owner-authenticated repository with write permission",
       "status": "blocked_target_and_write_permission_unresolved",
       "receipt": null
     },
     {
       "platform": "render",
-      "target": {"service": null, "environment": null},
+      "target": {
+        "service": null,
+        "environment": null
+      },
       "canonical_surface": "https://dashboard.render.com/",
       "write_operation": "deploy_exact_release_artifact",
-      "payload_template": {"release_id": "base-erp-b08-runtime-rebind-20260810-v1", "release_fingerprint": "c7e883b9074ca3ff4a1b07a5c8797e1c74e23b3111fe0348e4d7cf338a91defa", "bom_fingerprint": "f26de3c86e07a5b43ab63f1ff8eb10af48a2fc7d653d0490b278dd61fc524f63", "source_artifact": "projects/2026-08_Base_ERP_Settlement_Workbench"},
+      "payload_template": {
+        "release_id": "base-erp-public-product-20260810-v1",
+        "release_fingerprint": "9c36c0d1bb6c034202408031c07865490f3495c65c46544846fdbef5a6f58a20",
+        "bom_fingerprint": "d7c37cc3134dc10c18b47827522ee52ec15b1357a656bed63b37c5fd143ac45f",
+        "source_artifact": "projects/2026-08_Base_ERP_Settlement_Workbench"
+      },
       "required_auth": "owner-authenticated Render service and deploy permission",
       "status": "blocked_current_release_service_unresolved",
       "receipt": null
     },
     {
       "platform": "base_app",
-      "target": {"app_id": null, "slug": null},
+      "target": {
+        "app_id": null,
+        "slug": null
+      },
       "canonical_surface": "https://base.app/",
       "write_operation": "publish_current_release_metadata",
-      "payload_template": {"name": "Base ERP Settlement Workbench", "release_id": "base-erp-b08-runtime-rebind-20260810-v1", "release_fingerprint": "c7e883b9074ca3ff4a1b07a5c8797e1c74e23b3111fe0348e4d7cf338a91defa", "bom_fingerprint": "f26de3c86e07a5b43ab63f1ff8eb10af48a2fc7d653d0490b278dd61fc524f63", "identity": {"basename": "gaysonloser.base.eth", "account": "0xBa36D092dB2999bb1FaBbaf281AC956A97189C25"}},
+      "payload_template": {
+        "name": "Base ERP Settlement Workbench",
+        "release_id": "base-erp-public-product-20260810-v1",
+        "release_fingerprint": "9c36c0d1bb6c034202408031c07865490f3495c65c46544846fdbef5a6f58a20",
+        "bom_fingerprint": "d7c37cc3134dc10c18b47827522ee52ec15b1357a656bed63b37c5fd143ac45f",
+        "identity": {
+          "basename": "gaysonloser.base.eth",
+          "account": "0xBa36D092dB2999bb1FaBbaf281AC956A97189C25"
+        }
+      },
       "required_auth": "owner-authenticated Base App publisher surface",
       "status": "blocked_current_release_target_unresolved",
       "receipt": null
     },
     {
       "platform": "base_dashboard",
-      "target": {"app_id": null},
+      "target": {
+        "app_id": null
+      },
       "canonical_surface": "https://dashboard.base.org/apps",
       "write_operation": "register_or_update_current_release",
-      "payload_template": {"release_id": "base-erp-b08-runtime-rebind-20260810-v1", "release_fingerprint": "c7e883b9074ca3ff4a1b07a5c8797e1c74e23b3111fe0348e4d7cf338a91defa", "bom_fingerprint": "f26de3c86e07a5b43ab63f1ff8eb10af48a2fc7d653d0490b278dd61fc524f63", "builder_identity": "gaysonloser.base.eth"},
+      "payload_template": {
+        "release_id": "base-erp-public-product-20260810-v1",
+        "release_fingerprint": "9c36c0d1bb6c034202408031c07865490f3495c65c46544846fdbef5a6f58a20",
+        "bom_fingerprint": "d7c37cc3134dc10c18b47827522ee52ec15b1357a656bed63b37c5fd143ac45f",
+        "builder_identity": "gaysonloser.base.eth"
+      },
       "required_auth": "owner-authenticated Base Dashboard app owner",
       "status": "blocked_login_and_target_unresolved",
       "receipt": null
     },
     {
       "platform": "base_dev",
-      "target": {"registration": null},
+      "target": {
+        "registration": null
+      },
       "canonical_surface": "https://base.dev/",
       "write_operation": "register_current_release_builder_code_metadata",
-      "payload_template": {"release_id": "base-erp-b08-runtime-rebind-20260810-v1", "release_fingerprint": "c7e883b9074ca3ff4a1b07a5c8797e1c74e23b3111fe0348e4d7cf338a91defa", "bom_fingerprint": "f26de3c86e07a5b43ab63f1ff8eb10af48a2fc7d653d0490b278dd61fc524f63", "identity": "gaysonloser.base.eth"},
+      "payload_template": {
+        "release_id": "base-erp-public-product-20260810-v1",
+        "release_fingerprint": "9c36c0d1bb6c034202408031c07865490f3495c65c46544846fdbef5a6f58a20",
+        "bom_fingerprint": "d7c37cc3134dc10c18b47827522ee52ec15b1357a656bed63b37c5fd143ac45f",
+        "identity": "gaysonloser.base.eth"
+      },
       "required_auth": "owner-authenticated Base.dev registration",
       "status": "blocked_login_and_target_unresolved",
       "receipt": null
     },
     {
       "platform": "talent",
-      "target": {"profile": null, "project": null},
+      "target": {
+        "profile": null,
+        "project": null
+      },
       "canonical_surface": "https://talent.app/~/dashboard",
       "write_operation": "publish_current_release_project",
-      "payload_template": {"title": "Base ERP Settlement Workbench", "release_id": "base-erp-b08-runtime-rebind-20260810-v1", "release_fingerprint": "c7e883b9074ca3ff4a1b07a5c8797e1c74e23b3111fe0348e4d7cf338a91defa", "bom_fingerprint": "f26de3c86e07a5b43ab63f1ff8eb10af48a2fc7d653d0490b278dd61fc524f63"},
+      "payload_template": {
+        "title": "Base ERP Settlement Workbench",
+        "release_id": "base-erp-public-product-20260810-v1",
+        "release_fingerprint": "9c36c0d1bb6c034202408031c07865490f3495c65c46544846fdbef5a6f58a20",
+        "bom_fingerprint": "d7c37cc3134dc10c18b47827522ee52ec15b1357a656bed63b37c5fd143ac45f"
+      },
       "required_auth": "owner-authenticated Talent profile/project write access",
       "status": "blocked_security_checkpoint_and_target_unresolved",
       "receipt": null
     },
     {
       "platform": "guild",
-      "target": {"guild": "base", "role": null},
+      "target": {
+        "guild": "base",
+        "role": null
+      },
       "canonical_surface": "https://guild.xyz/base",
       "write_operation": "publish_or_update_current_release_evidence",
-      "payload_template": {"guild": "base", "release_id": "base-erp-b08-runtime-rebind-20260810-v1", "release_fingerprint": "c7e883b9074ca3ff4a1b07a5c8797e1c74e23b3111fe0348e4d7cf338a91defa", "bom_fingerprint": "f26de3c86e07a5b43ab63f1ff8eb10af48a2fc7d653d0490b278dd61fc524f63"},
+      "payload_template": {
+        "guild": "base",
+        "release_id": "base-erp-public-product-20260810-v1",
+        "release_fingerprint": "9c36c0d1bb6c034202408031c07865490f3495c65c46544846fdbef5a6f58a20",
+        "bom_fingerprint": "d7c37cc3134dc10c18b47827522ee52ec15b1357a656bed63b37c5fd143ac45f"
+      },
       "required_auth": "owner-authenticated Guild membership/admin surface",
       "status": "blocked_sign_in_and_join_surface_unresolved",
       "receipt": null
     },
     {
       "platform": "basename_base_org",
-      "target": {"basename": "gaysonloser.base.eth"},
+      "target": {
+        "basename": "gaysonloser.base.eth"
+      },
       "canonical_surface": "https://www.base.org/name/gaysonloser",
       "write_operation": "publish_current_release_reference_without_claiming_identity_proof",
-      "payload_template": {"basename": "gaysonloser.base.eth", "release_id": "base-erp-b08-runtime-rebind-20260810-v1", "release_fingerprint": "c7e883b9074ca3ff4a1b07a5c8797e1c74e23b3111fe0348e4d7cf338a91defa", "bom_fingerprint": "f26de3c86e07a5b43ab63f1ff8eb10af48a2fc7d653d0490b278dd61fc524f63"},
+      "payload_template": {
+        "basename": "gaysonloser.base.eth",
+        "release_id": "base-erp-public-product-20260810-v1",
+        "release_fingerprint": "9c36c0d1bb6c034202408031c07865490f3495c65c46544846fdbef5a6f58a20",
+        "bom_fingerprint": "d7c37cc3134dc10c18b47827522ee52ec15b1357a656bed63b37c5fd143ac45f"
+      },
       "required_auth": "owner-authenticated Basename/base.org write surface",
       "status": "blocked_read_only_profile_no_current_release_receipt",
       "receipt": null
     }
   ],
   "receipt_schema": {
-    "required_fields": ["platform", "receipt_id", "release_id", "release_fingerprint", "bom_fingerprint", "current", "historical", "synthetic", "evidence_origin", "proof_ref"],
+    "required_fields": [
+      "platform",
+      "receipt_id",
+      "release_id",
+      "release_fingerprint",
+      "bom_fingerprint",
+      "current",
+      "historical",
+      "synthetic",
+      "evidence_origin",
+      "proof_ref"
+    ],
     "current_release_only": true,
     "historical_credit": 0,
     "partial_credit": 0,

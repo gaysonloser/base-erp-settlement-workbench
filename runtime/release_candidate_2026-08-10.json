@@ -1,28 +1,62 @@
 {
   "schema_version": "1.0",
-  "release_id": "base-erp-b08-runtime-rebind-20260810-v1",
-  "generated_at_cst": "2026-08-10T23:22:38+08:00",
+  "release_id": "base-erp-public-product-20260810-v1",
+  "generated_at_cst": "2026-08-10T23:39:18+08:00",
   "project_name": "Base ERP Settlement Workbench",
-  "material_outcome": "B08 canonical current-runtime authority binding and contract-drift revalidation",
+  "material_outcome": "Deployable Base ERP settlement workbench with eight-surface public evidence validation",
   "basename": "gaysonloser.base.eth",
   "primary_base_account": "0xBa36D092dB2999bb1FaBbaf281AC956A97189C25",
   "network": "Base Mainnet preflight contract only; no chain action",
   "release_fingerprint_algorithm": "sha256(canonical_current_release_fields)",
-  "release_fingerprint": "c7e883b9074ca3ff4a1b07a5c8797e1c74e23b3111fe0348e4d7cf338a91defa",
-  "bom_fingerprint": "f26de3c86e07a5b43ab63f1ff8eb10af48a2fc7d653d0490b278dd61fc524f63",
+  "release_fingerprint": "9779a75db6b10b918b2a5ba2c7eb1aac4117e71391ce942b2dfa7bad77f1672f",
+  "bom_fingerprint": "d7c37cc3134dc10c18b47827522ee52ec15b1357a656bed63b37c5fd143ac45f",
   "immutable_release_bom": [
-    { "path": "config/base_erp_product_contract_v1.json", "digest": "aaa157f96b40ac02a415c69f4cc433d974031eaf3bcf4cf10e8ecdd2b4ae90f8" },
-    { "path": "config/release_identity_and_exposure_contract_v1.json", "digest": "29a1aa765d40f6660885542955eb4e5605c2e4b549a3b0131bdb63bb100cc269" },
-    { "path": "package.json", "digest": "faccdece43749e2471c4f5898b449de59604c612243971c6652ec9e250bf2ad6" },
-    { "path": "runtime/current_state.json", "digest": "af02c790d0bfbc7fbc013a241403b54cfed309b357c7137853a6eb5af1822ff1" },
-    { "path": "src/base-erp-scenario-router.mjs", "digest": "c6a37e2dd08df955443f15284a28370de8de3a2ef644d35c198c4014f862ca35" },
-    { "path": "test/base-erp-scenario-router.test.mjs", "digest": "a04e8c4ebf02ac854b90dceb8a1322b44a48c551ded91275caada6a808da0910" }
+    {
+      "path": "config/base_erp_product_contract_v1.json",
+      "digest": "aaa157f96b40ac02a415c69f4cc433d974031eaf3bcf4cf10e8ecdd2b4ae90f8"
+    },
+    {
+      "path": "config/release_identity_and_exposure_contract_v1.json",
+      "digest": "29a1aa765d40f6660885542955eb4e5605c2e4b549a3b0131bdb63bb100cc269"
+    },
+    {
+      "path": "package-lock.json",
+      "digest": "fbea54f06ed7b6f88684da96020412f876f172bcb507ccc845f03c8de9cf807c"
+    },
+    {
+      "path": "package.json",
+      "digest": "3e30abc353dfd6d30680aac7e583793fec05d9b75986b8fdb99d3cfbb3a21367"
+    },
+    {
+      "path": "render.yaml",
+      "digest": "324b437cb9d858d143a11dd458821c79ba2a9741d9476a1abe08896464181010"
+    },
+    {
+      "path": "runtime/current_state.json",
+      "digest": "af02c790d0bfbc7fbc013a241403b54cfed309b357c7137853a6eb5af1822ff1"
+    },
+    {
+      "path": "src/base-erp-scenario-router.mjs",
+      "digest": "c6a37e2dd08df955443f15284a28370de8de3a2ef644d35c198c4014f862ca35"
+    },
+    {
+      "path": "src/server.mjs",
+      "digest": "3ef8e301aad5b2a5273feb02afea16735c79308e9a7d89729e14460e1f6e9fa5"
+    },
+    {
+      "path": "test/base-erp-scenario-router.test.mjs",
+      "digest": "a04e8c4ebf02ac854b90dceb8a1322b44a48c551ded91275caada6a808da0910"
+    },
+    {
+      "path": "test/server.test.mjs",
+      "digest": "d22b5bf749ed2bfeedeccfd21459f81606b7b9cc1a1f9c8cadeaecf4c0a0a4ac"
+    }
   ],
   "current_release_delta": {
-    "batch": "B08",
-    "control": "runtime_authority_rebind",
-    "version": "2",
-    "change": "versioned runtime normalization, explicit writer-idle authority record, and automatic BOM file-hash verification"
+    "batch": "PUBLIC_PRODUCT",
+    "control": "deployable_public_product",
+    "version": "1",
+    "change": "Base-native settlement scenarios, exact seven-domain business-closure contracts, eight-surface public evidence validation, and self-contained HTTP deployment surface"
   },
   "interaction_evidence": {
     "source": "Base Docs + Base MCP live read-only preflight (help/get_wallets); no writes",
@@ -36,21 +70,45 @@
     "execution_authority": "none_until_02_Build_revalidates",
     "source_packet_review": "pass"
   },
-  "git_commit": "not_applicable_workspace_has_no_git_metadata",
+  "git_commit": "PENDING_OWNER_PUBLIC_COMMIT",
   "render_url": "not_yet_available",
   "contract_addresses_or_not_applicable_reason": "not_applicable_no_contract_change",
   "transaction_receipts_or_not_yet_available": "not_yet_available_x402_transport_502_before_request_id_or_approval; no wallet write",
   "erp_readback_level": "not_observed",
   "evidence_level": "L1_local_tests",
   "eight_surface_evidence_map": {
-    "github": { "status": "not_observed", "receipt": null },
-    "render": { "status": "not_observed", "receipt": null },
-    "base_app": { "status": "not_observed", "receipt": null },
-    "base_dashboard": { "status": "not_observed", "receipt": null },
-    "base_dev": { "status": "not_observed", "receipt": null },
-    "talent": { "status": "not_observed", "receipt": null },
-    "guild": { "status": "not_observed", "receipt": null },
-    "basename_base_org": { "status": "not_observed", "receipt": null }
+    "github": {
+      "status": "not_observed",
+      "receipt": null
+    },
+    "render": {
+      "status": "not_observed",
+      "receipt": null
+    },
+    "base_app": {
+      "status": "not_observed",
+      "receipt": null
+    },
+    "base_dashboard": {
+      "status": "not_observed",
+      "receipt": null
+    },
+    "base_dev": {
+      "status": "not_observed",
+      "receipt": null
+    },
+    "talent": {
+      "status": "not_observed",
+      "receipt": null
+    },
+    "guild": {
+      "status": "not_observed",
+      "receipt": null
+    },
+    "basename_base_org": {
+      "status": "not_observed",
+      "receipt": null
+    }
   },
   "runtime_binding": {
     "schema_version": "base-erp-runtime-binding-v1",
@@ -82,9 +140,21 @@
   "limitations": [
     "Owner confirmation is absent; executable is false and payload is null.",
     "Base MCP callable namespace is live at 15 tools; initiate_x402_request returned transport HTTP 502 before requestId/approvalUrl and no OAuth refresh or wallet substitution was attempted.",
-    "Local tests 55/55 and release fingerprints are L1 evidence only.",
+    "Local tests 72/72 and release fingerprints are L1 evidence only.",
     "current_run.json is mutable runtime state and is intentionally excluded from immutable_release_bom; its hash/cursor are snapshot-only runtime_binding observations.",
-    "No Base Mainnet receipt, ERP authoritative readback or complete eight-platform current-release bundle was observed; this candidate counts zero for 30+10."
+    "No Base Mainnet receipt, ERP authoritative readback or complete eight-platform current-release bundle was observed; this candidate counts zero for 30+10.",
+    "The HTTP deployment surface is self-contained; workspace runtime state is not a production health dependency.",
+    "The public commit remains a placeholder until an owner-authorized repository/deployment commit is observed."
   ],
-  "artifact_excluded_from_own_bom": true
+  "artifact_excluded_from_own_bom": true,
+  "deployment_surface": {
+    "start_command": "npm start",
+    "bind": "0.0.0.0:$PORT",
+    "health_path": "/healthz",
+    "release_path": "/release.json",
+    "public_path": "/",
+    "render_config": "render.yaml",
+    "package_lock": "package-lock.json",
+    "public_write_authorized": false
+  }
 }
