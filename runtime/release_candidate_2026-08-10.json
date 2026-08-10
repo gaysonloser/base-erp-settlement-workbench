@@ -1,23 +1,22 @@
 {
   "schema_version": "1.0",
   "release_id": "base-erp-b08-runtime-rebind-20260810-v1",
-  "generated_at_cst": "2026-08-10T23:08:00+08:00",
+  "generated_at_cst": "2026-08-10T23:22:38+08:00",
   "project_name": "Base ERP Settlement Workbench",
   "material_outcome": "B08 canonical current-runtime authority binding and contract-drift revalidation",
   "basename": "gaysonloser.base.eth",
   "primary_base_account": "0xBa36D092dB2999bb1FaBbaf281AC956A97189C25",
   "network": "Base Mainnet preflight contract only; no chain action",
   "release_fingerprint_algorithm": "sha256(canonical_current_release_fields)",
-  "release_fingerprint": "2f857668cb87b3ebd87da5c252e10d9d09bd296bbb7a34c4049a8dd790103bd4",
-  "bom_fingerprint": "b8582a3b99379339b5ec7bf0ae67d67242d8477f516418318d3147dd1f7355df",
+  "release_fingerprint": "c7e883b9074ca3ff4a1b07a5c8797e1c74e23b3111fe0348e4d7cf338a91defa",
+  "bom_fingerprint": "f26de3c86e07a5b43ab63f1ff8eb10af48a2fc7d653d0490b278dd61fc524f63",
   "immutable_release_bom": [
     { "path": "config/base_erp_product_contract_v1.json", "digest": "aaa157f96b40ac02a415c69f4cc433d974031eaf3bcf4cf10e8ecdd2b4ae90f8" },
     { "path": "config/release_identity_and_exposure_contract_v1.json", "digest": "29a1aa765d40f6660885542955eb4e5605c2e4b549a3b0131bdb63bb100cc269" },
     { "path": "package.json", "digest": "faccdece43749e2471c4f5898b449de59604c612243971c6652ec9e250bf2ad6" },
     { "path": "runtime/current_state.json", "digest": "af02c790d0bfbc7fbc013a241403b54cfed309b357c7137853a6eb5af1822ff1" },
-    { "path": "runtime/runtime_authority.json", "digest": "726e1149ddec3452a0963f920a195e1db061bf2962caa4868d4f7779b49f4262" },
-    { "path": "src/base-erp-scenario-router.mjs", "digest": "a00e0c8cbd4db2e56f76966b04d35965164b1f0ea95433c7a36a9785ddf7bdca" },
-    { "path": "test/base-erp-scenario-router.test.mjs", "digest": "832273b6206430538e3133fc01074afa8934dc3ea429d707cc3d388969a02bff" }
+    { "path": "src/base-erp-scenario-router.mjs", "digest": "c6a37e2dd08df955443f15284a28370de8de3a2ef644d35c198c4014f862ca35" },
+    { "path": "test/base-erp-scenario-router.test.mjs", "digest": "a04e8c4ebf02ac854b90dceb8a1322b44a48c551ded91275caada6a808da0910" }
   ],
   "current_release_delta": {
     "batch": "B08",

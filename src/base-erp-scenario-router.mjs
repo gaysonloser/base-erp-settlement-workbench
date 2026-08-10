@@ -54,6 +54,49 @@ const RELEASE_PLATFORMS = Object.freeze([
   "guild",
   "basename_base_org",
 ]);
+export const PUBLIC_SURFACE_RULES = Object.freeze({
+  github: Object.freeze({
+    canonical_urls: Object.freeze([/^https:\/\/github\.com\/[^/]+\/[^/]+\/(?:releases\/[A-Za-z0-9._-]+|commit\/[0-9a-f]{40}|blob\/[0-9a-f]{40}\/.+)$/i]),
+    forbidden_fragments: Object.freeze(["/releases/latest", "/blob/main/", "/blob/master/", "/login", "localhost", "127.0.0.1", "api_key=", "token="]),
+    required_public_fields: Object.freeze(["owner", "repo", "release_tag_or_commit_sha", "commit_sha", "release_url_or_permalink", "release_id", "release_fingerprint", "bom_fingerprint", "material_outcome_digest", "release_notes_or_manifest_url", "render_commit_sha"]),
+  }),
+  render: Object.freeze({
+    canonical_urls: Object.freeze([/^https:\/\/[a-z0-9][a-z0-9.-]*\.onrender\.com(?:\/[^\s]*)?$/i, /^https:\/\/(?!dashboard\.render\.com)[a-z0-9][a-z0-9.-]*\.[a-z]{2,}(?:\/[^\s]*)?$/i]),
+    forbidden_fragments: Object.freeze(["dashboard.render.com", "deploy-hook", "preview", "noindex", "localhost", "127.0.0.1", "/login", "api_key="]),
+    required_public_fields: Object.freeze(["service_url", "service_id", "deployment_id", "commit_sha", "git_repo_slug", "http_status", "public_manifest_path", "release_id", "release_fingerprint", "bom_fingerprint", "material_outcome_digest"]),
+  }),
+  base_app: Object.freeze({
+    canonical_urls: Object.freeze([/^https:\/\/base\.app\/profile\/0x[0-9a-f]{40}$/i, /^https:\/\/base\.app\/coin\/base-mainnet\/0x[0-9a-f]{40}$/i, /^https:\/\/[a-z0-9][a-z0-9.-]*\.[a-z]{2,}(?:\/[^\s]*)$/i]),
+    forbidden_fragments: Object.freeze(["farcaster", "/login", "api_key=", "localhost", "127.0.0.1"]),
+    required_public_fields: Object.freeze(["profile_url", "primary_url", "wallet_address", "basename_display", "app_name", "app_metadata_ref", "release_id", "release_fingerprint", "bom_fingerprint", "material_outcome_digest"]),
+  }),
+  base_dashboard: Object.freeze({
+    canonical_urls: Object.freeze([/^https:\/\/dashboard\.base\.org\/(?!login(?:\/|$)|settings(?:\/|$)|admin(?:\/|$)|api(?:\/|$))[a-z0-9][a-z0-9/_-]*$/i, /^https:\/\/[a-z0-9][a-z0-9.-]*\.[a-z]{2,}(?:\/[^\s]*)$/i]),
+    forbidden_fragments: Object.freeze(["/login", "/settings", "/admin", "/api/", "api_key=", "localhost", "127.0.0.1"]),
+    required_public_fields: Object.freeze(["dashboard_project_id_or_public_slug", "registered_app_url", "ownership_verification_status", "name", "icon", "tagline", "description", "screenshots", "category", "primary_url", "builder_code", "dashboard_public_url", "release_id", "release_fingerprint", "bom_fingerprint", "material_outcome_digest"]),
+  }),
+  base_dev: Object.freeze({
+    canonical_urls: Object.freeze([/^https:\/\/(?:www\.)?base\.dev\/[a-z0-9][a-z0-9/_-]*$/i]),
+    forbidden_fragments: Object.freeze(["/login", "/settings", "/api/", "api_key=", "localhost", "127.0.0.1"]),
+    required_public_fields: Object.freeze(["base_dev_public_url", "project_name", "primary_url", "name", "icon", "tagline", "description", "screenshots", "category", "builder_code", "builder_code_source", "onchain_attribution_readback", "release_id", "release_fingerprint", "bom_fingerprint", "material_outcome_digest"]),
+  }),
+  talent: Object.freeze({
+    canonical_urls: Object.freeze([/^https:\/\/talentprotocol\.com\/[a-z0-9][a-z0-9-]*$/i]),
+    forbidden_fragments: Object.freeze(["api.talentprotocol.com", "api_key=", "/login", "localhost", "127.0.0.1"]),
+    required_public_fields: Object.freeze(["profile_id", "profile_url", "name", "display_name", "connected_accounts", "human_checkmark", "onchain", "tags", "created_at", "primary_base_account_or_wallet_link", "github_link", "release_id", "release_fingerprint", "bom_fingerprint", "material_outcome_digest"]),
+  }),
+  guild: Object.freeze({
+    canonical_urls: Object.freeze([/^https:\/\/guild\.xyz\/[a-z0-9][a-z0-9/_-]*$/i]),
+    forbidden_fragments: Object.freeze(["/admin", "/editor", "/login", "localhost", "127.0.0.1"]),
+    required_public_fields: Object.freeze(["guild_slug", "guild_url", "project_name", "project_description", "linked_official_urls", "verification_badge_or_public_announcement_if_claimed", "roles", "requirements", "rewards", "release_id", "release_fingerprint", "bom_fingerprint", "material_outcome_digest"]),
+  }),
+  basename_base_org: Object.freeze({
+    canonical_urls: Object.freeze([/^https:\/\/(?:www\.)?base\.org\/names(?:[/?#].*)?$/i]),
+    forbidden_fragments: Object.freeze(["/manage-names", "api_key=", "localhost", "127.0.0.1"]),
+    required_public_fields: Object.freeze(["basename", "primary_base_account", "resolved_address", "primary_name_status", "resolution_observed_at", "resolver_source", "profile_url", "release_id", "release_fingerprint", "bom_fingerprint", "material_outcome_digest"]),
+  }),
+});
+export const BASE_EIGHT_SURFACE_CONTRACT_ID = "base-eight-surface-public-evidence-v2";
 function loadBusinessClosureProductContract() {
   const productContract = JSON.parse(readFileSync(new URL("../config/base_erp_product_contract_v1.json", import.meta.url), "utf8"));
   const contract = productContract?.business_closure_contract;
@@ -1107,6 +1150,108 @@ export function validateBaseBusinessClosureEvidenceGap(input = {}) {
   }
 }
 
+function publicEvidenceValuePresent(value) {
+  if (value === null || value === undefined) return false;
+  if (typeof value === "string") return value.trim() !== "";
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === "object") return Object.keys(value).length > 0;
+  return true;
+}
+
+function samePublicOrigin(left, right) {
+  try {
+    const leftUrl = new URL(left);
+    const rightUrl = new URL(right);
+    return leftUrl.protocol === "https:" && rightUrl.protocol === "https:" && leftUrl.hostname.toLowerCase() === rightUrl.hostname.toLowerCase() && (leftUrl.port || "443") === (rightUrl.port || "443");
+  } catch {
+    return false;
+  }
+}
+
+/** Validate the eight current-release public-surface rows from the v2 product-owner contract. */
+export function validateEightSurfacePublicEvidence({ surfaces, releaseId, releaseFingerprint, bomFingerprint, immutableBomSha256 } = {}) {
+  try {
+    if (!surfaces || typeof surfaces !== "object" || Array.isArray(surfaces)) return failClosed("eight_platform_gate_incomplete");
+    const receiptIds = new Set();
+    const outcomeDigests = new Set();
+    const normalized = {};
+    for (const platform of RELEASE_PLATFORMS) {
+      const evidence = surfaces[platform];
+      const rule = PUBLIC_SURFACE_RULES[platform];
+      if (!evidence || typeof evidence !== "object" || Array.isArray(evidence)) return failClosed("eight_platform_gate_incomplete", { platform });
+      if (evidence.release_id !== releaseId || evidence.release_fingerprint !== releaseFingerprint || evidence.bom_fingerprint !== bomFingerprint || (evidence.immutable_bom_sha256 ?? null) !== (immutableBomSha256 ?? null)) {
+        return failClosed("historical_receipt_guard", { platform });
+      }
+      if (evidence.current !== true || evidence.historical !== false || evidence.synthetic !== false || evidence.independent !== true || evidence.status !== "verified") {
+        return failClosed("platform_receipt_not_independent", { platform });
+      }
+      if (evidence.evidence_origin !== "official_platform_readback") return failClosed("platform_evidence_provenance_missing", { platform });
+      const receiptId = requiredString(evidence.receipt_id, `${platform}.receipt_id`);
+      if (receiptIds.has(receiptId)) return failClosed("platform_receipt_not_independent", { platform });
+      receiptIds.add(receiptId);
+      const outcomeDigest = requiredString(evidence.material_outcome_digest, `${platform}.material_outcome_digest`).toLowerCase();
+      if (!RELEASE_DIGEST_PATTERN.test(outcomeDigest)) return failClosed("platform_outcome_digest_invalid", { platform });
+      outcomeDigests.add(outcomeDigest);
+
+      const proofRef = requiredString(evidence.proof_ref, `${platform}.proof_ref`);
+      if (!/^https:\/\//i.test(proofRef)) return failClosed("platform_public_url_invalid", { platform });
+      const lowerProofRef = proofRef.toLowerCase();
+      if (rule.forbidden_fragments.some((fragment) => lowerProofRef.includes(fragment.toLowerCase()))) return failClosed("platform_public_url_forbidden", { platform });
+      const canonicalIndex = rule.canonical_urls.findIndex((pattern) => pattern.test(proofRef));
+      if (canonicalIndex < 0) return failClosed("platform_public_url_noncanonical", { platform });
+      if (!Array.isArray(evidence.public_urls) || evidence.public_urls.length === 0 || evidence.public_urls.some((url) => typeof url !== "string" || !/^https:\/\//i.test(url) || rule.forbidden_fragments.some((fragment) => url.toLowerCase().includes(fragment.toLowerCase())))) {
+        return failClosed("platform_public_urls_invalid", { platform });
+      }
+      if (!evidence.public_urls.includes(proofRef)) return failClosed("platform_public_urls_missing_proof_ref", { platform });
+      if (evidence.public_access !== "unauthenticated_public") return failClosed("platform_public_access_invalid", { platform });
+      if (typeof evidence.observed_at !== "string" || Number.isNaN(Date.parse(evidence.observed_at))) return failClosed("platform_observed_at_invalid", { platform });
+      if (!evidence.public_fields || typeof evidence.public_fields !== "object" || Array.isArray(evidence.public_fields)) return failClosed("platform_public_fields_missing", { platform });
+      for (const field of rule.required_public_fields) {
+        if (!Object.prototype.hasOwnProperty.call(evidence.public_fields, field) || !publicEvidenceValuePresent(evidence.public_fields[field])) return failClosed("platform_public_field_missing", { platform, field });
+      }
+      if (platform === "base_app" && canonicalIndex === 1 && (evidence.public_fields.material_outcome_type !== "token" || !publicEvidenceValuePresent(evidence.public_fields.token_address))) {
+        return failClosed("platform_public_url_semantics_invalid", { platform });
+      }
+      if (platform === "base_app" && canonicalIndex === 1) {
+        const tokenMatch = proofRef.match(/\/coin\/base-mainnet\/(0x[0-9a-f]{40})$/i);
+        if (!tokenMatch || evidence.public_fields.token_address.toLowerCase() !== tokenMatch[1].toLowerCase()) return failClosed("platform_public_url_semantics_invalid", { platform });
+      }
+      if (platform === "base_app" && canonicalIndex === 2 && !samePublicOrigin(proofRef, evidence.public_fields.primary_url)) return failClosed("platform_public_url_semantics_invalid", { platform });
+      if (platform === "render" && !samePublicOrigin(proofRef, evidence.public_fields.service_url)) return failClosed("platform_public_url_semantics_invalid", { platform });
+      if (platform === "base_dashboard" && canonicalIndex === 1 && (!samePublicOrigin(proofRef, evidence.public_fields.registered_app_url) || !samePublicOrigin(proofRef, evidence.public_fields.primary_url))) return failClosed("platform_public_url_semantics_invalid", { platform });
+      if (evidence.public_fields.release_id !== releaseId || evidence.public_fields.release_fingerprint !== releaseFingerprint || evidence.public_fields.bom_fingerprint !== bomFingerprint || evidence.public_fields.material_outcome_digest.toLowerCase() !== outcomeDigest) {
+        return failClosed("platform_public_field_binding_mismatch", { platform });
+      }
+      normalized[platform] = Object.freeze({ proof_ref: proofRef, public_urls: Object.freeze([...evidence.public_urls]), public_fields: Object.freeze({ ...evidence.public_fields }) });
+    }
+    if (outcomeDigests.size !== 1) return failClosed("platform_outcome_mismatch");
+    if (normalized.github.public_fields.commit_sha !== normalized.render.public_fields.commit_sha || normalized.github.public_fields.render_commit_sha !== normalized.render.public_fields.commit_sha) {
+      return failClosed("platform_commit_sha_mismatch", { platforms: ["github", "render"] });
+    }
+    const baseDev = normalized.base_dev;
+    const baseDashboard = normalized.base_dashboard;
+    if (baseDev.proof_ref === baseDashboard.proof_ref || baseDev.public_urls.some((url) => baseDashboard.public_urls.includes(url)) || digest(baseDev.public_fields) === digest(baseDashboard.public_fields)) {
+      return failClosed("platform_alias_collision", { platforms: ["base_dev", "base_dashboard"] });
+    }
+    const baseAppFields = normalized.base_app.public_fields;
+    const baseDashboardFields = baseDashboard.public_fields;
+    const baseDevFields = baseDev.public_fields;
+    if (baseAppFields.primary_url !== baseDashboardFields.registered_app_url || baseAppFields.primary_url !== baseDashboardFields.primary_url || baseAppFields.primary_url !== baseDevFields.primary_url) {
+      return failClosed("platform_primary_url_mismatch", { platforms: ["base_app", "base_dashboard", "base_dev"] });
+    }
+    if (normalizeAddress(baseAppFields.wallet_address, "base_app.public_fields.wallet_address") !== PRIMARY_BASE_ACCOUNT) {
+      return failClosed("platform_wallet_identity_mismatch", { platform: "base_app" });
+    }
+    const basenameFields = normalized.basename_base_org.public_fields;
+    if (normalizeAddress(basenameFields.primary_base_account, "basename.public_fields.primary_base_account") !== PRIMARY_BASE_ACCOUNT || normalizeAddress(basenameFields.resolved_address, "basename.public_fields.resolved_address") !== PRIMARY_BASE_ACCOUNT) {
+      return failClosed("platform_wallet_identity_mismatch", { platform: "basename_base_org" });
+    }
+    return Object.freeze({ ok: true, fail_closed: false, contract_id: BASE_EIGHT_SURFACE_CONTRACT_ID, platform_count: RELEASE_PLATFORMS.length, receipt_count: receiptIds.size, outcome_digest: [...outcomeDigests][0] });
+  } catch (error) {
+    return failClosed("invalid_eight_surface_public_evidence", { message: error.message });
+  }
+}
+
 /** Validate one current release without inferring ERP or publication from chain success. */
 export function validateReleaseIntegrity({ currentRelease, chainEvidence, erpReadback } = {}) {
   try {
@@ -1280,7 +1425,15 @@ export function validateReleaseIntegrity({ currentRelease, chainEvidence, erpRea
       outcomeDigests.add(outcomeDigest);
     }
     if (outcomeDigests.size !== 1) return releaseFailure("platform_outcome_mismatch", erpResult);
-    const platformResult = { ...erpResult, platform_complete: true, platform_count: RELEASE_PLATFORMS.length };
+    const publicEvidenceResult = validateEightSurfacePublicEvidence({
+      surfaces,
+      releaseId,
+      releaseFingerprint: currentRelease.release_fingerprint,
+      bomFingerprint: currentRelease.bom_fingerprint,
+      immutableBomSha256,
+    });
+    if (!publicEvidenceResult.ok) return releaseFailure(publicEvidenceResult.reason, { ...erpResult, platform: publicEvidenceResult.platform, field: publicEvidenceResult.field });
+    const platformResult = { ...erpResult, platform_complete: true, platform_count: RELEASE_PLATFORMS.length, public_surface_contract_id: publicEvidenceResult.contract_id };
     if (acceptanceState.independent_sol_medium !== "pass") return releaseFailure("independent_review_pending", platformResult);
     if (acceptanceState.owner_gate !== "owner_visible") return releaseFailure("owner_gate_missing", platformResult);
     return Object.freeze({ ...platformResult, ok: true, fail_closed: false, publication_complete: true });

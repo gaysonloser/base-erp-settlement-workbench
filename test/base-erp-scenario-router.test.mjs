@@ -6,6 +6,7 @@ import {
   BASE_WALLET_PROVIDER_CONTRACT,
   BUSINESS_CLOSURE_BATCH_ID,
   BUSINESS_CLOSURE_CONTRACTS,
+  PUBLIC_SURFACE_RULES,
   PRIMARY_BASE_ACCOUNT,
   applyErpReadback,
   applyReceipt,
@@ -18,6 +19,7 @@ import {
   validateBaseCapabilityPreflight,
   validateBaseBusinessClosureEvidenceGap,
   validateBaseGatePreflight,
+  validateEightSurfacePublicEvidence,
   validateReleaseIntegrity,
 } from "../src/base-erp-scenario-router.mjs";
 import { digest } from "../src/base-neutral-receipt-controls.mjs";
@@ -274,6 +276,30 @@ function buildReleaseFixture({
     });
   }
   const materialOutcomeDigest = digest({ release_id: release.release_id, outcome: "settlement-workbench-release" });
+  const publicSurfaceUrls = {
+    github: `https://github.com/gaysonloser/base-erp-settlement-workbench/commit/${"a".repeat(40)}`,
+    render: "https://base-erp-settlement-workbench.onrender.com/release-manifest.json",
+    base_app: `https://base.app/profile/${PRIMARY_BASE_ACCOUNT}`,
+    base_dashboard: "https://dashboard.base.org/projects/base-erp-settlement-workbench",
+    base_dev: "https://base.dev/base-erp-settlement-workbench",
+    talent: "https://talentprotocol.com/base-erp-settlement-workbench",
+    guild: "https://guild.xyz/base-erp-settlement-workbench",
+    basename_base_org: "https://www.base.org/names?name=gaysonloser.base.eth",
+  };
+  const publicFieldValue = (platform, field) => {
+    if (field === "release_id") return release.release_id;
+    if (field === "release_fingerprint") return release.release_fingerprint;
+    if (field === "bom_fingerprint") return release.bom_fingerprint;
+    if (field === "material_outcome_digest") return materialOutcomeDigest;
+    if (field === "commit_sha" || field === "render_commit_sha") return "a".repeat(40);
+    if (field === "wallet_address" || field === "primary_base_account") return PRIMARY_BASE_ACCOUNT;
+    if (field === "resolved_address") return PRIMARY_BASE_ACCOUNT;
+    if (field === "primary_url" || field === "registered_app_url") return "https://base-erp-settlement-workbench.onrender.com/";
+    if (field === "service_url") return "https://base-erp-settlement-workbench.onrender.com/release-manifest.json";
+    if (field === "http_status") return 200;
+    if (field === "screenshots" || field === "connected_accounts" || field === "linked_official_urls" || field === "roles" || field === "requirements" || field === "rewards" || field === "tags" || field === "onchain") return [`${platform}-${field}`];
+    return `${platform}-${field}`;
+  };
   release.eight_surface_evidence_map = Object.fromEntries(B04_PLATFORMS.map((platform) => [platform, {
     platform,
     receipt_id: `${platform}-b04-receipt`,
@@ -283,7 +309,11 @@ function buildReleaseFixture({
     ...(release.immutable_bom_sha256 ? { immutable_bom_sha256: release.immutable_bom_sha256 } : {}),
     material_outcome_digest: materialOutcomeDigest,
     evidence_origin: "official_platform_readback",
-    proof_ref: `${platform}-b04-official-readback`,
+    proof_ref: publicSurfaceUrls[platform],
+    public_urls: [publicSurfaceUrls[platform]],
+    public_access: "unauthenticated_public",
+    observed_at: "2026-08-10T23:10:00+08:00",
+    public_fields: Object.fromEntries(PUBLIC_SURFACE_RULES[platform].required_public_fields.map((field) => [field, publicFieldValue(platform, field)])),
     synthetic: false,
     current: true,
     independent: true,
@@ -730,6 +760,125 @@ test("B04 requires eight independent current receipts with one shared material o
     erpReadback: buildErpReadback(outcomeDrift),
   });
   assert.equal(drift.reason, "platform_outcome_mismatch");
+});
+
+function buildPublicSurfaceValidationFixture() {
+  const release = buildReleaseFixture();
+  return { release, surfaces: structuredClone(release.eight_surface_evidence_map) };
+}
+
+function validatePublicSurfaceFixture(release, surfaces) {
+  return validateEightSurfacePublicEvidence({
+    surfaces,
+    releaseId: release.release_id,
+    releaseFingerprint: release.release_fingerprint,
+    bomFingerprint: release.bom_fingerprint,
+  });
+}
+
+test("B04 accepts one complete canonical public readback per surface", () => {
+  const { release, surfaces } = buildPublicSurfaceValidationFixture();
+  const valid = validatePublicSurfaceFixture(release, surfaces);
+  assert.equal(valid.ok, true);
+  assert.equal(valid.contract_id, "base-eight-surface-public-evidence-v2");
+  assert.equal(valid.receipt_count, 8);
+});
+
+test("B04 rejects a missing required public field", () => {
+  const { release, surfaces } = buildPublicSurfaceValidationFixture();
+  delete surfaces.github.public_fields.owner;
+  assert.equal(validatePublicSurfaceFixture(release, surfaces).reason, "platform_public_field_missing");
+});
+
+test("B04 rejects preview, login and API-only public URLs", () => {
+  const preview = buildPublicSurfaceValidationFixture();
+  preview.surfaces.render.proof_ref = "https://preview-base-erp.onrender.com/release-manifest.json";
+  preview.surfaces.render.public_urls = [preview.surfaces.render.proof_ref];
+  assert.equal(validatePublicSurfaceFixture(preview.release, preview.surfaces).reason, "platform_public_url_forbidden");
+
+  const login = buildPublicSurfaceValidationFixture();
+  login.surfaces.github.proof_ref = "https://github.com/login";
+  login.surfaces.github.public_urls = [login.surfaces.github.proof_ref];
+  assert.equal(validatePublicSurfaceFixture(login.release, login.surfaces).reason, "platform_public_url_forbidden");
+
+  const apiOnly = buildPublicSurfaceValidationFixture();
+  apiOnly.surfaces.talent.proof_ref = "https://api.talentprotocol.com/v1/profile/base-erp";
+  apiOnly.surfaces.talent.public_urls = [apiOnly.surfaces.talent.proof_ref];
+  assert.equal(validatePublicSurfaceFixture(apiOnly.release, apiOnly.surfaces).reason, "platform_public_url_forbidden");
+});
+
+test("B04 rejects login-only, API-only and preview access modes", () => {
+  for (const access of ["login_only", "api_only", "preview"]) {
+    const { release, surfaces } = buildPublicSurfaceValidationFixture();
+    surfaces.guild.public_access = access;
+    assert.equal(validatePublicSurfaceFixture(release, surfaces).reason, "platform_public_access_invalid");
+  }
+});
+
+test("B04 rejects GitHub/Render commit SHA mismatch", () => {
+  const { release, surfaces } = buildPublicSurfaceValidationFixture();
+  surfaces.render.public_fields.commit_sha = "b".repeat(40);
+  assert.equal(validatePublicSurfaceFixture(release, surfaces).reason, "platform_commit_sha_mismatch");
+});
+
+test("B04 rejects Base.dev and Base Dashboard alias collisions", () => {
+  const { release, surfaces } = buildPublicSurfaceValidationFixture();
+  surfaces.base_dashboard.public_urls.push(surfaces.base_dev.public_urls[0]);
+  assert.equal(validatePublicSurfaceFixture(release, surfaces).reason, "platform_alias_collision");
+});
+
+test("B04 binds every public field to the exact current release identity", () => {
+  const { release, surfaces } = buildPublicSurfaceValidationFixture();
+  surfaces.render.public_fields.release_fingerprint = "f".repeat(64);
+  assert.equal(validatePublicSurfaceFixture(release, surfaces).reason, "platform_public_field_binding_mismatch");
+});
+
+test("B04 binds Base App, Dashboard and Base.dev to one primary URL", () => {
+  const { release, surfaces } = buildPublicSurfaceValidationFixture();
+  surfaces.base_dev.public_fields.primary_url = "https://different.example/";
+  assert.equal(validatePublicSurfaceFixture(release, surfaces).reason, "platform_primary_url_mismatch");
+});
+
+test("B04 accepts Render custom domains and registered primary app URLs", () => {
+  const { release, surfaces } = buildPublicSurfaceValidationFixture();
+  const primaryUrl = "https://erp.example.com/";
+  surfaces.render.proof_ref = "https://erp.example.com/release-manifest.json";
+  surfaces.render.public_urls = [surfaces.render.proof_ref];
+  surfaces.render.public_fields.service_url = surfaces.render.proof_ref;
+  surfaces.base_app.proof_ref = primaryUrl;
+  surfaces.base_app.public_urls = [primaryUrl];
+  surfaces.base_app.public_fields.primary_url = primaryUrl;
+  surfaces.base_dashboard.proof_ref = primaryUrl;
+  surfaces.base_dashboard.public_urls = [primaryUrl];
+  surfaces.base_dashboard.public_fields.registered_app_url = primaryUrl;
+  surfaces.base_dashboard.public_fields.primary_url = primaryUrl;
+  surfaces.base_dev.public_fields.primary_url = primaryUrl;
+  assert.equal(validatePublicSurfaceFixture(release, surfaces).ok, true);
+});
+
+test("B04 accepts a Base App token coin URL only for a token material outcome", () => {
+  const { release, surfaces } = buildPublicSurfaceValidationFixture();
+  const tokenAddress = `0x${"2".repeat(40)}`;
+  surfaces.base_app.proof_ref = `https://base.app/coin/base-mainnet/${tokenAddress}`;
+  surfaces.base_app.public_urls = [surfaces.base_app.proof_ref];
+  surfaces.base_app.public_fields.material_outcome_type = "token";
+  surfaces.base_app.public_fields.token_address = tokenAddress;
+  assert.equal(validatePublicSurfaceFixture(release, surfaces).ok, true);
+
+  const nonToken = buildPublicSurfaceValidationFixture();
+  nonToken.surfaces.base_app.proof_ref = `https://base.app/coin/base-mainnet/${tokenAddress}`;
+  nonToken.surfaces.base_app.public_urls = [nonToken.surfaces.base_app.proof_ref];
+  assert.equal(validatePublicSurfaceFixture(nonToken.release, nonToken.surfaces).reason, "platform_public_url_semantics_invalid");
+});
+
+test("B04 binds Base App and Basename rows to the primary Base Account", () => {
+  const app = buildPublicSurfaceValidationFixture();
+  app.surfaces.base_app.public_fields.wallet_address = `0x${"1".repeat(40)}`;
+  assert.equal(validatePublicSurfaceFixture(app.release, app.surfaces).reason, "platform_wallet_identity_mismatch");
+
+  const basename = buildPublicSurfaceValidationFixture();
+  basename.surfaces.basename_base_org.public_fields.resolved_address = `0x${"1".repeat(40)}`;
+  assert.equal(validatePublicSurfaceFixture(basename.release, basename.surfaces).reason, "platform_wallet_identity_mismatch");
 });
 
 test("B04 keeps independent review and owner gate separate from local validator readiness", () => {
