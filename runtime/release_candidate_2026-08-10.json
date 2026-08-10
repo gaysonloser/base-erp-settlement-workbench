@@ -8,8 +8,8 @@
   "primary_base_account": "0xBa36D092dB2999bb1FaBbaf281AC956A97189C25",
   "network": "Base Mainnet preflight contract only; no chain action",
   "release_fingerprint_algorithm": "sha256(canonical_current_release_fields)",
-  "release_fingerprint": "b263a95a523b25d08be0d1dc7160186508235c2404b88482efdc4c199da8f986",
-  "bom_fingerprint": "5ace40159d6ce0f711cfce1c6e8ff3a9ff34cd2f112117e7684cb5e2b9b9dc36",
+  "release_fingerprint": "07bd1356e27be3267ad569e2b1f41396083fbb5b700799bf2b418a49f6fc1788",
+  "bom_fingerprint": "4373cc6b58e50b09e7e302fbe3534aedfee1de526b7a76936bbdd285ef38c1e4",
   "immutable_release_bom": [
     {
       "path": "config/base_erp_product_contract_v1.json",
@@ -41,7 +41,7 @@
     },
     {
       "path": "src/server.mjs",
-      "digest": "3ef8e301aad5b2a5273feb02afea16735c79308e9a7d89729e14460e1f6e9fa5"
+      "digest": "bd0d32f214b27d69ef80b6fe12d63d62b9ea51977638bf56a51d6e861b2e2bc9"
     },
     {
       "path": "test/base-erp-scenario-router.test.mjs",
@@ -49,7 +49,7 @@
     },
     {
       "path": "test/server.test.mjs",
-      "digest": "d22b5bf749ed2bfeedeccfd21459f81606b7b9cc1a1f9c8cadeaecf4c0a0a4ac"
+      "digest": "81c3ba5567758c3ff5b149b5a0ffab6dbc88391323363590503cec7e69f158bb"
     }
   ],
   "current_release_delta": {

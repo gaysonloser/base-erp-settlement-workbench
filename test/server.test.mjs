@@ -66,6 +66,7 @@ test("public home page exposes product identity and explicit limits", async () =
     assert.match(response.headers.get("content-type"), /text\/html/);
     const body = await response.text();
     assert.match(body, /Base ERP Settlement Workbench/);
+    assert.match(body, /<meta name="base:app_id" content="6a7a0717e209a55163497d2d">/);
     assert.match(body, /gaysonloser\.base\.eth/);
     assert.match(body, /0xba36d092db2999bb1fabbaf281ac956a97189c25/i);
     assert.match(body, /BOM fingerprint/);

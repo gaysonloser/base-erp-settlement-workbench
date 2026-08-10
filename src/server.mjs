@@ -160,6 +160,7 @@ export function renderHomePage(release) {
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="base:app_id" content="6a7a0717e209a55163497d2d">
     <title>${escapeHtml(release.project_name)}</title>
     <style>body{font:16px/1.5 system-ui,sans-serif;max-width:760px;margin:3rem auto;padding:0 1.25rem;color:#172033;background:#f7f8fb}main{background:#fff;border:1px solid #dfe4ef;border-radius:16px;padding:2rem;box-shadow:0 8px 30px #17203312}h1{margin-top:0}code{word-break:break-all}a{color:#0052ff}dt{font-weight:700;margin-top:1rem}dd{margin:0}</style>
   </head>
