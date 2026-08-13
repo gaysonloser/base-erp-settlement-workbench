@@ -1,15 +1,15 @@
 {
   "schema_version": "1.0",
   "release_id": "base-erp-public-product-20260810-v1",
-  "generated_at_cst": "2026-08-10T23:39:18+08:00",
+  "generated_at_cst": "2026-08-14T01:50:02+08:00",
   "project_name": "Base ERP Settlement Workbench",
   "material_outcome": "Deployable Base ERP settlement workbench with eight-surface public evidence validation",
   "basename": "gaysonloser.base.eth",
   "primary_base_account": "0xBa36D092dB2999bb1FaBbaf281AC956A97189C25",
   "network": "Base Mainnet preflight contract only; no chain action",
   "release_fingerprint_algorithm": "sha256(canonical_current_release_fields)",
-  "release_fingerprint": "07bd1356e27be3267ad569e2b1f41396083fbb5b700799bf2b418a49f6fc1788",
-  "bom_fingerprint": "4373cc6b58e50b09e7e302fbe3534aedfee1de526b7a76936bbdd285ef38c1e4",
+  "release_fingerprint": "719b2b6b740de2025f444504724d28ea57628ef32614af9dfc6ede245f446d58",
+  "bom_fingerprint": "86712f0fd99576c0de1a9e6e3c50a485a833579bbea922aaf6878271c9476c4f",
   "immutable_release_bom": [
     {
       "path": "config/base_erp_product_contract_v1.json",
@@ -41,7 +41,7 @@
     },
     {
       "path": "src/server.mjs",
-      "digest": "bd0d32f214b27d69ef80b6fe12d63d62b9ea51977638bf56a51d6e861b2e2bc9"
+      "digest": "05260915d48502dcc816ff631f560c6cb55257797253dcbf03f769e0d2bc5770"
     },
     {
       "path": "test/base-erp-scenario-router.test.mjs",
@@ -49,17 +49,17 @@
     },
     {
       "path": "test/server.test.mjs",
-      "digest": "81c3ba5567758c3ff5b149b5a0ffab6dbc88391323363590503cec7e69f158bb"
+      "digest": "cbfc411eb7922cf293cc4eb6c0ea7ad16a7f2898d8eee8516fe96822ab251924"
     }
   ],
   "current_release_delta": {
-    "batch": "PUBLIC_PRODUCT",
+    "batch": "PUBLIC_PRODUCT_EVIDENCE_WORKBENCH",
     "control": "deployable_public_product",
     "version": "1",
-    "change": "Base-native settlement scenarios, exact seven-domain business-closure contracts, eight-surface public evidence validation, and self-contained HTTP deployment surface"
+    "change": "Base-native account preflight, receipt-first ERP settlement workflow, typed release identity/BOM, simulation-versus-executable gates, finality/reconciliation controls, eight-surface visitor-visible evidence workbench, and self-contained HTTP deployment surface"
   },
   "interaction_evidence": {
-    "source": "Base Docs + Base MCP live read-only preflight (help/get_wallets); no writes",
+    "source": "Base Docs current-task live read-only discovery; Base MCP help/get_wallets passed for the primary Base Account; no writes; CIRCLE receipt-first architecture gap closure",
     "base_docs_tools": 3,
     "base_mcp_tools": 15,
     "external_actions": 0
@@ -68,46 +68,146 @@
     "independent_sol_medium": "pending",
     "owner_gate": "not_observed",
     "execution_authority": "none_until_02_Build_revalidates",
-    "source_packet_review": "pass"
+    "source_packet_review": "pass",
+    "product_increment": "visitor_visible_evidence_workbench_v1"
   },
   "git_commit": "PENDING_OWNER_PUBLIC_COMMIT",
-  "render_url": "not_yet_available",
+  "render_url": "https://base-erp-settlement-workbench.onrender.com",
   "contract_addresses_or_not_applicable_reason": "not_applicable_no_contract_change",
-  "transaction_receipts_or_not_yet_available": "not_yet_available_x402_transport_502_before_request_id_or_approval; no wallet write",
+  "transaction_receipts_or_not_yet_available": "20260814_base_mcp_live_help_get_wallets_passed; fresh_0.01_USDC_x402_candidate_not_created_yet; no_approvalUrl_requestId_signature_transaction_hash_receipt_or_finality; chain_count_zero",
   "erp_readback_level": "not_observed",
   "evidence_level": "L1_local_tests",
   "eight_surface_evidence_map": {
     "github": {
-      "status": "not_observed",
-      "receipt": null
+      "status": "historical_candidate_reference_not_current_release",
+      "receipt": null,
+      "owner_write_gate": "blocked_gh_auth_invalid_token",
+      "release_api_http_status": 200,
+      "release_count": 0,
+      "candidate_reference": {
+        "platform": "GitHub",
+        "receipt_id": "github:gaysonloser/base-erp-settlement-workbench@main:3880de0b116baeef70f8482e7449bd3e597b2030",
+        "release_id": "base-erp-public-product-20260810-v1",
+        "release_fingerprint": "07bd1356e27be3267ad569e2b1f41396083fbb5b700799bf2b418a49f6fc1788",
+        "bom_fingerprint": "4373cc6b58e50b09e7e302fbe3534aedfee1de526b7a76936bbdd285ef38c1e4",
+        "current": false,
+        "historical": true,
+        "synthetic": false,
+        "evidence_origin": "official_platform_readback",
+        "proof_ref": "https://github.com/gaysonloser/base-erp-settlement-workbench/commit/3880de0b116baeef70f8482e7449bd3e597b2030",
+        "commit_sha": "3880de0b116baeef70f8482e7449bd3e597b2030"
+      }
     },
     "render": {
-      "status": "not_observed",
-      "receipt": null
+      "status": "historical_candidate_reference_not_current_release",
+      "receipt": null,
+      "candidate_reference": {
+        "platform": "Render",
+        "receipt_id": "render:base-erp-settlement-workbench:3880de0b116baeef70f8482e7449bd3e597b2030",
+        "release_id": "base-erp-public-product-20260810-v1",
+        "release_fingerprint": "07bd1356e27be3267ad569e2b1f41396083fbb5b700799bf2b418a49f6fc1788",
+        "bom_fingerprint": "4373cc6b58e50b09e7e302fbe3534aedfee1de526b7a76936bbdd285ef38c1e4",
+        "current": false,
+        "historical": true,
+        "synthetic": false,
+        "evidence_origin": "official_platform_readback",
+        "proof_ref": "https://base-erp-settlement-workbench.onrender.com/release.json",
+        "service_url": "https://base-erp-settlement-workbench.onrender.com",
+        "commit_sha": "3880de0b116baeef70f8482e7449bd3e597b2030"
+      }
     },
     "base_app": {
-      "status": "not_observed",
-      "receipt": null
+      "status": "blocked_public_landing_no_release_mapping",
+      "receipt": null,
+      "readback": {
+        "proof_ref": "https://base.app/",
+        "http_status": 200,
+        "page_title": "Base App | Trade &amp; Earn",
+        "continue_on_web_visible": true,
+        "release_mapping_observed": false,
+        "primary_url_observed": false,
+        "observed_at": "2026-08-13T17:10:25Z"
+      }
     },
     "base_dashboard": {
-      "status": "not_observed",
-      "receipt": null
+      "status": "blocked_public_shell_no_owner_app_metadata",
+      "receipt": null,
+      "candidate_reference": {
+        "platform": "Base Dashboard",
+        "receipt_id": "base_dashboard:6a7a0717e209a55163497d2d:base-erp-settlement-workbench.onrender.com",
+        "release_id": "base-erp-public-product-20260810-v1",
+        "release_fingerprint": "07bd1356e27be3267ad569e2b1f41396083fbb5b700799bf2b418a49f6fc1788",
+        "bom_fingerprint": "4373cc6b58e50b09e7e302fbe3534aedfee1de526b7a76936bbdd285ef38c1e4",
+        "current": false,
+        "historical": true,
+        "synthetic": false,
+        "evidence_origin": "official_platform_readback",
+        "proof_ref": "https://dashboard.base.org/apps/6a7a0717e209a55163497d2d",
+        "app_id": "6a7a0717e209a55163497d2d",
+        "primary_domain": "base-erp-settlement-workbench.onrender.com"
+      },
+      "readback": {
+        "proof_ref": "https://dashboard.base.org/apps/6a7a0717e209a55163497d2d",
+        "http_status": 200,
+        "page_title": "Overview | Base Dashboard",
+        "page_content": "public shell; no owner app metadata or release mapping exposed",
+        "primary_domain_observed": false,
+        "ownership_verification_observed": false,
+        "observed_at": "2026-08-13T17:10:25Z"
+      }
     },
     "base_dev": {
-      "status": "not_observed",
-      "receipt": null
+      "status": "blocked_generic_dashboard_redirect_no_distinct_target",
+      "receipt": null,
+      "readback": {
+        "proof_ref": "https://base.dev/",
+        "final_url": "https://dashboard.base.org/",
+        "http_status": 200,
+        "page_title": "Base Dashboard",
+        "distinct_project_target_observed": false,
+        "release_mapping_observed": false,
+        "observed_at": "2026-08-13T17:10:25Z"
+      }
     },
     "talent": {
-      "status": "not_observed",
-      "receipt": null
+      "status": "blocked_security_checkpoint_429",
+      "receipt": null,
+      "readback": {
+        "proof_ref": "https://talent.app/",
+        "http_status": 429,
+        "final_url": "https://talent.app/",
+        "page_title": "Vercel Security Checkpoint",
+        "visitor_profile_or_project_observed": false,
+        "release_mapping_observed": false,
+        "observed_at": "2026-08-13T17:10:25Z"
+      }
     },
     "guild": {
-      "status": "not_observed",
-      "receipt": null
+      "status": "blocked_sign_in_no_release_mapping",
+      "receipt": null,
+      "readback": {
+        "proof_ref": "https://guild.xyz/base",
+        "http_status": 200,
+        "page_title": "Base | Guild",
+        "base_guild_visible": true,
+        "member_count_visible": "617K",
+        "sign_in_gate_visible": true,
+        "release_mapping_observed": false,
+        "observed_at": "2026-08-13T17:10:25Z"
+      }
     },
     "basename_base_org": {
-      "status": "not_observed",
-      "receipt": null
+      "status": "blocked_read_only_profile_no_current_release_receipt",
+      "receipt": null,
+      "readback": {
+        "proof_ref": "https://www.base.org/name/gaysonloser",
+        "http_status": 200,
+        "page_title": "Basenames | gaysonloser.base.eth",
+        "basename_visible": "gaysonloser.base.eth",
+        "fresh_primary_name_resolution_observed": false,
+        "release_mapping_observed": false,
+        "observed_at": "2026-08-13T17:10:25Z"
+      }
     }
   },
   "runtime_binding": {
@@ -116,22 +216,22 @@
     "mutable_source": true,
     "snapshot_only": true,
     "snapshot": {
-      "runtime_sha256": "4ca19fb4d45efce297b6b3afdda77e1b56b0dec426d2686bf2bcde00b64dd34e",
-      "run_id": "02_Build-20260810-204108",
-      "date_cst": "2026-08-10",
+    "runtime_sha256": "9e5b1b0fe6d543e49d850e6fb54c5d78ec39aa07d671f87e5814a433e73f6e4a",
+      "run_id": "02_Build-20260814-010433",
+      "date_cst": "2026-08-14",
       "status": "running",
-      "cursor": "Same-day real-candidate queue exhausted below hard floor; keep runtime running and resume on the next date. Before any new action, re-read the owner ledger and generate a fresh official queue. Do not fill the deficit with research, observations, duplicate lifecycle evidence or replayed releases.",
-      "observed_at": "2026-08-10T16:19:50.000Z"
+      "cursor": "Deficit-first dispatch: trace_gap=30; public_gap=10. Trace gap remains: prepare exactly one legitimate corresponding-wallet onchain state-change, open one exact final wallet review, and count it only after a unique successful receipt. Publication gap remains: one material unit needs truthful receipts on every mandatory platform (github, render, base_app, base_dashboard, base_dev, talent, guild, basename_base_org); partial bundles count zero. Execute eligible candidate BASE-HARD-FLOOR-DISCOVERY-20260814-03 now; do not rediscover earlier routes.",
+      "observed_at": "2026-08-13T17:50:02Z"
     },
     "authority_record": {
       "path": "runtime/runtime_authority.json",
       "schema_version": "base-erp-runtime-authority-v1",
-      "runtime_sha256": "4ca19fb4d45efce297b6b3afdda77e1b56b0dec426d2686bf2bcde00b64dd34e",
+      "runtime_sha256": "9e5b1b0fe6d543e49d850e6fb54c5d78ec39aa07d671f87e5814a433e73f6e4a",
       "writer_idle": true,
       "source": "projects/2026-06_Base_Guild_Onchain_Score/runtime/current_run.json",
-      "observed_at": "2026-08-10T16:19:50.000Z",
-      "event_id": "base-erp-runtime-rebind-20260810-p9",
-      "record_sha256": "b12cc4a8ad0ebe01b6986c5ec477d6ef277ca0af5c410445d0ef1daea298f034"
+      "observed_at": "2026-08-13T17:50:02Z",
+      "event_id": "base-erp-runtime-rebind-20260814-p17",
+      "record_sha256": "85a683160b96af1ebc65d2082e23dd05c9d677639a9b68eb0d94d74e69f7602b"
     },
     "fingerprint_scope": "runtime snapshot is excluded from the immutable release fingerprint and is checked separately against the live runtime and authority record",
     "invalidation": "Any byte change to current_run.json, run_id/date/status/cursor change, or missing/malformed/hash-mismatched/false writer-idle authority record invalidates this snapshot and requires a fresh runtime rebind before preflight, execution or publication.",
@@ -139,13 +239,92 @@
   },
   "limitations": [
     "Owner confirmation is absent; executable is false and payload is null.",
-    "Base MCP callable namespace is live at 15 tools; initiate_x402_request returned transport HTTP 502 before requestId/approvalUrl and no OAuth refresh or wallet substitution was attempted.",
-    "Local tests 72/72 and release fingerprints are L1 evidence only.",
+    "2026-08-14 current-task Base MCP help/get_wallets passed with 15 callable tools and the primary Base Account was returned; the owner-authorized 0.01 USDC x402 retry has not yet been created; no approval URL/requestId/signature/transaction hash/receipt/finality exists, and no wallet write or public write was attempted.",
+    "Local tests 74/74; fresh strict native receipt completeness is 0/8. The prior GitHub/Render references are historical candidate evidence and are not reused for this current release; no annotated Release, current Deploy ID or current public platform receipt is claimed; public_update_units remains zero.",
     "current_run.json is mutable runtime state and is intentionally excluded from immutable_release_bom; its hash/cursor are snapshot-only runtime_binding observations.",
     "No Base Mainnet receipt, ERP authoritative readback or complete eight-platform current-release bundle was observed; this candidate counts zero for 30+10.",
     "The HTTP deployment surface is self-contained; workspace runtime state is not a production health dependency.",
-    "The public commit remains a placeholder until an owner-authorized repository/deployment commit is observed."
+    "Base Docs current-task live discovery returned 3 tools and /get-started/base.mdx first line '# Base'; Base MCP help/get_wallets returned 15 callable tools and the primary Base Account. Base App exposes Continue on Web without a release mapping; Base.dev redirects to generic Dashboard; Talent root is HTTP 429 security checkpoint; Guild is public but sign-in gated with no release mapping; Basename profile is display-only without fresh primary-name/release evidence. All remain without current-release receipts."
   ],
+  "latest_build_readback": {
+    "observed_at": "2026-08-13T17:50:02Z",
+    "source": "current_release_rebind_before_owner_publication",
+    "strict_receipt_count": 0,
+    "strict_receipt_platforms": [],
+    "release_join": {
+      "release_id": "base-erp-public-product-20260810-v1",
+      "release_fingerprint": "719b2b6b740de2025f444504724d28ea57628ef32614af9dfc6ede245f446d58",
+      "bom_fingerprint": "86712f0fd99576c0de1a9e6e3c50a485a833579bbea922aaf6878271c9476c4f"
+    },
+    "github": {
+      "proof_ref": null,
+      "commit_sha": null,
+      "repository_public": true,
+      "push_permission": false,
+      "deployment_status_count": 0,
+      "release_api_http_status": 200,
+      "release_count": 0,
+      "owner_write_gate": "blocked_gh_auth_invalid_token",
+      "strict_status": "no_current_release_readback_before_owner_publication"
+    },
+    "render": {
+      "proof_ref": "https://base-erp-settlement-workbench.onrender.com/release.json",
+      "health_ref": "https://base-erp-settlement-workbench.onrender.com/healthz",
+      "release_http_status": null,
+      "health_http_status": null,
+      "health_ready": false,
+      "commit_sha": null,
+      "service_id_observed": false,
+      "deployment_id_observed": false,
+      "strict_status": "no_current_release_deploy_readback_before_owner_publication"
+    },
+    "base_dashboard": {
+      "proof_ref": "https://dashboard.base.org/apps/6a7a0717e209a55163497d2d",
+      "app_id": "6a7a0717e209a55163497d2d",
+      "http_status": 200,
+      "page_title": "Overview | Base Dashboard",
+      "page_content": "public shell; no owner app metadata or release mapping exposed",
+      "primary_domain_observed": false,
+      "ownership_verification_observed": false,
+      "strict_status": "blocked_public_shell_no_owner_app_metadata"
+    },
+    "route_delta": {
+      "observed_at": "2026-08-13T17:10:25Z",
+      "base_app": {
+        "proof_ref": "https://base.app/",
+        "http_status": 200,
+        "continue_on_web_visible": true,
+        "release_mapping_observed": false
+      },
+      "base_dev": {
+        "proof_ref": "https://base.dev/",
+        "final_url": "https://dashboard.base.org/",
+        "http_status": 200,
+        "distinct_project_target_observed": false
+      },
+      "talent": {
+        "proof_ref": "https://talent.app/",
+        "http_status": 429,
+        "page_title": "Vercel Security Checkpoint",
+        "visitor_profile_or_project_observed": false
+      },
+      "guild": {
+        "proof_ref": "https://guild.xyz/base",
+        "http_status": 200,
+        "base_guild_visible": true,
+        "member_count_visible": "617K",
+        "sign_in_gate_visible": true,
+        "release_mapping_observed": false
+      },
+      "basename_base_org": {
+        "proof_ref": "https://www.base.org/name/gaysonloser",
+        "http_status": 200,
+        "basename_visible": "gaysonloser.base.eth",
+        "fresh_primary_name_resolution_observed": false,
+        "release_mapping_observed": false
+      }
+    }
+  },
   "artifact_excluded_from_own_bom": true,
   "deployment_surface": {
     "start_command": "npm start",

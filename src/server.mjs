@@ -13,6 +13,16 @@ const COMMIT_PATTERN = /^[0-9a-f]{7,40}$/i;
 const FULL_COMMIT_PATTERN = /^[0-9a-f]{40}$/i;
 const DIGEST_PATTERN = /^[0-9a-f]{64}$/i;
 const DEFAULT_COMMIT_PLACEHOLDER = "PENDING_OWNER_PUBLIC_COMMIT";
+const PUBLIC_PLATFORM_ORDER = Object.freeze([
+  "github",
+  "render",
+  "base_app",
+  "base_dashboard",
+  "base_dev",
+  "talent",
+  "guild",
+  "basename_base_org",
+]);
 
 function readJsonFile(filePath) {
   const resolvedPath = filePath instanceof URL ? filePath : resolve(String(filePath));
@@ -143,6 +153,174 @@ export function readHealth({ release = readReleaseDocument(), runtimeReader = nu
   });
 }
 
+function readCandidateJson(releasePath) {
+  try {
+    return readJsonFile(releasePath);
+  } catch {
+    return {};
+  }
+}
+
+function platformEvidence(candidate, release) {
+  const source = candidate?.eight_surface_evidence_map ?? {};
+  return Object.fromEntries(PUBLIC_PLATFORM_ORDER.map((platform) => {
+    const row = source[platform] && typeof source[platform] === "object" ? source[platform] : {};
+    const candidateReference = row.candidate_reference && typeof row.candidate_reference === "object"
+      ? row.candidate_reference
+      : null;
+    const readback = row.readback && typeof row.readback === "object" ? row.readback : null;
+    const strictReceipt = row.receipt && typeof row.receipt === "object" ? row.receipt : null;
+    const boundCandidate = candidateReference
+      && candidateReference.release_id === release.release_id
+      && candidateReference.release_fingerprint === release.release_fingerprint
+      && candidateReference.bom_fingerprint === release.bom_fingerprint;
+    const boundReceipt = strictReceipt
+      && strictReceipt.release_id === release.release_id
+      && strictReceipt.release_fingerprint === release.release_fingerprint
+      && strictReceipt.bom_fingerprint === release.bom_fingerprint
+      && strictReceipt.current === true
+      && strictReceipt.historical === false
+      && strictReceipt.synthetic === false;
+    return [platform, {
+      status: asNonEmptyString(row.status, "missing_current_receipt"),
+      proof_ref: candidateReference?.proof_ref ?? readback?.proof_ref ?? null,
+      candidate_reference_present: Boolean(boundCandidate),
+      visitor_visible_release_mapping: readback?.release_mapping_observed === true,
+      owner_readback_required: !boundReceipt,
+      receipt: boundReceipt || null,
+      countable: Boolean(boundReceipt),
+    }];
+  }));
+}
+
+/**
+ * Visitor-visible, read-only product/evidence contract. It intentionally
+ * exposes the boundaries between account preflight, simulation, executable
+ * owner-gated work, chain truth, ERP reconciliation and publication proof.
+ * It never reads a wallet provider, accepts credentials, signs, broadcasts or
+ * turns candidate references into receipts.
+ */
+export function readPublicEvidenceDocument({ releasePath = DEFAULT_RELEASE_PATH, env = process.env } = {}) {
+  const release = readReleaseDocument({ releasePath, env });
+  const candidate = readCandidateJson(releasePath);
+  const baseMcpTools = Number.isInteger(candidate.interaction_evidence?.base_mcp_tools)
+    ? candidate.interaction_evidence.base_mcp_tools
+    : 0;
+  const capabilityStatus = baseMcpTools > 0
+    ? "help_probe_passed_primary_base_account"
+    : "task_manifest_absent";
+  const surfaces = platformEvidence(candidate, release);
+  const countablePlatforms = PUBLIC_PLATFORM_ORDER.filter((platform) => surfaces[platform].countable);
+  const simulationRecords = (() => {
+    try {
+      const fixture = readJsonFile(resolve(PROJECT_ROOT, "fixtures/simulated_transactions.json"));
+      return Array.isArray(fixture) ? fixture.length : 0;
+    } catch {
+      return 0;
+    }
+  })();
+  const chainCount = typeof candidate.transaction_receipts_or_not_yet_available === "string"
+    && candidate.transaction_receipts_or_not_yet_available.includes("chain_count_zero")
+    ? 0
+    : null;
+  return Object.freeze({
+    schema_version: "base-erp-public-evidence-v1",
+    generated_at_cst: release.generated_at_cst,
+    public_write_authorized: false,
+    external_actions: 0,
+    release: Object.freeze({
+      release_id: release.release_id,
+      release_fingerprint: release.release_fingerprint,
+      bom_fingerprint: release.bom_fingerprint,
+      immutable_bom_sha256: release.immutable_bom_sha256,
+      git_commit: release.git_commit,
+      commit_placeholder: release.commit_placeholder,
+      project_name: release.project_name,
+      material_outcome: release.material_outcome,
+      network: release.network,
+      public_identity: release.public_identity,
+    }),
+    account_connect_preflight: Object.freeze({
+      network: "base_mainnet",
+      chain_id: 8453,
+      primary_base_account: release.public_identity.primary_base_account,
+      mode: "read_only_preflight",
+      connected: false,
+      owner_confirmation: "NOT_GRANTED",
+      capability_status: capabilityStatus,
+      wallet_write_allowed: false,
+      stop_conditions: [
+        ...(baseMcpTools > 0 ? [] : ["no callable Base MCP namespace in this task"]),
+        "no owner-visible review window",
+        "no signature, broadcast, receipt or finality",
+      ],
+    }),
+    execution_layers: Object.freeze({
+      simulation: Object.freeze({
+        available: true,
+        record_count: simulationRecords,
+        broadcast: false,
+        countable_daily_trace: false,
+        source: "fixtures/simulated_transactions.json",
+      }),
+      executable: Object.freeze({
+        available: false,
+        owner_gate: "not_observed",
+        mcp_namespace: baseMcpTools > 0 ? `base_mcp_live_${baseMcpTools}_tools` : "task_manifest_absent",
+        public_write_authorized: false,
+        payload: null,
+      }),
+    }),
+    settlement_workflow: Object.freeze({
+      mode: "receipt_first_fail_closed",
+      stages: [
+        { id: "account_connect", status: "owner_gate_required", consequence: "none" },
+        { id: "receipt_capture", status: chainCount === 0 ? "unproven" : "receipt_required", consequence: "none" },
+        { id: "finality_reconciliation", status: "unproven", required: "l1_batch_finality" },
+        { id: "erp_reconciliation", status: "unproven", authority: "authoritative_erp_readback" },
+        { id: "business_close", status: "unproven", consequence: "none" },
+      ],
+      chain_count: chainCount,
+      boundaries: {
+        chain_success_implies_erp_posting: false,
+        erp_write_exposed: false,
+        business_close_claimed: false,
+      },
+    }),
+    publication: Object.freeze({
+      required_platforms: PUBLIC_PLATFORM_ORDER,
+      strict_receipt_count: countablePlatforms.length,
+      strict_receipt_platforms: countablePlatforms,
+      publication_unit_count: countablePlatforms.length === PUBLIC_PLATFORM_ORDER.length ? 1 : 0,
+      same_release_join: {
+        release_id: release.release_id,
+        release_fingerprint: release.release_fingerprint,
+        bom_fingerprint: release.bom_fingerprint,
+      },
+      surfaces,
+    }),
+    safety: Object.freeze({
+      lifecycle_states: ["prepared", "owner_gate_required", "broadcast", "receipt_pending", "final", "reconciled", "exception", "replay_locked"],
+      retry: {
+        allowed_after_terminal_resolution: true,
+        requires_new_owner_authorized_candidate: true,
+        unresolved_request_replay: "forbidden",
+      },
+      deduplication: {
+        key: "release_id + platform + material_outcome + proof_ref",
+        duplicate_consequence: "noop",
+        conflicting_source: "fail_closed",
+      },
+      replay: {
+        prior_failed_or_unresolved_packet: "replay_locked_until_terminal_resolution",
+        historical_receipt_credit: 0,
+        synthetic_receipt_credit: 0,
+      },
+    }),
+    limitations: release.limitations,
+  });
+}
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -180,10 +358,35 @@ export function renderHomePage(release) {
       </dl>
       <h2>Limits</h2>
       <ul>${limitations}</ul>
-      <p>Public writes and wallet actions are disabled. See <a href="/release.json">release.json</a> for the bounded public release document and <a href="/healthz">healthz</a> for runtime readiness.</p>
+      <p>Public writes and wallet actions are disabled. See <a href="/evidence/">Evidence Workbench</a>, <a href="/release.json">release.json</a> for the bounded public release document and <a href="/healthz">healthz</a> for runtime readiness.</p>
     </main>
   </body>
 </html>`;
+}
+
+export function renderEvidencePage(evidence) {
+  const surfaces = PUBLIC_PLATFORM_ORDER.map((platform) => {
+    const row = evidence.publication.surfaces[platform];
+    const proof = row.proof_ref ? `<a href="${escapeHtml(row.proof_ref)}">proof</a>` : "—";
+    return `<tr><td>${escapeHtml(platform)}</td><td>${escapeHtml(row.status)}</td><td>${row.countable ? "strict receipt" : "candidate/blocker"}</td><td>${proof}</td></tr>`;
+  }).join("");
+  const stages = evidence.settlement_workflow.stages
+    .map((stage) => `<li><strong>${escapeHtml(stage.id)}</strong>: ${escapeHtml(stage.status)}</li>`)
+    .join("");
+  return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(evidence.release.project_name)} · Evidence</title>
+<style>body{font:15px/1.5 system-ui,sans-serif;max-width:1100px;margin:2rem auto;padding:0 1rem;color:#172033;background:#f7f8fb}main{background:#fff;border:1px solid #dfe4ef;border-radius:16px;padding:1.5rem;box-shadow:0 8px 30px #17203312}h1{margin-top:0}code{word-break:break-all}table{width:100%;border-collapse:collapse;margin:1rem 0}th,td{text-align:left;border-bottom:1px solid #e4e8f0;padding:.55rem}a{color:#0052ff}.pill{display:inline-block;border:1px solid #ccd5e5;border-radius:999px;padding:.15rem .5rem;margin:.15rem 0}</style></head>
+<body><main><h1>${escapeHtml(evidence.release.project_name)} · Evidence Workbench</h1>
+<p>Visitor-visible, read-only release metadata and fail-closed settlement/publication evidence. No wallet, signer, ERP writer or public write is exposed.</p>
+<p><span class="pill">${escapeHtml(evidence.release.release_id)}</span> <span class="pill">strict receipts ${evidence.publication.strict_receipt_count}/8</span> <span class="pill">publication unit ${evidence.publication.publication_unit_count}</span></p>
+<h2>Release identity</h2><dl><dt>Release fingerprint</dt><dd><code>${escapeHtml(evidence.release.release_fingerprint)}</code></dd><dt>BOM fingerprint</dt><dd><code>${escapeHtml(evidence.release.bom_fingerprint)}</code></dd><dt>Commit</dt><dd><code>${escapeHtml(evidence.release.git_commit)}</code></dd><dt>Identity</dt><dd>${escapeHtml(evidence.release.public_identity.basename)} · <code>${escapeHtml(evidence.release.public_identity.primary_base_account)}</code></dd></dl>
+<h2>Account/connect preflight</h2><p>Base Mainnet · chain ${evidence.account_connect_preflight.chain_id} · ${escapeHtml(evidence.account_connect_preflight.primary_base_account)} · <strong>${escapeHtml(evidence.account_connect_preflight.owner_confirmation)}</strong>. Wallet write allowed: <strong>${evidence.account_connect_preflight.wallet_write_allowed}</strong>.</p>
+<h2>Settlement workflow</h2><ol>${stages}</ol>
+<h2>Execution layers</h2><p>Simulation: ${evidence.execution_layers.simulation.record_count} records, broadcast=${evidence.execution_layers.simulation.broadcast}, daily-countable=${evidence.execution_layers.simulation.countable_daily_trace}. Executable: ${evidence.execution_layers.executable.available}, owner gate=${escapeHtml(evidence.execution_layers.executable.owner_gate)}.</p>
+<h2>Eight-platform publication evidence</h2><table><thead><tr><th>Platform</th><th>Status</th><th>Credit</th><th>Proof</th></tr></thead><tbody>${surfaces}</tbody></table>
+<h2>Safety</h2><p>Retries require terminal resolution and a new owner-authorized candidate; duplicate keys are no-op and conflicting replay is fail-closed. Prior unresolved packets remain replay-locked.</p>
+<p><a href="/evidence.json">evidence.json</a> · <a href="/release.json">release.json</a> · <a href="/healthz">healthz</a> · <a href="/">home</a></p>
+</main></body></html>`;
 }
 
 function writeResponse(response, status, body, contentType, { head = false } = {}) {
@@ -226,6 +429,14 @@ export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = proc
     }
     if (pathname === "/release.json") {
       writeResponse(response, 200, release, "application/json; charset=utf-8", { head });
+      return;
+    }
+    if (pathname === "/evidence.json") {
+      writeResponse(response, 200, readPublicEvidenceDocument({ releasePath, env }), "application/json; charset=utf-8", { head });
+      return;
+    }
+    if (pathname === "/evidence" || pathname === "/evidence/") {
+      writeResponse(response, 200, renderEvidencePage(readPublicEvidenceDocument({ releasePath, env })), "text/html; charset=utf-8", { head });
       return;
     }
     if (pathname === "/") {

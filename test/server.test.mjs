@@ -59,6 +59,56 @@ test("release endpoint binds the public document to the current release identity
   });
 });
 
+test("public evidence endpoint exposes the typed fail-closed product boundary", async () => {
+  await withServer(async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/evidence.json`);
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get("content-type"), /application\/json/);
+    const body = await response.json();
+    assert.equal(body.schema_version, "base-erp-public-evidence-v1");
+    assert.equal(body.public_write_authorized, false);
+    assert.equal(body.external_actions, 0);
+    assert.equal(body.release.release_id, "base-erp-public-product-20260810-v1");
+    assert.equal(body.account_connect_preflight.network, "base_mainnet");
+    assert.equal(body.account_connect_preflight.chain_id, 8453);
+    assert.equal(body.account_connect_preflight.owner_confirmation, "NOT_GRANTED");
+    assert.equal(body.account_connect_preflight.wallet_write_allowed, false);
+    assert.equal(body.execution_layers.simulation.broadcast, false);
+    assert.equal(body.execution_layers.simulation.countable_daily_trace, false);
+    assert.equal(body.execution_layers.executable.available, false);
+    assert.equal(body.settlement_workflow.boundaries.chain_success_implies_erp_posting, false);
+    assert.deepEqual(body.publication.required_platforms, ["github", "render", "base_app", "base_dashboard", "base_dev", "talent", "guild", "basename_base_org"]);
+    assert.equal(body.publication.strict_receipt_count, 0);
+    assert.equal(body.publication.publication_unit_count, 0);
+    for (const platform of body.publication.required_platforms) {
+      assert.equal(body.publication.surfaces[platform].countable, false, platform);
+      assert.equal(body.publication.surfaces[platform].receipt, null, platform);
+    }
+    assert.equal(body.safety.retry.unresolved_request_replay, "forbidden");
+    assert.equal(body.safety.deduplication.duplicate_consequence, "noop");
+    assert.equal(body.safety.replay.historical_receipt_credit, 0);
+  });
+});
+
+test("visitor evidence page links release identity and all eight publication surfaces", async () => {
+  await withServer(async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/evidence/`);
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get("content-type"), /text\/html/);
+    const body = await response.text();
+    assert.match(body, /Evidence Workbench/);
+    assert.match(body, /Account\/connect preflight/);
+    assert.match(body, /Settlement workflow/);
+    assert.match(body, /Eight-platform publication evidence/);
+    assert.match(body, /strict receipts 0\/8/);
+    for (const platform of ["github", "render", "base_app", "base_dashboard", "base_dev", "talent", "guild", "basename_base_org"]) {
+      assert.match(body, new RegExp(platform));
+    }
+    assert.match(body, /href="\/evidence\.json"/);
+    assert.match(body, /href="\/release\.json"/);
+  });
+});
+
 test("public home page exposes product identity and explicit limits", async () => {
   await withServer(async (baseUrl) => {
     const response = await fetch(`${baseUrl}/`);
@@ -74,6 +124,7 @@ test("public home page exposes product identity and explicit limits", async () =
     assert.match(body, new RegExp(TEST_COMMIT));
     assert.match(body, /Public writes and wallet actions are disabled/);
     assert.match(body, /href="\/release\.json"/);
+    assert.match(body, /href="\/evidence\//);
     assert.match(body, /href="\/healthz"/);
   });
 });

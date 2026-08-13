@@ -1,0 +1,113 @@
+{
+  "schema_version": "base-circle-platform-isolation-matrix-v1",
+  "project": "Base ERP Settlement Workbench",
+  "purpose": "Keep this Base release completely independent from any CIRCLE release, project, service, profile, manifest, domain, URL or receipt.",
+  "base_identity": {
+    "repository": "gaysonloser/base-erp-settlement-workbench",
+    "render_service": "base-erp-settlement-workbench",
+    "render_url": "https://base-erp-settlement-workbench.onrender.com",
+    "basename": "gaysonloser.base.eth",
+    "base_org_profile": "https://www.base.org/name/gaysonloser",
+    "primary_base_account": "0xBa36D092dB2999bb1FaBbaf281AC956A97189C25",
+    "release_join": [
+      "release_id",
+      "release_fingerprint",
+      "bom_fingerprint",
+      "material_outcome"
+    ]
+  },
+  "platforms": [
+    {
+      "platform": "github",
+      "exact_target": "gaysonloser/base-erp-settlement-workbench",
+      "write_scope": "Base repository main ref and Base release only",
+      "pre_write_checks": [
+        "owner is gaysonloser",
+        "repository is base-erp-settlement-workbench",
+        "ref is the Base project ref",
+        "release join is the current Base candidate",
+        "no CIRCLE project, service, profile, manifest, domain or URL field is present"
+      ],
+      "on_conflict": "stop_owner_gate"
+    },
+    {
+      "platform": "render",
+      "exact_target": "base-erp-settlement-workbench.onrender.com",
+      "write_scope": "Base service deployment only",
+      "pre_write_checks": [
+        "service name is base-erp-settlement-workbench",
+        "public URL is base-erp-settlement-workbench.onrender.com",
+        "deployment commit is the current Base GitHub commit",
+        "no CIRCLE service, project, domain or environment field is present"
+      ],
+      "on_conflict": "stop_owner_gate"
+    },
+    {
+      "platform": "base_app",
+      "exact_target": "Base ERP project-specific Base App entry",
+      "write_scope": "Add or update a Base-specific entry without changing any existing account-level project entry",
+      "owner_verification_required": true,
+      "on_conflict": "stop_owner_gate"
+    },
+    {
+      "platform": "base_dashboard",
+      "exact_target": "Base ERP project-specific Dashboard entry",
+      "candidate_target": "6a7a0717e209a55163497d2d",
+      "write_scope": "Use the candidate only after an owner-visible readback proves it is the Base project entry",
+      "owner_verification_required": true,
+      "on_conflict": "stop_owner_gate"
+    },
+    {
+      "platform": "base_dev",
+      "exact_target": "Base ERP project-specific base.dev entry",
+      "write_scope": "Base project entry or deployment mapping only",
+      "owner_verification_required": true,
+      "on_conflict": "stop_owner_gate"
+    },
+    {
+      "platform": "talent",
+      "exact_target": "Base ERP project-specific Talent entry",
+      "write_scope": "Base project entry only",
+      "owner_verification_required": true,
+      "on_conflict": "stop_owner_gate"
+    },
+    {
+      "platform": "guild",
+      "exact_target": "Base ERP project-specific Guild entry",
+      "write_scope": "Base project entry only",
+      "owner_verification_required": true,
+      "on_conflict": "stop_owner_gate"
+    },
+    {
+      "platform": "basename_base_org",
+      "exact_target": "gaysonloser.base.eth / www.base.org/name/gaysonloser",
+      "write_scope": "Read/verify Base identity; any primary-name mutation requires a separate owner-approved transaction",
+      "owner_verification_required": true,
+      "on_conflict": "stop_owner_gate"
+    },
+    {
+      "platform": "base_sepolia",
+      "exact_target": "Base Sepolia project-specific testnet evidence",
+      "write_scope": "Base testnet transaction/evidence only; never substitute for Base Mainnet or another project",
+      "on_conflict": "stop_owner_gate"
+    }
+  ],
+  "hard_rules": [
+    "Never modify, overwrite, reuse, rename or replace any CIRCLE repository, service, app, project, profile entry, release, manifest, domain, URL or receipt.",
+    "Before every external write, verify the exact Base target identity against this matrix and the live owner-visible surface.",
+    "If a target contains a CIRCLE project ID, name or domain, stop immediately and create an owner/platform gate; do not force coexistence.",
+    "If a shared account-level profile cannot hold a separate Base project-specific entry without changing an existing entry, stop at the owner/platform gate.",
+    "A receipt counts only when its target is Base-specific and its release_id, release_fingerprint, bom_fingerprint and material_outcome join the current Base release.",
+    "CIRCLE receipts, deployments and manifests are never Base evidence."
+  ],
+  "external_write_protocol": [
+    "read target identity",
+    "compare exact Base owner/project/service/domain fields",
+    "assert no CIRCLE identifiers",
+    "write only the Base-specific resource",
+    "read back native receipt and release join",
+    "stop and record owner/platform gate on ambiguity"
+  ],
+  "status": "active_owner_constraint",
+  "updated_at": "2026-08-14T02:00:00+08:00"
+}
