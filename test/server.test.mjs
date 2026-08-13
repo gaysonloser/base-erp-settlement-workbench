@@ -68,7 +68,7 @@ test("public evidence endpoint exposes the typed fail-closed product boundary", 
     assert.equal(body.schema_version, "base-erp-public-evidence-v1");
     assert.equal(body.public_write_authorized, false);
     assert.equal(body.external_actions, 0);
-    assert.equal(body.release.release_id, "base-erp-public-product-20260810-v1");
+    assert.equal(body.release.release_id, "base-erp-public-product-20260814-v2");
     assert.equal(body.account_connect_preflight.network, "base_mainnet");
     assert.equal(body.account_connect_preflight.chain_id, 8453);
     assert.equal(body.account_connect_preflight.owner_confirmation, "NOT_GRANTED");
@@ -169,6 +169,97 @@ test("HTTP server handles unsupported methods and unknown paths, then shuts down
     assert.equal(missingResponse.status, 404);
     assert.deepEqual(await missingResponse.json(), { error: "not_found", path: "/missing" });
     const headResponse = await fetch(`${baseUrl}/release.json`, { method: "HEAD" });
+    assert.equal(headResponse.status, 200);
+    assert.equal(await headResponse.text(), "");
+  });
+});
+
+test("visitor case catalog exposes seven H209 profiles on one release join key", async () => {
+  await withServer(async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/cases.json`);
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.schema_version, "base-erp-visitor-case-catalog-v1");
+    assert.equal(body.mode, "visitor_read_only");
+    assert.equal(body.profiles.length, 7);
+    assert.deepEqual(body.erp_domains, ["Sales Invoice", "Payment Entry", "Bank Transaction", "General Ledger", "Payment Ledger", "Accounting Period", "Period Closing Voucher"]);
+    assert.equal(body.release.current, true);
+    assert.equal(body.release.historical, false);
+    assert.equal(body.release.synthetic, false);
+    assert.ok(body.profiles.every((profile) => profile.chain_id === 84532 && profile.safety.wallet_write_allowed === false));
+  });
+});
+
+test("read-only simulation is deterministic and explicitly non-executable", async () => {
+  await withServer(async (baseUrl) => {
+    const url = `${baseUrl}/simulate.json?profile_id=customer_invoice_receipt&amount=12.50&currency=USDC&business_reference=invoice-demo-001`;
+    const [firstResponse, secondResponse] = await Promise.all([fetch(url), fetch(url)]);
+    assert.equal(firstResponse.status, 200);
+    assert.equal(secondResponse.status, 200);
+    const first = await firstResponse.json();
+    const second = await secondResponse.json();
+    assert.deepEqual(first, second);
+    assert.equal(first.mode, "simulation_non_executable");
+    assert.equal(first.case.profile_id, "customer_invoice_receipt");
+    assert.equal(first.case.chain_id, 84532);
+    assert.equal(first.safety.broadcast, false);
+    assert.equal(first.safety.signed, false);
+    assert.equal(first.safety.transaction_hash, null);
+    assert.equal(first.safety.countable_daily_trace, false);
+    assert.equal(first.expected_effects.event_history, "not_observed");
+    assert.match(first.simulation_id, /^sim-[0-9a-f]{24}$/);
+  });
+});
+
+test("simulation rejects unknown profiles and unsupported network input", async () => {
+  await withServer(async (baseUrl) => {
+    const unknown = await fetch(`${baseUrl}/simulate.json?profile_id=unknown-profile`);
+    assert.equal(unknown.status, 400);
+    assert.equal((await unknown.json()).error, "simulation_input_invalid");
+    const unsupported = await fetch(`${baseUrl}/simulate.json?profile_id=customer_invoice_receipt&network=base_vibenet`);
+    assert.equal(unsupported.status, 400);
+    assert.equal((await unsupported.json()).error, "simulation_input_invalid");
+  });
+});
+
+test("event admission remains blocked until independent durable event evidence exists", async () => {
+  await withServer(async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/event-admission.json?case_id=case-demo-001`);
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.schema_version, "base-erp-event-admission-v1");
+    assert.equal(body.case_id, "case-demo-001");
+    assert.equal(body.status, "blocked_missing_event_history");
+    assert.equal(body.observed, false);
+    assert.equal(body.current_release_bound, true);
+    assert.equal(body.raw_payload_digest, null);
+    assert.equal(body.durable_store_pointer, null);
+    assert.equal(body.credit, 0);
+  });
+});
+
+test("standard web-app metadata and existing Base App assets are served without write capability", async () => {
+  await withServer(async (baseUrl) => {
+    const [metadataResponse, wellKnownResponse, assetResponse, headResponse] = await Promise.all([
+      fetch(`${baseUrl}/app.json`),
+      fetch(`${baseUrl}/.well-known/base-app.json`),
+      fetch(`${baseUrl}/assets/base-app/base-erp-workbench-thumbnail-1200x628.jpg`),
+      fetch(`${baseUrl}/assets/base-app/base-erp-workbench-thumbnail-1200x628.jpg`, { method: "HEAD" }),
+    ]);
+    assert.equal(metadataResponse.status, 200);
+    assert.equal(wellKnownResponse.status, 200);
+    const metadata = await metadataResponse.json();
+    const wellKnown = await wellKnownResponse.json();
+    assert.deepEqual(metadata, wellKnown);
+    assert.equal(metadata.schema_version, "base-erp-standard-web-app-metadata-v1");
+    assert.equal(metadata.primary_url, "https://base-erp-settlement-workbench.onrender.com/");
+    assert.equal(metadata.screenshots.length, 2);
+    assert.equal(metadata.public_write_authorized, false);
+    assert.equal(metadata.wallet_actions_exposed, false);
+    assert.match(metadata.icon, /^\/assets\/base-app\//);
+    assert.equal(assetResponse.status, 200);
+    assert.match(assetResponse.headers.get("content-type"), /^image\/jpeg/);
+    assert.ok(Number(assetResponse.headers.get("content-length")) > 0);
     assert.equal(headResponse.status, 200);
     assert.equal(await headResponse.text(), "");
   });

@@ -34,20 +34,20 @@
   "runtime_snapshot": {
     "source": "projects/2026-06_Base_Guild_Onchain_Score/runtime/current_run.json",
     "mutable": true,
-    "runtime_sha256": "9e5b1b0fe6d543e49d850e6fb54c5d78ec39aa07d671f87e5814a433e73f6e4a",
+    "runtime_sha256": "dd3aa78f6b0116c63631d74df119c8501fcdfaa8e4e29c7a49dc087a7b52d7c8",
     "run_id": "02_Build-20260814-010433",
     "date_cst": "2026-08-14",
     "status": "running",
     "cursor_source": "top-level cursor when non-empty, otherwise resume.cursor",
-    "cursor": "Deficit-first dispatch: trace_gap=30; public_gap=10. Trace gap remains: prepare exactly one legitimate corresponding-wallet onchain state-change, open one exact final wallet review, and count it only after a unique successful receipt. Publication gap remains: one material unit needs truthful receipts on every mandatory platform (github, render, base_app, base_dashboard, base_dev, talent, guild, basename_base_org); partial bundles count zero. Execute eligible candidate BASE-HARD-FLOOR-DISCOVERY-20260814-03 now; do not rediscover earlier routes.",
+    "cursor": "Deficit-first dispatch: trace_gap=30; public_gap=10. Trace gap remains: prepare exactly one legitimate corresponding-wallet onchain state-change, open one exact final wallet review, and count it only after a unique successful receipt. Publication gap remains: one material unit needs truthful receipts on every mandatory platform (github, render, base_app, base_dashboard, base_dev, talent, guild, basename_base_org); partial bundles count zero. Execute eligible candidate BASE-HARD-FLOOR-DISCOVERY-20260814-04 now; do not rediscover earlier routes.",
     "writer_idle_authority": {
       "path": "runtime/runtime_authority.json",
       "schema_version": "base-erp-runtime-authority-v1",
-      "runtime_sha256": "9e5b1b0fe6d543e49d850e6fb54c5d78ec39aa07d671f87e5814a433e73f6e4a",
+      "runtime_sha256": "dd3aa78f6b0116c63631d74df119c8501fcdfaa8e4e29c7a49dc087a7b52d7c8",
       "writer_idle": true,
-      "record_sha256": "85a683160b96af1ebc65d2082e23dd05c9d677639a9b68eb0d94d74e69f7602b",
-      "observed_at": "2026-08-13T17:50:02Z",
-      "event_id": "base-erp-runtime-rebind-20260814-p17"
+      "record_sha256": "f858112766918e1d853cc0da3030c7c27e4dd6ba5ad899a48876b528e189163b",
+      "observed_at": "2026-08-13T19:25:00Z",
+      "event_id": "base-erp-runtime-rebind-20260814-p23"
     },
     "invalidation": "Any byte change to current_run.json or any authority-record hash/cursor/writer-idle drift invalidates this snapshot and requires fresh Build revalidation."
   },
@@ -363,6 +363,7 @@
       "receipt": null
     }
   ],
+  "post_publication_readback": "runtime/publication_readback_2026-08-14.json",
   "receipt_schema": {
     "required_fields": [
       "platform",

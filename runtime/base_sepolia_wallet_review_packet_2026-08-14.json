@@ -1,0 +1,43 @@
+{
+  "schema_version": "base-erp-wallet-review-packet-v1",
+  "packet_id": "base-erp-sepolia-rehearsal-self-transfer-20260814-01",
+  "created_at_cst": "2026-08-14T03:20:00+08:00",
+  "purpose": "Base Sepolia rehearsal of the single owner-visible Base Account review state machine",
+  "release_join": {
+    "release_id": "base-erp-public-product-20260814-v2",
+    "release_fingerprint": "3cb69bbc90f755ff8540ca8e606a580d74b67ef46e71cbdba623c594e721f40e",
+    "bom_fingerprint": "ef9b54c273e1895dc5883b4942533243cc4a9d6f54568010a6f12175c2b94a5e"
+  },
+  "case": {
+    "profile_id": "customer_invoice_receipt",
+    "network": "base_sepolia",
+    "chain_id": 84532,
+    "asset": "ETH",
+    "amount": "0.000001",
+    "recipient_role": "configured_primary_base_account_rehearsal_target",
+    "recipient": "0xBa36D092dB2999bb1FaBbaf281AC956A97189C25"
+  },
+  "preflight": {
+    "base_mcp_tools": 15,
+    "help_passed": true,
+    "get_wallets_primary_account_confirmed": true,
+    "chain_id_readback_passed": true,
+    "owner_confirmation": "NOT_GRANTED",
+    "review_surface": "surface_missing",
+    "approval_request_created": true,
+    "approval_url_persisted": false,
+    "request_id_persisted": false,
+    "broadcast": false,
+    "transaction_hash": null,
+    "receipt": null,
+    "finality": null,
+    "counts_as_mainnet_trace": false,
+    "counts_as_publication_unit": false,
+    "terminal_outcome": "surface_missing_not_broadcast_replay_locked"
+  },
+  "stop_conditions": [
+    "Do not approve unless the Base Account review window shows Base Sepolia, exact recipient, exact 0.000001 ETH value and the owner recognizes this rehearsal.",
+    "Any rejection, cancellation, surface_missing or not_broadcast result replay-locks this packet.",
+    "A testnet receipt never advances the 30 Base Mainnet trace counter or the eight-surface publication counter."
+  ]
+}

@@ -5,6 +5,12 @@ import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 
 import { digest } from "./base-neutral-receipt-controls.mjs";
+import {
+  buildEventAdmissionPreview,
+  buildReadOnlySimulation,
+  buildStandardWebAppMetadata,
+  buildVisitorCaseCatalog,
+} from "./base-erp-workbench.mjs";
 
 const PROJECT_ROOT = fileURLToPath(new URL("../", import.meta.url));
 const DEFAULT_RELEASE_PATH = resolve(PROJECT_ROOT, "runtime/release_candidate_2026-08-10.json");
@@ -23,6 +29,24 @@ const PUBLIC_PLATFORM_ORDER = Object.freeze([
   "guild",
   "basename_base_org",
 ]);
+const PUBLIC_ASSETS = Object.freeze({
+  "/assets/base-app/base-erp-workbench-screenshot-1284x2778.jpg": Object.freeze({
+    file: "assets/base-app/base-erp-workbench-screenshot-1284x2778.jpg",
+    type: "image/jpeg",
+  }),
+  "/assets/base-app/base-erp-workbench-screenshot-source.png": Object.freeze({
+    file: "assets/base-app/base-erp-workbench-screenshot-source.png",
+    type: "image/png",
+  }),
+  "/assets/base-app/base-erp-workbench-thumbnail-1200x628.jpg": Object.freeze({
+    file: "assets/base-app/base-erp-workbench-thumbnail-1200x628.jpg",
+    type: "image/jpeg",
+  }),
+  "/assets/base-app/base-erp-workbench-thumbnail-source.png": Object.freeze({
+    file: "assets/base-app/base-erp-workbench-thumbnail-source.png",
+    type: "image/png",
+  }),
+});
 
 function readJsonFile(filePath) {
   const resolvedPath = filePath instanceof URL ? filePath : resolve(String(filePath));
@@ -358,6 +382,9 @@ export function renderHomePage(release) {
       </dl>
       <h2>Limits</h2>
       <ul>${limitations}</ul>
+      <h2>Visitor mode</h2>
+      <p>Explore the seven document-aware settlement profiles and run a deterministic, non-broadcast simulation. It never requests a wallet, signs, sends or posts to ERP.</p>
+      <p><a href="/cases.json">Case catalog</a> · <a href="/simulate.json?profile_id=customer_invoice_receipt">Run a read-only simulation</a> · <a href="/event-admission.json">Event admission status</a> · <a href="/app.json">Standard web-app metadata</a></p>
       <p>Public writes and wallet actions are disabled. See <a href="/evidence/">Evidence Workbench</a>, <a href="/release.json">release.json</a> for the bounded public release document and <a href="/healthz">healthz</a> for runtime readiness.</p>
     </main>
   </body>
@@ -385,6 +412,7 @@ export function renderEvidencePage(evidence) {
 <h2>Execution layers</h2><p>Simulation: ${evidence.execution_layers.simulation.record_count} records, broadcast=${evidence.execution_layers.simulation.broadcast}, daily-countable=${evidence.execution_layers.simulation.countable_daily_trace}. Executable: ${evidence.execution_layers.executable.available}, owner gate=${escapeHtml(evidence.execution_layers.executable.owner_gate)}.</p>
 <h2>Eight-platform publication evidence</h2><table><thead><tr><th>Platform</th><th>Status</th><th>Credit</th><th>Proof</th></tr></thead><tbody>${surfaces}</tbody></table>
 <h2>Safety</h2><p>Retries require terminal resolution and a new owner-authorized candidate; duplicate keys are no-op and conflicting replay is fail-closed. Prior unresolved packets remain replay-locked.</p>
+<h2>Visitor product surfaces</h2><p><a href="/cases.json">Case catalog</a> · <a href="/simulate.json?profile_id=customer_invoice_receipt">Read-only simulation</a> · <a href="/event-admission.json">Event admission</a> · <a href="/app.json">App metadata</a></p>
 <p><a href="/evidence.json">evidence.json</a> · <a href="/release.json">release.json</a> · <a href="/healthz">healthz</a> · <a href="/">home</a></p>
 </main></body></html>`;
 }
@@ -401,6 +429,25 @@ function writeResponse(response, status, body, contentType, { head = false } = {
   else response.end();
 }
 
+function writeAsset(response, pathname, { head = false } = {}) {
+  const asset = PUBLIC_ASSETS[pathname];
+  if (!asset) return false;
+  try {
+    const payload = readFileSync(resolve(PROJECT_ROOT, asset.file));
+    response.writeHead(200, {
+      "content-type": asset.type,
+      "content-length": payload.byteLength,
+      "cache-control": "public, max-age=300",
+      "x-content-type-options": "nosniff",
+    });
+    if (!head) response.end(payload);
+    else response.end();
+  } catch {
+    writeResponse(response, 404, { error: "asset_not_found", path: pathname }, "application/json; charset=utf-8", { head });
+  }
+  return true;
+}
+
 export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = process.env, runtimeReader = null } = {}) {
   return createServer((request, response) => {
     const head = request.method === "HEAD";
@@ -408,13 +455,15 @@ export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = proc
       writeResponse(response, 405, { error: "method_not_allowed", allowed: ["GET", "HEAD"] }, "application/json; charset=utf-8");
       return;
     }
-    let pathname;
+    let parsedUrl;
     try {
-      pathname = new URL(request.url ?? "/", "http://localhost").pathname;
+      parsedUrl = new URL(request.url ?? "/", "http://localhost");
     } catch {
       writeResponse(response, 400, { error: "invalid_request_url" }, "application/json; charset=utf-8", { head });
       return;
     }
+    const pathname = parsedUrl.pathname;
+    if (writeAsset(response, pathname, { head })) return;
     let release;
     try {
       release = readReleaseDocument({ releasePath, env });
@@ -433,6 +482,45 @@ export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = proc
     }
     if (pathname === "/evidence.json") {
       writeResponse(response, 200, readPublicEvidenceDocument({ releasePath, env }), "application/json; charset=utf-8", { head });
+      return;
+    }
+    if (pathname === "/cases.json") {
+      writeResponse(response, 200, buildVisitorCaseCatalog({ release }), "application/json; charset=utf-8", { head });
+      return;
+    }
+    if (pathname === "/simulate.json") {
+      try {
+        const simulation = buildReadOnlySimulation({
+          release,
+          profile_id: parsedUrl.searchParams.get("profile_id") ?? "",
+          amount: parsedUrl.searchParams.get("amount") ?? "100.00",
+          currency: parsedUrl.searchParams.get("currency") ?? "USDC",
+          network: parsedUrl.searchParams.get("network") ?? undefined,
+          business_reference: parsedUrl.searchParams.get("business_reference") ?? "visitor-demo-001",
+        });
+        writeResponse(response, 200, simulation, "application/json; charset=utf-8", { head });
+      } catch (error) {
+        writeResponse(response, 400, { error: "simulation_input_invalid", reason: error instanceof Error ? error.message : "invalid simulation input" }, "application/json; charset=utf-8", { head });
+      }
+      return;
+    }
+    if (pathname === "/event-admission.json") {
+      try {
+        writeResponse(response, 200, buildEventAdmissionPreview({ release, case_id: parsedUrl.searchParams.get("case_id") ?? undefined }), "application/json; charset=utf-8", { head });
+      } catch (error) {
+        writeResponse(response, 400, { error: "event_admission_input_invalid", reason: error instanceof Error ? error.message : "invalid event admission input" }, "application/json; charset=utf-8", { head });
+      }
+      return;
+    }
+    if (pathname === "/app.json" || pathname === "/.well-known/base-app.json") {
+      try {
+        writeResponse(response, 200, buildStandardWebAppMetadata({
+          release,
+          primary_url: env?.PUBLIC_BASE_URL ?? env?.BASE_APP_PRIMARY_URL ?? "https://base-erp-settlement-workbench.onrender.com/",
+        }), "application/json; charset=utf-8", { head });
+      } catch (error) {
+        writeResponse(response, 503, { error: "app_metadata_unavailable", reason: error instanceof Error ? error.message : "app metadata unavailable" }, "application/json; charset=utf-8", { head });
+      }
       return;
     }
     if (pathname === "/evidence" || pathname === "/evidence/") {

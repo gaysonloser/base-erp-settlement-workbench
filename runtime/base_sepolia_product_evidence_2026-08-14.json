@@ -1,0 +1,40 @@
+{
+  "schema_version": "base-erp-base-sepolia-read-only-evidence-v1",
+  "observed_at_cst": "2026-08-14T03:19:40+08:00",
+  "network": "base_sepolia",
+  "chain_id": 84532,
+  "chain_id_hex": "0x14a34",
+  "rpc_methods": [
+    "eth_chainId",
+    "eth_blockNumber",
+    "eth_getBlockByNumber"
+  ],
+  "observed_block": {
+    "number_hex": "0x2b55cf2",
+    "hash": "0xd6211fa66d92d447d6a85c3c22cc16b328e387c4bca9e533acbe2c8f7779a42b"
+  },
+  "release_join": {
+    "release_id": "base-erp-public-product-20260814-v2",
+    "release_fingerprint": "3cb69bbc90f755ff8540ca8e606a580d74b67ef46e71cbdba623c594e721f40e",
+    "bom_fingerprint": "ef9b54c273e1895dc5883b4942533243cc4a9d6f54568010a6f12175c2b94a5e"
+  },
+  "product_routes_validated": [
+    "/",
+    "/healthz",
+    "/release.json",
+    "/evidence.json",
+    "/cases.json",
+    "/simulate.json",
+    "/event-admission.json",
+    "/app.json"
+  ],
+  "transaction_hash": null,
+  "receipt": null,
+  "counts_as_mainnet_trace": false,
+  "counts_as_publication_unit": false,
+  "owner_review": "not_requested",
+  "limitations": [
+    "This is independent Base Sepolia read-only RPC evidence, not a state-changing transaction.",
+    "Simulation remains non-executable; no owner approval, signature, broadcast, receipt, finality or ERP posting is inferred."
+  ]
+}
