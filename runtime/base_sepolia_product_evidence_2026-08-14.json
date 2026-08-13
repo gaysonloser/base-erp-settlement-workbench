@@ -14,9 +14,9 @@
     "hash": "0xd6211fa66d92d447d6a85c3c22cc16b328e387c4bca9e533acbe2c8f7779a42b"
   },
   "release_join": {
-    "release_id": "base-erp-public-product-20260814-v2",
-    "release_fingerprint": "3cb69bbc90f755ff8540ca8e606a580d74b67ef46e71cbdba623c594e721f40e",
-    "bom_fingerprint": "ef9b54c273e1895dc5883b4942533243cc4a9d6f54568010a6f12175c2b94a5e"
+    "release_id": "base-erp-public-product-20260814-v3",
+    "release_fingerprint": "1d4eb4b455c6e8f962fb3f33c76ef037572efa331cd43de10d23498d4bf4c727",
+    "bom_fingerprint": "cd7d3f453080ec6746a1220fd57e4b826358e4e3c63864b9ea2bd8e2dd63d44a"
   },
   "product_routes_validated": [
     "/",
@@ -32,7 +32,7 @@
   "receipt": null,
   "counts_as_mainnet_trace": false,
   "counts_as_publication_unit": false,
-  "owner_review": "not_requested",
+  "owner_review": "terminal_surface_missing_not_broadcast_replay_locked",
   "limitations": [
     "This is independent Base Sepolia read-only RPC evidence, not a state-changing transaction.",
     "Simulation remains non-executable; no owner approval, signature, broadcast, receipt, finality or ERP posting is inferred."

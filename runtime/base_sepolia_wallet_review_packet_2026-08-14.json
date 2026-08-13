@@ -4,9 +4,9 @@
   "created_at_cst": "2026-08-14T03:20:00+08:00",
   "purpose": "Base Sepolia rehearsal of the single owner-visible Base Account review state machine",
   "release_join": {
-    "release_id": "base-erp-public-product-20260814-v2",
-    "release_fingerprint": "3cb69bbc90f755ff8540ca8e606a580d74b67ef46e71cbdba623c594e721f40e",
-    "bom_fingerprint": "ef9b54c273e1895dc5883b4942533243cc4a9d6f54568010a6f12175c2b94a5e"
+    "release_id": "base-erp-public-product-20260814-v3",
+    "release_fingerprint": "1d4eb4b455c6e8f962fb3f33c76ef037572efa331cd43de10d23498d4bf4c727",
+    "bom_fingerprint": "cd7d3f453080ec6746a1220fd57e4b826358e4e3c63864b9ea2bd8e2dd63d44a"
   },
   "case": {
     "profile_id": "customer_invoice_receipt",

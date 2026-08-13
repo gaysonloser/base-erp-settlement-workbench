@@ -68,7 +68,7 @@ test("public evidence endpoint exposes the typed fail-closed product boundary", 
     assert.equal(body.schema_version, "base-erp-public-evidence-v1");
     assert.equal(body.public_write_authorized, false);
     assert.equal(body.external_actions, 0);
-    assert.equal(body.release.release_id, "base-erp-public-product-20260814-v2");
+    assert.equal(body.release.release_id, "base-erp-public-product-20260814-v3");
     assert.equal(body.account_connect_preflight.network, "base_mainnet");
     assert.equal(body.account_connect_preflight.chain_id, 8453);
     assert.equal(body.account_connect_preflight.owner_confirmation, "NOT_GRANTED");
@@ -78,11 +78,18 @@ test("public evidence endpoint exposes the typed fail-closed product boundary", 
     assert.equal(body.execution_layers.executable.available, false);
     assert.equal(body.settlement_workflow.boundaries.chain_success_implies_erp_posting, false);
     assert.deepEqual(body.publication.required_platforms, ["github", "render", "base_app", "base_dashboard", "base_dev", "talent", "guild", "basename_base_org"]);
-    assert.equal(body.publication.strict_receipt_count, 0);
+    assert.equal(body.publication.strict_receipt_count, 1);
+    assert.deepEqual(body.publication.strict_receipt_platforms, ["github"]);
     assert.equal(body.publication.publication_unit_count, 0);
     for (const platform of body.publication.required_platforms) {
-      assert.equal(body.publication.surfaces[platform].countable, false, platform);
-      assert.equal(body.publication.surfaces[platform].receipt, null, platform);
+      if (platform === "github") {
+        assert.equal(body.publication.surfaces[platform].countable, true, platform);
+        assert.equal(body.publication.surfaces[platform].receipt.release_id, "base-erp-public-product-20260814-v3");
+        assert.equal(body.publication.surfaces[platform].receipt.current, true);
+      } else {
+        assert.equal(body.publication.surfaces[platform].countable, false, platform);
+        assert.equal(body.publication.surfaces[platform].receipt, null, platform);
+      }
     }
     assert.equal(body.safety.retry.unresolved_request_replay, "forbidden");
     assert.equal(body.safety.deduplication.duplicate_consequence, "noop");
@@ -100,7 +107,7 @@ test("visitor evidence page links release identity and all eight publication sur
     assert.match(body, /Account\/connect preflight/);
     assert.match(body, /Settlement workflow/);
     assert.match(body, /Eight-platform publication evidence/);
-    assert.match(body, /strict receipts 0\/8/);
+    assert.match(body, /strict receipts 1\/8/);
     for (const platform of ["github", "render", "base_app", "base_dashboard", "base_dev", "talent", "guild", "basename_base_org"]) {
       assert.match(body, new RegExp(platform));
     }

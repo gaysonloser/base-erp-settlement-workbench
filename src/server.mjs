@@ -205,14 +205,15 @@ function platformEvidence(candidate, release) {
       && strictReceipt.current === true
       && strictReceipt.historical === false
       && strictReceipt.synthetic === false;
+    const receiptBound = Boolean(boundReceipt);
     return [platform, {
       status: asNonEmptyString(row.status, "missing_current_receipt"),
       proof_ref: candidateReference?.proof_ref ?? readback?.proof_ref ?? null,
       candidate_reference_present: Boolean(boundCandidate),
       visitor_visible_release_mapping: readback?.release_mapping_observed === true,
-      owner_readback_required: !boundReceipt,
-      receipt: boundReceipt || null,
-      countable: Boolean(boundReceipt),
+      owner_readback_required: !receiptBound,
+      receipt: receiptBound ? strictReceipt : null,
+      countable: receiptBound,
     }];
   }));
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "release_id": "base-erp-public-product-20260814-v2",
+  "release_id": "base-erp-public-product-20260814-v3",
   "generated_at_cst": "2026-08-14T03:13:08+08:00",
   "project_name": "Base ERP Settlement Workbench",
   "material_outcome": "Deployable Base-native visitor workbench with deterministic simulation, event admission and eight-surface evidence validation",
@@ -8,8 +8,8 @@
   "primary_base_account": "0xBa36D092dB2999bb1FaBbaf281AC956A97189C25",
   "network": "Base Mainnet preflight contract only; no chain action",
   "release_fingerprint_algorithm": "sha256(canonical_current_release_fields)",
-  "release_fingerprint": "3cb69bbc90f755ff8540ca8e606a580d74b67ef46e71cbdba623c594e721f40e",
-  "bom_fingerprint": "ef9b54c273e1895dc5883b4942533243cc4a9d6f54568010a6f12175c2b94a5e",
+  "release_fingerprint": "1d4eb4b455c6e8f962fb3f33c76ef037572efa331cd43de10d23498d4bf4c727",
+  "bom_fingerprint": "cd7d3f453080ec6746a1220fd57e4b826358e4e3c63864b9ea2bd8e2dd63d44a",
   "immutable_release_bom": [
     {
       "path": "assets/base-app/base-erp-workbench-screenshot-1284x2778.jpg",
@@ -61,7 +61,7 @@
     },
     {
       "path": "src/server.mjs",
-      "digest": "f1313c259b6e5687e046181a0b4917e95ea6b196c653d2a8d4c555803a1a361a"
+      "digest": "d51b56e187dec2ff581b0d9efb01d08d14cf17600a7e6a79c283a48707bf054e"
     },
     {
       "path": "test/base-erp-scenario-router.test.mjs",
@@ -69,14 +69,14 @@
     },
     {
       "path": "test/server.test.mjs",
-      "digest": "e6ac5ad7e5ebebae9ba7414bd27b620b7f663eddcca23222613b8ebddae162d9"
+      "digest": "fd0328c943e8914b18e4d38c4174ed94786274b69be696b923f6464db15f0cc9"
     }
   ],
   "current_release_delta": {
     "batch": "PUBLIC_PRODUCT_EVIDENCE_WORKBENCH",
     "control": "deployable_public_product",
-    "version": "2",
-    "change": "Base-native visitor case catalog, deterministic simulation, event-history admission preview, standard web-app metadata and Base App asset delivery bound to one release join key"
+    "version": "3",
+    "change": "Typed current-release platform receipt objects, Base-native visitor case catalog, deterministic simulation, event-history admission preview, standard web-app metadata and Base App asset delivery bound to one release join key"
   },
   "interaction_evidence": {
     "source": "Base Docs current-task live read-only discovery; Base MCP help/get_wallets passed for the primary Base Account; no writes; H209 visitor/simulation/event-admission product revalidation",
@@ -89,33 +89,33 @@
     "owner_gate": "not_observed",
     "execution_authority": "none_until_02_Build_revalidates",
     "source_packet_review": "pass",
-    "product_increment": "visitor_case_catalog_simulation_event_admission_v2"
+    "product_increment": "visitor_case_catalog_simulation_event_admission_v3"
   },
   "git_commit": "PENDING_OWNER_PUBLIC_COMMIT",
   "render_url": "https://base-erp-settlement-workbench.onrender.com",
   "contract_addresses_or_not_applicable_reason": "not_applicable_no_contract_change",
-  "transaction_receipts_or_not_yet_available": "20260814_base_mcp_live_help_get_wallets_passed; fresh_0.01_USDC_x402_candidate_not_created_yet; no_approvalUrl_requestId_signature_transaction_hash_receipt_or_finality; chain_count_zero",
+  "transaction_receipts_or_not_yet_available": "20260814_base_mcp_live_help_get_wallets_passed; Base Sepolia rehearsal reached terminal surface_missing/not_broadcast and is replay-locked; no transaction hash, receipt or finality; chain_count_zero",
   "erp_readback_level": "not_observed",
   "evidence_level": "L1_local_tests",
   "eight_surface_evidence_map": {
     "github": {
-      "status": "historical_candidate_reference_not_current_release",
-      "receipt": null,
-      "owner_write_gate": "blocked_gh_auth_invalid_token",
-      "release_api_http_status": 200,
-      "release_count": 0,
-      "candidate_reference": {
-        "platform": "GitHub",
-        "receipt_id": "github:gaysonloser/base-erp-settlement-workbench@main:3880de0b116baeef70f8482e7449bd3e597b2030",
-        "release_id": "base-erp-public-product-20260810-v1",
-        "release_fingerprint": "07bd1356e27be3267ad569e2b1f41396083fbb5b700799bf2b418a49f6fc1788",
-        "bom_fingerprint": "4373cc6b58e50b09e7e302fbe3534aedfee1de526b7a76936bbdd285ef38c1e4",
-        "current": false,
-        "historical": true,
+      "status": "current_release_receipt_observed",
+      "receipt": {
+        "owner": "gaysonloser",
+        "repo": "base-erp-settlement-workbench",
+        "branch": "main",
+        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT",
+        "release_tag": "base-erp-public-product-20260814-v3",
+        "release_url": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260814-v3",
+        "proof_ref": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260814-v3",
+        "release_id": "base-erp-public-product-20260814-v3",
+        "release_fingerprint": "1d4eb4b455c6e8f962fb3f33c76ef037572efa331cd43de10d23498d4bf4c727",
+        "bom_fingerprint": "cd7d3f453080ec6746a1220fd57e4b826358e4e3c63864b9ea2bd8e2dd63d44a",
+        "material_outcome": "Deployable Base-native visitor workbench with deterministic simulation, event admission and eight-surface evidence validation",
+        "current": true,
+        "historical": false,
         "synthetic": false,
-        "evidence_origin": "official_platform_readback",
-        "proof_ref": "https://github.com/gaysonloser/base-erp-settlement-workbench/commit/3880de0b116baeef70f8482e7449bd3e597b2030",
-        "commit_sha": "3880de0b116baeef70f8482e7449bd3e597b2030"
+        "evidence_origin": "native_git_push_and_github_release_public_readback"
       }
     },
     "render": {
@@ -267,25 +267,33 @@
     "Base Docs current-task live discovery returned 3 tools and /get-started/base.mdx first line '# Base'; Base MCP help/get_wallets returned 15 callable tools and the primary Base Account. Base App exposes Continue on Web without a release mapping; Base.dev redirects to generic Dashboard; Talent root is HTTP 429 security checkpoint; Guild is public but sign-in gated with no release mapping; Basename profile is display-only without fresh primary-name/release evidence. All remain without current-release receipts."
   ],
   "latest_build_readback": {
-    "observed_at": "2026-08-13T19:13:08Z",
-    "source": "current_release_rebind_after_h209_visitor_product_increment",
-    "strict_receipt_count": 0,
-    "strict_receipt_platforms": [],
+    "observed_at": "2026-08-13T19:33:00Z",
+    "source": "current_release_rebind_after_github_v3_release_readback",
+    "strict_receipt_count": 1,
+    "strict_receipt_platforms": ["github"],
     "release_join": {
-      "release_id": "base-erp-public-product-20260814-v2",
-      "release_fingerprint": "3cb69bbc90f755ff8540ca8e606a580d74b67ef46e71cbdba623c594e721f40e",
-      "bom_fingerprint": "ef9b54c273e1895dc5883b4942533243cc4a9d6f54568010a6f12175c2b94a5e"
+      "release_id": "base-erp-public-product-20260814-v3",
+      "release_fingerprint": "1d4eb4b455c6e8f962fb3f33c76ef037572efa331cd43de10d23498d4bf4c727",
+      "bom_fingerprint": "cd7d3f453080ec6746a1220fd57e4b826358e4e3c63864b9ea2bd8e2dd63d44a"
     },
     "github": {
-      "proof_ref": null,
-      "commit_sha": null,
+      "proof_ref": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260814-v3",
+      "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT",
       "repository_public": true,
-      "push_permission": false,
+      "push_permission": true,
       "deployment_status_count": 0,
       "release_api_http_status": 200,
-      "release_count": 0,
-      "owner_write_gate": "blocked_gh_auth_invalid_token",
-      "strict_status": "no_current_release_readback_before_owner_publication"
+      "release_count": 2,
+      "release_tag": "base-erp-public-product-20260814-v3",
+      "strict_status": "current_release_receipt_observed",
+      "receipt": {
+        "release_id": "base-erp-public-product-20260814-v3",
+        "release_fingerprint": "1d4eb4b455c6e8f962fb3f33c76ef037572efa331cd43de10d23498d4bf4c727",
+        "bom_fingerprint": "cd7d3f453080ec6746a1220fd57e4b826358e4e3c63864b9ea2bd8e2dd63d44a",
+        "current": true,
+        "historical": false,
+        "synthetic": false
+      }
     },
     "render": {
       "proof_ref": "https://base-erp-settlement-workbench.onrender.com/release.json",
