@@ -7,10 +7,13 @@ import { resolve } from "node:path";
 import { digest } from "./base-neutral-receipt-controls.mjs";
 import {
   buildEventAdmissionPreview,
+  buildOperatorWorkbench,
   buildReadOnlySimulation,
   buildStandardWebAppMetadata,
   buildVisitorCaseCatalog,
 } from "./base-erp-workbench.mjs";
+import { renderOperatorWorkbenchPage } from "./operator-workbench-page.mjs";
+import { evaluateRefundProposal } from "./base-refund-ceiling-guard.mjs";
 
 const PROJECT_ROOT = fileURLToPath(new URL("../", import.meta.url));
 const DEFAULT_RELEASE_PATH = resolve(PROJECT_ROOT, "runtime/release_candidate_2026-08-10.json");
@@ -385,7 +388,7 @@ export function renderHomePage(release) {
       <ul>${limitations}</ul>
       <h2>Visitor mode</h2>
       <p>Explore the seven document-aware settlement profiles and run a deterministic, non-broadcast simulation. It never requests a wallet, signs, sends or posts to ERP.</p>
-      <p><a href="/cases.json">Case catalog</a> · <a href="/simulate.json?profile_id=customer_invoice_receipt">Run a read-only simulation</a> · <a href="/event-admission.json">Event admission status</a> · <a href="/app.json">Standard web-app metadata</a></p>
+      <p><a href="/workbench/">Open operator workbench</a> · <a href="/cases.json">Case catalog</a> · <a href="/simulate.json?profile_id=customer_invoice_receipt">Run a read-only simulation</a> · <a href="/event-admission.json">Event admission status</a> · <a href="/app.json">Standard web-app metadata</a></p>
       <p>Public writes and wallet actions are disabled. See <a href="/evidence/">Evidence Workbench</a>, <a href="/release.json">release.json</a> for the bounded public release document and <a href="/healthz">healthz</a> for runtime readiness.</p>
     </main>
   </body>
@@ -489,6 +492,38 @@ export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = proc
       writeResponse(response, 200, buildVisitorCaseCatalog({ release }), "application/json; charset=utf-8", { head });
       return;
     }
+    if (pathname === "/workbench.json") {
+      try {
+        writeResponse(response, 200, buildOperatorWorkbench({ release, selected_profile_id: parsedUrl.searchParams.get("profile_id") ?? undefined }), "application/json; charset=utf-8", { head });
+      } catch (error) {
+        writeResponse(response, 400, { error: "workbench_input_invalid", reason: error instanceof Error ? error.message : "invalid workbench input" }, "application/json; charset=utf-8", { head });
+      }
+      return;
+    }
+    if (pathname === "/refund-preview.json") {
+      const originalDirection = parsedUrl.searchParams.get("original_direction") ?? "outbound";
+      const refundedToDate = parsedUrl.searchParams.get("refunded_to_date") ?? "120.00";
+      const result = evaluateRefundProposal({
+        original: {
+          case_id: parsedUrl.searchParams.get("original_case_id") ?? "BASE-ORIGINAL-DEMO-001",
+          candidate_count: Number(parsedUrl.searchParams.get("candidate_count") ?? "1"),
+          principal: parsedUrl.searchParams.get("principal") ?? "1000.00",
+          party: parsedUrl.searchParams.get("party") ?? "demo-counterparty",
+          direction: originalDirection,
+          source_document: parsedUrl.searchParams.get("source_document") ?? "PINV-DEMO-001",
+          refund_history: [{ refund_id: "REFUND-HISTORY-DEMO-001", amount: refundedToDate }],
+          refunded_to_date: refundedToDate,
+        },
+        proposed: {
+          party: parsedUrl.searchParams.get("proposed_party") ?? parsedUrl.searchParams.get("party") ?? "demo-counterparty",
+          direction: parsedUrl.searchParams.get("proposed_direction") ?? (originalDirection === "outbound" ? "inbound" : "outbound"),
+          amount: parsedUrl.searchParams.get("amount") ?? "80.00",
+          original_source_document: parsedUrl.searchParams.get("proposed_source_document") ?? parsedUrl.searchParams.get("source_document") ?? "PINV-DEMO-001",
+        },
+      });
+      writeResponse(response, 200, result, "application/json; charset=utf-8", { head });
+      return;
+    }
     if (pathname === "/simulate.json") {
       try {
         const simulation = buildReadOnlySimulation({
@@ -526,6 +561,14 @@ export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = proc
     }
     if (pathname === "/evidence" || pathname === "/evidence/") {
       writeResponse(response, 200, renderEvidencePage(readPublicEvidenceDocument({ releasePath, env })), "text/html; charset=utf-8", { head });
+      return;
+    }
+    if (pathname === "/workbench" || pathname === "/workbench/") {
+      try {
+        writeResponse(response, 200, renderOperatorWorkbenchPage(buildOperatorWorkbench({ release, selected_profile_id: parsedUrl.searchParams.get("profile_id") ?? undefined })), "text/html; charset=utf-8", { head });
+      } catch (error) {
+        writeResponse(response, 400, { error: "workbench_input_invalid", reason: error instanceof Error ? error.message : "invalid workbench input" }, "application/json; charset=utf-8", { head });
+      }
       return;
     }
     if (pathname === "/") {

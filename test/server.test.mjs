@@ -68,7 +68,7 @@ test("public evidence endpoint exposes the typed fail-closed product boundary", 
     assert.equal(body.schema_version, "base-erp-public-evidence-v1");
     assert.equal(body.public_write_authorized, false);
     assert.equal(body.external_actions, 0);
-    assert.equal(body.release.release_id, "base-erp-public-product-20260814-v3");
+    assert.equal(body.release.release_id, "base-erp-public-product-20260814-v4");
     assert.equal(body.account_connect_preflight.network, "base_mainnet");
     assert.equal(body.account_connect_preflight.chain_id, 8453);
     assert.equal(body.account_connect_preflight.owner_confirmation, "NOT_GRANTED");
@@ -84,7 +84,7 @@ test("public evidence endpoint exposes the typed fail-closed product boundary", 
     for (const platform of body.publication.required_platforms) {
       if (platform === "github") {
         assert.equal(body.publication.surfaces[platform].countable, true, platform);
-        assert.equal(body.publication.surfaces[platform].receipt.release_id, "base-erp-public-product-20260814-v3");
+        assert.equal(body.publication.surfaces[platform].receipt.release_id, "base-erp-public-product-20260814-v4");
         assert.equal(body.publication.surfaces[platform].receipt.current, true);
       } else {
         assert.equal(body.publication.surfaces[platform].countable, false, platform);
@@ -194,6 +194,69 @@ test("visitor case catalog exposes seven H209 profiles on one release join key",
     assert.equal(body.release.historical, false);
     assert.equal(body.release.synthetic, false);
     assert.ok(body.profiles.every((profile) => profile.chain_id === 84532 && profile.safety.wallet_write_allowed === false));
+  });
+});
+
+test("operator workbench exposes four persistent decision landmarks and seven selectable cases", async () => {
+  await withServer(async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/workbench.json?profile_id=payment_refund_incoming`);
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.schema_version, "base-erp-operator-workbench-v1");
+    assert.equal(body.mode, "visitor_read_only");
+    assert.deepEqual(body.landmarks, ["global-control-shell", "case-queue", "decision-canvas", "evidence-inspector"]);
+    assert.equal(body.queue.length, 7);
+    assert.equal(body.queue.filter((row) => row.selected).length, 1);
+    assert.equal(body.selected_case.profile_id, "payment_refund_incoming");
+    assert.equal(body.selected_case.verb, "Resolve payment refund");
+    assert.match(body.selected_case.consequence_preview.accounting, /refund ceiling/i);
+    assert.equal(body.selected_case.consequence_preview.chain_success_implies_erp_posting, false);
+    assert.equal(body.safety.wallet_write_allowed, false);
+    assert.equal(body.safety.erp_write_allowed, false);
+    assert.equal(body.safety.broadcast, false);
+  });
+});
+
+test("operator workbench HTML is decision-first and preserves explicit stop conditions", async () => {
+  await withServer(async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/workbench/?profile_id=customer_invoice_receipt`);
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get("content-type"), /text\/html/);
+    const body = await response.text();
+    for (const landmark of ["global-control-shell", "case-queue", "decision-canvas", "evidence-inspector"]) {
+      assert.match(body, new RegExp(`id="${landmark}"`));
+    }
+    assert.match(body, /Match incoming customer receipt/);
+    assert.match(body, /Stop condition/);
+    assert.match(body, /Finality pending/);
+    assert.match(body, /ERP consequence preview/);
+    assert.match(body, /No wallet request, signature, broadcast, ERP write or platform write is exposed/);
+    assert.match(body, /<button disabled>Review evidence<\/button>/);
+  });
+});
+
+test("operator workbench rejects unknown case profiles without falling through", async () => {
+  await withServer(async (baseUrl) => {
+    const jsonResponse = await fetch(`${baseUrl}/workbench.json?profile_id=unknown`);
+    assert.equal(jsonResponse.status, 400);
+    assert.equal((await jsonResponse.json()).error, "workbench_input_invalid");
+    const htmlResponse = await fetch(`${baseUrl}/workbench/?profile_id=unknown`);
+    assert.equal(htmlResponse.status, 400);
+    assert.equal((await htmlResponse.json()).error, "workbench_input_invalid");
+  });
+});
+
+test("refund preview endpoint exposes cumulative ceiling math without an executable consequence", async () => {
+  await withServer(async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/refund-preview.json?principal=500.00&refunded_to_date=125.00&amount=75.00`);
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.schema_version, "base-refund-ceiling-guard-v1");
+    assert.equal(body.ok, true);
+    assert.equal(body.action_enabled, false);
+    assert.equal(body.remaining_ceiling_before, "375");
+    assert.equal(body.remaining_ceiling_after, "300");
+    assert.equal(body.payment_entry_projection, null);
   });
 });
 

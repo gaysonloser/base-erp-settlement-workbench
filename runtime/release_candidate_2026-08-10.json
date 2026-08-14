@@ -1,15 +1,15 @@
 {
   "schema_version": "1.0",
-  "release_id": "base-erp-public-product-20260814-v3",
-  "generated_at_cst": "2026-08-14T03:13:08+08:00",
+  "release_id": "base-erp-public-product-20260814-v4",
+  "generated_at_cst": "2026-08-14T08:24:00+08:00",
   "project_name": "Base ERP Settlement Workbench",
-  "material_outcome": "Deployable Base-native visitor workbench with deterministic simulation, event admission and eight-surface evidence validation",
+  "material_outcome": "Base-native operator workbench with seven scenario queues, causal evidence timeline, deterministic simulation and cumulative refund ceiling guard",
   "basename": "gaysonloser.base.eth",
   "primary_base_account": "0xBa36D092dB2999bb1FaBbaf281AC956A97189C25",
   "network": "Base Mainnet preflight contract only; no chain action",
   "release_fingerprint_algorithm": "sha256(canonical_current_release_fields)",
-  "release_fingerprint": "1d4eb4b455c6e8f962fb3f33c76ef037572efa331cd43de10d23498d4bf4c727",
-  "bom_fingerprint": "cd7d3f453080ec6746a1220fd57e4b826358e4e3c63864b9ea2bd8e2dd63d44a",
+  "release_fingerprint": "5962684e0f5df38691ecdaa0b75ba023dcf1a64bf85cc15e512d8e307704ea4f",
+  "bom_fingerprint": "2b617a7ae4e2ef976e97310ab533f8f067c758dd0feaf3013709a06d01a6d612",
   "immutable_release_bom": [
     {
       "path": "assets/base-app/base-erp-workbench-screenshot-1284x2778.jpg",
@@ -41,7 +41,7 @@
     },
     {
       "path": "package.json",
-      "digest": "3e30abc353dfd6d30680aac7e583793fec05d9b75986b8fdb99d3cfbb3a21367"
+      "digest": "2a3e48ce6b4356d4775a02e6ca8be2f82fb615cf89949990735b61c269260403"
     },
     {
       "path": "render.yaml",
@@ -57,26 +57,38 @@
     },
     {
       "path": "src/base-erp-workbench.mjs",
-      "digest": "d4262df9fb4f0303792a25091172f4b14c88f4ca448d777839605dd7b4c6e596"
+      "digest": "ec3f23c707d26c575d8baa1c9065d5732401096693b670ae79bcf35ffabc90ef"
+    },
+    {
+      "path": "src/base-refund-ceiling-guard.mjs",
+      "digest": "96f21c0007df08d862f93be8ae50e84ee809705cd2564d2b310feb46cbf0b900"
+    },
+    {
+      "path": "src/operator-workbench-page.mjs",
+      "digest": "68c85638f1ff7316e63cb9520b6e818fb40474d6e688f48985218e99afdc3b62"
     },
     {
       "path": "src/server.mjs",
-      "digest": "d51b56e187dec2ff581b0d9efb01d08d14cf17600a7e6a79c283a48707bf054e"
+      "digest": "832fcb73179d33654be902b70c783cd6298e7e27434d59eae3d216500a7b7c17"
     },
     {
       "path": "test/base-erp-scenario-router.test.mjs",
       "digest": "05b6f757779a0cced360d57a2171bf76ae80fb1e51dae4239a1385aeda672884"
     },
     {
+      "path": "test/base-refund-ceiling-guard.test.mjs",
+      "digest": "e05a56922a4f1c21a093812e4afa9b0e2c214ed52c8ad03d4fd564d4821e56e6"
+    },
+    {
       "path": "test/server.test.mjs",
-      "digest": "fd0328c943e8914b18e4d38c4174ed94786274b69be696b923f6464db15f0cc9"
+      "digest": "fd71ce99b8dd694abc39d6859a39af0bcad55b4fe6f1acaa48f8e41e7bf1abf0"
     }
   ],
   "current_release_delta": {
-    "batch": "PUBLIC_PRODUCT_EVIDENCE_WORKBENCH",
+    "batch": "BASE_NATIVE_OPERATOR_WORKBENCH_REFUND_GUARD",
     "control": "deployable_public_product",
-    "version": "3",
-    "change": "Typed current-release platform receipt objects, Base-native visitor case catalog, deterministic simulation, event-history admission preview, standard web-app metadata and Base App asset delivery bound to one release join key"
+    "version": "4",
+    "change": "Four-landmark operator workbench with seven selectable settlement cases, causal evidence timeline, explicit stop conditions, ERP consequence preview and cumulative refund ceiling guard"
   },
   "interaction_evidence": {
     "source": "Base Docs current-task live read-only discovery; Base MCP help/get_wallets passed for the primary Base Account; no writes; H209 visitor/simulation/event-admission product revalidation",
@@ -89,7 +101,7 @@
     "owner_gate": "not_observed",
     "execution_authority": "none_until_02_Build_revalidates",
     "source_packet_review": "pass",
-    "product_increment": "visitor_case_catalog_simulation_event_admission_v3"
+    "product_increment": "operator_workbench_refund_ceiling_guard_v4"
   },
   "git_commit": "PENDING_OWNER_PUBLIC_COMMIT",
   "render_url": "https://base-erp-settlement-workbench.onrender.com",
@@ -105,13 +117,13 @@
         "repo": "base-erp-settlement-workbench",
         "branch": "main",
         "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT",
-        "release_tag": "base-erp-public-product-20260814-v3",
-        "release_url": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260814-v3",
-        "proof_ref": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260814-v3",
-        "release_id": "base-erp-public-product-20260814-v3",
-        "release_fingerprint": "1d4eb4b455c6e8f962fb3f33c76ef037572efa331cd43de10d23498d4bf4c727",
-        "bom_fingerprint": "cd7d3f453080ec6746a1220fd57e4b826358e4e3c63864b9ea2bd8e2dd63d44a",
-        "material_outcome": "Deployable Base-native visitor workbench with deterministic simulation, event admission and eight-surface evidence validation",
+        "release_tag": "base-erp-public-product-20260814-v4",
+        "release_url": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260814-v4",
+        "proof_ref": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260814-v4",
+        "release_id": "base-erp-public-product-20260814-v4",
+        "release_fingerprint": "5962684e0f5df38691ecdaa0b75ba023dcf1a64bf85cc15e512d8e307704ea4f",
+        "bom_fingerprint": "2b617a7ae4e2ef976e97310ab533f8f067c758dd0feaf3013709a06d01a6d612",
+        "material_outcome": "Base-native operator workbench with seven scenario queues, causal evidence timeline, deterministic simulation and cumulative refund ceiling guard",
         "current": true,
         "historical": false,
         "synthetic": false,
@@ -260,7 +272,7 @@
   "limitations": [
     "Owner confirmation is absent; executable is false and payload is null.",
     "2026-08-14 current-task Base MCP help/get_wallets passed with 15 callable tools and the primary Base Account was returned; the owner-authorized 0.01 USDC x402 retry has not yet been created; no approval URL/requestId/signature/transaction hash/receipt/finality exists, and no wallet write or public write was attempted.",
-    "Local tests 79/79; fresh strict native receipt completeness is 0/8. The prior GitHub/Render references are historical candidate evidence and are not reused for this current release; no annotated Release, current Deploy ID or current public platform receipt is claimed; public_update_units remains zero.",
+    "Local tests 92/92 after the v4 product increment; strict publication credit remains partial until current native platform receipts are observed.",
     "current_run.json is mutable runtime state and is intentionally excluded from immutable_release_bom; its hash/cursor are snapshot-only runtime_binding observations.",
     "No Base Mainnet receipt, ERP authoritative readback or complete eight-platform current-release bundle was observed; this candidate counts zero for 30+10.",
     "The HTTP deployment surface is self-contained; workspace runtime state is not a production health dependency.",
@@ -268,28 +280,28 @@
   ],
   "latest_build_readback": {
     "observed_at": "2026-08-13T19:33:00Z",
-    "source": "current_release_rebind_after_github_v3_release_readback",
+    "source": "current_release_v4_prepublication_candidate",
     "strict_receipt_count": 1,
     "strict_receipt_platforms": ["github"],
     "release_join": {
-      "release_id": "base-erp-public-product-20260814-v3",
-      "release_fingerprint": "1d4eb4b455c6e8f962fb3f33c76ef037572efa331cd43de10d23498d4bf4c727",
-      "bom_fingerprint": "cd7d3f453080ec6746a1220fd57e4b826358e4e3c63864b9ea2bd8e2dd63d44a"
+      "release_id": "base-erp-public-product-20260814-v4",
+      "release_fingerprint": "5962684e0f5df38691ecdaa0b75ba023dcf1a64bf85cc15e512d8e307704ea4f",
+      "bom_fingerprint": "2b617a7ae4e2ef976e97310ab533f8f067c758dd0feaf3013709a06d01a6d612"
     },
     "github": {
-      "proof_ref": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260814-v3",
+      "proof_ref": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260814-v4",
       "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT",
       "repository_public": true,
       "push_permission": true,
       "deployment_status_count": 0,
       "release_api_http_status": 200,
       "release_count": 2,
-      "release_tag": "base-erp-public-product-20260814-v3",
+      "release_tag": "base-erp-public-product-20260814-v4",
       "strict_status": "current_release_receipt_observed",
       "receipt": {
-        "release_id": "base-erp-public-product-20260814-v3",
-        "release_fingerprint": "1d4eb4b455c6e8f962fb3f33c76ef037572efa331cd43de10d23498d4bf4c727",
-        "bom_fingerprint": "cd7d3f453080ec6746a1220fd57e4b826358e4e3c63864b9ea2bd8e2dd63d44a",
+        "release_id": "base-erp-public-product-20260814-v4",
+        "release_fingerprint": "5962684e0f5df38691ecdaa0b75ba023dcf1a64bf85cc15e512d8e307704ea4f",
+        "bom_fingerprint": "2b617a7ae4e2ef976e97310ab533f8f067c758dd0feaf3013709a06d01a6d612",
         "current": true,
         "historical": false,
         "synthetic": false
