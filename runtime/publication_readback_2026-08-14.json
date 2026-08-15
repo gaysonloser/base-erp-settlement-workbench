@@ -9,8 +9,10 @@
     "material_outcome": "H215 server-owned operator workbench with dual-origin decision canvas, independent truth layers, deterministic browser acceptance, and deployment-commit fail-closed public health"
   },
   "public_update_units": 0,
-  "strict_receipt_count": 0,
-  "strict_receipt_platforms": [],
+  "strict_receipt_count": 1,
+  "strict_receipt_platforms": [
+    "github"
+  ],
   "complete_eight_surface_bundle": false,
   "isolation_matrix": "config/base_circle_platform_isolation_matrix_v1.json",
   "platforms": {
@@ -18,7 +20,7 @@
       "target": "gaysonloser/base-erp-settlement-workbench",
       "target_identity_verified": true,
       "circle_target_absent": true,
-      "status": "owner_publication_ready_v7_exact_commit",
+      "status": "current_release_receipt_observed_render_pending",
       "historical_receipt": {
         "owner": "gaysonloser",
         "repo": "base-erp-settlement-workbench",
@@ -43,24 +45,27 @@
         "commit_sha": "5459eaf3b8000b5a85197516d0b72a5cc46e03a5"
       },
       "receipt": {
+        "platform": "github",
+        "receipt_id": "github:gaysonloser/base-erp-settlement-workbench:base-erp-public-product-20260815-v7",
         "owner": "gaysonloser",
         "repo": "base-erp-settlement-workbench",
         "branch": "main",
-        "commit_sha": "e5bb4f36edf5570fd673b05ee012b46e5126db66",
-        "release_tag": "base-erp-public-product-20260815-v6",
-        "release_url": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v6",
-        "proof_ref": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v6",
-        "release_id": "base-erp-public-product-20260815-v6",
-        "release_fingerprint": "cb062fb7e1f81b0d0741fdbdbfb6a13616d1e3be273febdee443a1b7e07f897b",
-        "bom_fingerprint": "140ae63e054c60724d868e4d26221de8b2c5f854e4e74abf00fccd40dc3dacea",
-        "receipt_id": "github:gaysonloser/base-erp-settlement-workbench:base-erp-public-product-20260815-v6",
-        "material_outcome": "H215 server-owned operator workbench with dual-origin decision canvas, independent truth layers, deterministic browser acceptance and fail-closed external gates",
-        "current": false,
-        "historical": true,
+        "commit_sha": "5459eaf3b8000b5a85197516d0b72a5cc46e03a5",
+        "release_tag": "base-erp-public-product-20260815-v7",
+        "release_url": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v7",
+        "proof_ref": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v7",
+        "release_id": "base-erp-public-product-20260815-v7",
+        "release_fingerprint": "bfd8e57684b0c43bb92dbc9ac3bcd7426b226dc816541c008c7085b7cc6ae5ae",
+        "bom_fingerprint": "3b856d0a18fc996b47e5bb4bb0b4c06a73e28ff2f5a0ce13e08612b27ad3529c",
+        "current": true,
+        "historical": false,
         "synthetic": false,
-        "evidence_origin": "native_git_push_and_github_release_public_readback",
-        "pre_reseal_v6": true,
-        "superseded_by_release_id": "base-erp-public-product-20260815-v7"
+        "evidence_origin": "official_github_api_release_readback",
+        "release_api_http_status": 200,
+        "target_commitish": "5459eaf3b8000b5a85197516d0b72a5cc46e03a5",
+        "draft": false,
+        "prerelease": false,
+        "published_at": "2026-08-15T06:45:15Z"
       },
       "pre_reseal_receipt": {
         "owner": "gaysonloser",
@@ -80,7 +85,21 @@
         "synthetic": false,
         "evidence_origin": "native_git_push_and_github_release_public_readback"
       },
-      "external_refresh_required": true
+      "external_refresh_required": false,
+      "current_public_readback": {
+        "proof_ref": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v7",
+        "release_api_http_status": 200,
+        "release_id": "base-erp-public-product-20260815-v7",
+        "release_fingerprint": "bfd8e57684b0c43bb92dbc9ac3bcd7426b226dc816541c008c7085b7cc6ae5ae",
+        "bom_fingerprint": "3b856d0a18fc996b47e5bb4bb0b4c06a73e28ff2f5a0ce13e08612b27ad3529c",
+        "commit_sha": "5459eaf3b8000b5a85197516d0b72a5cc46e03a5",
+        "target_commitish": "5459eaf3b8000b5a85197516d0b72a5cc46e03a5",
+        "release_tag": "base-erp-public-product-20260815-v7",
+        "current": true,
+        "historical": false,
+        "synthetic": false,
+        "observed_at_cst": "2026-08-15T06:45:15Z"
+      }
     },
     "render": {
       "target": "base-erp-settlement-workbench.onrender.com",
@@ -454,9 +473,9 @@
     "profile_scope": "existing owner-visible Gayson Chrome only",
     "base_owner_surface_available": true,
     "base_owner_tab_count": null,
-    "external_write_performed": false,
+    "external_write_performed": true,
     "circle_target_touched": false,
-    "gate": "v7 product commit 5459eaf3b8000b5a85197516d0b72a5cc46e03a5 pushed to exact BASE main; GitHub v7 release and exact Render deploy/readback pending; Dashboard+Base.dev canonical identity, Base App readiness-only, Talent/Guild/Basename remain fail-closed; no CIRCLE or wallet action.",
+    "gate": "GitHub v7 current receipt observed at exact product commit 5459eaf3b8000b5a85197516d0b72a5cc46e03a5; exact BASE Render deploy/readback pending; Dashboard+Base.dev canonical identity, Base App readiness-only, Talent/Guild/Basename remain fail-closed; no CIRCLE or wallet action.",
     "reseal_release_id": "base-erp-public-product-20260815-v7",
     "reseal_release_fingerprint": "bfd8e57684b0c43bb92dbc9ac3bcd7426b226dc816541c008c7085b7cc6ae5ae",
     "reseal_bom_fingerprint": "3b856d0a18fc996b47e5bb4bb0b4c06a73e28ff2f5a0ce13e08612b27ad3529c"
@@ -921,8 +940,17 @@
       "observed_at_cst": "2026-08-15T06:44:57.472Z",
       "immutable_bom_unchanged": true,
       "candidate_git_commit_remains_placeholder": true
+    },
+    "github_receipt_observed": {
+      "release_id": "base-erp-public-product-20260815-v7",
+      "release_fingerprint": "bfd8e57684b0c43bb92dbc9ac3bcd7426b226dc816541c008c7085b7cc6ae5ae",
+      "bom_fingerprint": "3b856d0a18fc996b47e5bb4bb0b4c06a73e28ff2f5a0ce13e08612b27ad3529c",
+      "commit_sha": "5459eaf3b8000b5a85197516d0b72a5cc46e03a5",
+      "release_tag": "base-erp-public-product-20260815-v7",
+      "release_url": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v7",
+      "observed_at_cst": "2026-08-15T06:45:15Z"
     }
   },
-  "reseal_current_receipt_count": 0,
+  "reseal_current_receipt_count": 1,
   "pre_reseal_receipt_count": 2
 }
