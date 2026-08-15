@@ -156,14 +156,19 @@ test("release endpoint binds the public document to the current release identity
 
 test("public evidence endpoint exposes the typed fail-closed product boundary", async () => {
   await withServer(async (baseUrl) => {
-    const response = await fetch(`${baseUrl}/evidence.json`);
+    const [response, releaseResponse] = await Promise.all([
+      fetch(`${baseUrl}/evidence.json`),
+      fetch(`${baseUrl}/release.json`),
+    ]);
     assert.equal(response.status, 200);
+    assert.equal(releaseResponse.status, 200);
     assert.match(response.headers.get("content-type"), /application\/json/);
     const body = await response.json();
+    const release = await releaseResponse.json();
     assert.equal(body.schema_version, "base-erp-public-evidence-v1");
     assert.equal(body.public_write_authorized, false);
     assert.equal(body.external_actions, 0);
-    assert.equal(body.release.release_id, "base-erp-public-product-20260815-v6");
+    assert.equal(body.release.release_id, release.release_id);
     assert.equal(body.account_connect_preflight.network, "base_mainnet");
     assert.equal(body.account_connect_preflight.chain_id, 8453);
     assert.equal(body.account_connect_preflight.owner_confirmation, "NOT_GRANTED");

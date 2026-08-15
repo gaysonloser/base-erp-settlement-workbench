@@ -198,7 +198,21 @@ function releaseFailure(reason, details = {}) {
 function readReleaseBomFileDigest(path) {
   try {
     const filePath = resolve(PROJECT_ROOT_PATH, path);
-    return createHash("sha256").update(readFileSync(filePath)).digest("hex");
+    const raw = readFileSync(filePath);
+    // H214/H215 readbacks are BOM members whose release/BOM fields point back
+    // to the enclosing release. Hash the documented placeholder projection so
+    // release validation agrees with the server's self-hash rule without
+    // creating a recursive release identity.
+    if (path === "runtime/h214_recurring_settlement_readback_2026-08-14.json" || path === "runtime/h215_operator_workbench_readback_2026-08-14.json") {
+      const readback = JSON.parse(raw.toString("utf8"));
+      for (const field of ["release_join", "release_bom"]) {
+        if (readback[field] && typeof readback[field] === "object" && !Array.isArray(readback[field])) {
+          readback[field] = { ...readback[field], release_fingerprint: "<current>", bom_fingerprint: "<current>" };
+        }
+      }
+      return digest(readback);
+    }
+    return createHash("sha256").update(raw).digest("hex");
   } catch {
     return null;
   }
@@ -1325,8 +1339,12 @@ export function validateReleaseIntegrity({ currentRelease, chainEvidence, erpRea
         acceptance_state: acceptanceState,
       });
     }
-    if (immutableBomSha256 !== undefined && (!normalizedReleaseFingerprintBasis || !normalizedReleaseFingerprintBasis.includes(immutableBomSha256.toLowerCase()))) {
-      return releaseFailure("immutable_bom_basis_mismatch");
+    if (immutableBomSha256 !== undefined) {
+      const normalizedImmutableBomSha256 = typeof immutableBomSha256 === "string" ? immutableBomSha256.toLowerCase() : "";
+      const immutableBomBindingValid = normalizedReleaseFingerprintBasis
+        ? normalizedReleaseFingerprintBasis.includes(normalizedImmutableBomSha256)
+        : normalizedImmutableBomSha256 === computedBomManifestDigest;
+      if (!immutableBomBindingValid) return releaseFailure("immutable_bom_basis_mismatch");
     }
     if (currentRelease.release_fingerprint !== computedReleaseFingerprint) return releaseFailure("release_fingerprint_mismatch", { computed_release_fingerprint: computedReleaseFingerprint });
     const resultBase = {

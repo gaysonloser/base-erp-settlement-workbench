@@ -1,15 +1,15 @@
 {
   "schema_version": "1.0",
-  "release_id": "base-erp-public-product-20260815-v6",
-  "generated_at_cst": "2026-08-15T13:11:42.300+08:00",
+  "release_id": "base-erp-public-product-20260815-v7",
+  "generated_at_cst": "2026-08-15T14:31:28+08:00",
   "project_name": "Base ERP Settlement Workbench",
-  "material_outcome": "H215 server-owned operator workbench with dual-origin decision canvas, independent truth layers, deterministic browser acceptance and fail-closed external gates",
+  "material_outcome": "H215 server-owned operator workbench with dual-origin decision canvas, independent truth layers, deterministic browser acceptance, and deployment-commit fail-closed public health",
   "basename": "gaysonloser.base.eth",
   "primary_base_account": "0xBa36D092dB2999bb1FaBbaf281AC956A97189C25",
   "network": "Base Sepolia descriptor-only; Base Mainnet owner gate required; no chain action",
   "release_fingerprint_algorithm": "sha256(canonical_current_release_fields)",
-  "release_fingerprint": "cb062fb7e1f81b0d0741fdbdbfb6a13616d1e3be273febdee443a1b7e07f897b",
-  "bom_fingerprint": "140ae63e054c60724d868e4d26221de8b2c5f854e4e74abf00fccd40dc3dacea",
+  "release_fingerprint": "bfd8e57684b0c43bb92dbc9ac3bcd7426b226dc816541c008c7085b7cc6ae5ae",
+  "bom_fingerprint": "3b856d0a18fc996b47e5bb4bb0b4c06a73e28ff2f5a0ce13e08612b27ad3529c",
   "immutable_release_bom": [
     {
       "path": "assets/base-app/base-erp-workbench-screenshot-1284x2778.jpg",
@@ -53,7 +53,7 @@
     },
     {
       "path": "src/base-erp-scenario-router.mjs",
-      "digest": "c6a37e2dd08df955443f15284a28370de8de3a2ef644d35c198c4014f862ca35"
+      "digest": "00ef279e9b42426175860d1d1edb2549a80539450753d5d286d374bf1697d78f"
     },
     {
       "path": "src/base-erp-workbench.mjs",
@@ -73,7 +73,7 @@
     },
     {
       "path": "src/server.mjs",
-      "digest": "49bdb9af7b8890c92cdebf6000324a82d201c1308c1d420d5a171c204eb2a96b"
+      "digest": "c422fdd4da6f000ab7fe11f94b29f60836bead70534c0881ba7b270b332a267b"
     },
     {
       "path": "test/base-erp-scenario-router.test.mjs",
@@ -97,14 +97,14 @@
     },
     {
       "path": "test/server.test.mjs",
-      "digest": "54846e3815ea0826fd2dd4c75cf7da2980527809859917faa6f7e07a952cde8c"
+      "digest": "c8220c1419573f19683e7ccf00301b7988393015dcfe79e8a3d2d5a9dc7eeed2"
     }
   ],
   "current_release_delta": {
     "batch": "BASE_NATIVE_OPERATOR_WORKBENCH_PUBLIC_SURFACE",
     "control": "non_executable_server_owned_public_projection",
-    "version": "6",
-    "change": "H215 global shell, seven-row queue, dual origins, ten visible states, chain/ERP/business-close truth separation, /workbench parity and responsive keyboard acceptance; no external write"
+    "version": "7",
+    "change": "H215 public operator workbench plus deployment-provided commit proof: resolveCommit never treats candidate metadata as served-byte evidence, /healthz fails closed without an injected deployment commit, and BOM validators honor the H214/H215 placeholder projection; no external write"
   },
   "interaction_evidence": {
     "source": "Base Docs live read-only discovery plus Base MCP live help/get_wallets; no wallet request, signing, broadcast, transaction, deployment or public write",
@@ -116,14 +116,14 @@
   },
   "acceptance_state": {
     "independent_sol_medium": "pass_P0_P1_P2_0_0_0",
-    "owner_gate": "owner_authorized_github_render_publication_pending",
-    "execution_authority": "02_Build_publication_lane_owner_authorized",
+    "owner_gate": "owner_authorized_github_render_v7_publication_pending_exact_commit",
+    "execution_authority": "02_Build_v7_reseal_and_publication_lane_owner_authorized",
     "source_packet_review": "pass_h215_hashes_revalidated",
-    "product_increment": "operator_workbench_h215_public_surface_v6",
+    "product_increment": "operator_workbench_h215_public_surface_v7_fail_closed_deployment_identity",
     "local_parent_review": "pass_clean_git_export_153_of_153_with_fail_closed_external_gate; local_exchange_and_upstream_material_excluded",
     "browser_acceptance": "4/4_browser_plus_3/3_page_unit_plus_153/153_clean_git_export"
   },
-  "git_commit": "e5bb4f36edf5570fd673b05ee012b46e5126db66",
+  "git_commit": "PENDING_OWNER_PUBLIC_COMMIT",
   "render_url": "https://base-erp-settlement-workbench.onrender.com",
   "contract_addresses_or_not_applicable_reason": "not_applicable_no_contract_change",
   "transaction_receipts_or_not_yet_available": "no transaction hash, receipt or finality; chain_count_zero; H215 is non-executable projection only",
@@ -291,105 +291,63 @@
     "mutable_source": true,
     "snapshot_only": true,
     "snapshot": {
-      "runtime_sha256": "2855365be3aec45889abc7d3570d5d6c34f1dc2a1636dd5e9e4e4b1d3a320b2c",
+      "runtime_sha256": "813fa7d2286faaeffc66ff1ab2cb493e0dfc87c58976d516ba2d0c33b9721230",
       "run_id": "02_Build-20260815-122052",
       "date_cst": "2026-08-15",
       "status": "running",
-      "cursor": "Deficit-first dispatch: trace_gap=30; public_gap=10. Trace gap remains: prepare exactly one legitimate corresponding-wallet onchain state-change, open one exact final wallet review, and count it only after a unique successful receipt. Publication gap remains: one material unit needs truthful receipts on every mandatory platform (github, render, base_app, base_dashboard, base_dev, talent, guild, basename_base_org); partial bundles count zero. Execute eligible candidate BASE-PUBLICATION-V6-20260815-01 now; do not rediscover earlier routes.",
-      "observed_at": "2026-08-15T05:11:42.300Z"
+      "cursor": "Deficit-first dispatch: trace_gap=30; public_gap=10. Trace gap remains: prepare exactly one legitimate corresponding-wallet onchain state-change, open one exact final wallet review, and count it only after a unique successful receipt. Publication gap remains: one material unit needs truthful receipts on every mandatory platform (github, render, base_app, base_dashboard, base_dev, talent, guild, basename_base_org); partial bundles count zero. Execute eligible candidate BASE-PUBLICATION-V7-FAILCLOSED-20260815-01 now; do not rediscover earlier routes.",
+      "observed_at": "2026-08-15T06:31:28.000Z"
     },
     "authority_record": {
       "path": "runtime/runtime_authority.json",
       "schema_version": "base-erp-runtime-authority-v1",
       "source": "projects/2026-06_Base_Guild_Onchain_Score/runtime/current_run.json",
-      "runtime_sha256": "2855365be3aec45889abc7d3570d5d6c34f1dc2a1636dd5e9e4e4b1d3a320b2c",
+      "runtime_sha256": "813fa7d2286faaeffc66ff1ab2cb493e0dfc87c58976d516ba2d0c33b9721230",
       "writer_idle": true,
-      "observed_at": "2026-08-15T05:11:42.300Z",
-      "event_id": "base-erp-runtime-rebind-20260815-v6-publication",
-      "record_sha256": "af169879865c40dc0a347520708769dbd93dbdd2f12dad58952a6dd81753d543"
+      "observed_at": "2026-08-15T06:31:28.000Z",
+      "event_id": "base-erp-runtime-rebind-20260815-v7-prepublication",
+      "record_sha256": "d86fd246e5f3432e499777fa6990c7857c6085cd2eee1747bd813e46d65352b7"
     },
     "fingerprint_scope": "runtime snapshot is excluded from immutable release fingerprint and checked separately against live runtime/authority",
     "invalidation": "Any byte change to current_run.json or authority record requires fresh runtime rebind before execution or publication.",
     "runtime_authority_revalidated": true,
-    "runtime_authority_note": "Fresh writer-idle authority rebind base-erp-runtime-rebind-20260815-v6-publication verified against the current run before v6 publication preparation."
+    "runtime_authority_note": "Fresh writer-idle authority rebind base-erp-runtime-rebind-20260815-v7-prepublication verified after expanding the new material v7 candidate."
   },
   "limitations": [
-    "Owner explicitly authorized the exact BASE GitHub/Render publication lane; GitHub v6 receipt is observed, while Render remains an exact owner-surface gate.",
-    "Formal historical capability health: Base Docs live tools=3/probe passed and Base MCP live tools=15/help passed; this publication lane performs no wallet, signature, transaction, deployment or public write through Base MCP.",
-    "H215 is a visitor-safe, non-executable projection; Base Sepolia is descriptor-only and Base Mainnet remains owner-gated.",
-    "The H215 readback is included in the immutable BOM over the documented canonical readback-placeholder projection to avoid a recursive release/BOM self-hash cycle.",
-    "Runtime is bound to the current mutable run 02_Build-20260815-122052 with writer-idle authority af169879865c40dc0a347520708769dbd93dbdd2f12dad58952a6dd81753d543; a fresh rebind is required after any runtime or authority byte change.",
-    "GitHub v6 release receipt is current and joined to commit 1689ca9e66042919939654f65a7c2eaa3417ac15, release_id, release_fingerprint and bom_fingerprint; exact Render service remains on v4 pending its owner credential/surface, and no complete eight-surface receipt exists.",
-    "The public payload is product-only; two local fixture-bearing paths are excluded from the v6 BOM and publication staging without deleting local files.",
-    "BASE/CIRCLE isolation was checked against the matrix; no CIRCLE repository, service, app, domain, release or receipt was touched.",
-    "Clean git-export npm test passes 153/153 with local exchange and upstream material excluded; Playwright/browser acceptance is 4/4 and page unit is 3/3. External publication remains fail-closed until exact owner gates are verified.",
-    "Runtime counters and queue/cursor are authoritative only through runctl; local release evidence cannot increment the 30/10 ledger."
+    "v7 is a new release identity after the fail-closed resolveCommit correction; v6 receipts remain historical until exact v7 commit/deploy readbacks are observed.",
+    "Candidate git_commit is an explicit placeholder and is never deployment evidence; only injected Render/GitHub owner-visible commit readbacks can prove served bytes.",
+    "Runtime is bound to the current mutable run 02_Build-20260815-122052 with writer-idle authority d86fd246e5f3432e499777fa6990c7857c6085cd2eee1747bd813e46d65352b7; a fresh rebind is required after any runtime or authority byte change.",
+    "The H215 readback remains a descriptor-only pinned dependency with placeholder self-hash semantics; the H217 v6 envelope must be re-bound by 03_Base for v7.",
+    "No complete eight-surface current receipt exists; partial evidence remains zero-credit and runtime counters remain 0/30 and 0/10.",
+    "BASE/CIRCLE isolation is checked against the exact matrix; no CIRCLE repository, service, app, domain, release or receipt is touched."
   ],
   "latest_build_readback": {
-    "observed_at": "2026-08-15T13:30:00+08:00",
-    "source": "H215_parent_revalidation_after_runtime_authority_rebind",
-    "strict_receipt_count": 1,
-    "strict_receipt_platforms": [
-      "github"
-    ],
+    "observed_at": "2026-08-15T14:31:28+08:00",
+    "source": "v7_local_reseal_pre_external_refresh",
+    "strict_receipt_count": 0,
+    "strict_receipt_platforms": [],
+    "complete_eight_surface_bundle": false,
     "release_join": {
-      "release_id": "base-erp-public-product-20260815-v6",
-      "release_fingerprint": "cb062fb7e1f81b0d0741fdbdbfb6a13616d1e3be273febdee443a1b7e07f897b",
-      "bom_fingerprint": "140ae63e054c60724d868e4d26221de8b2c5f854e4e74abf00fccd40dc3dacea"
+      "release_id": "base-erp-public-product-20260815-v7",
+      "release_fingerprint": "bfd8e57684b0c43bb92dbc9ac3bcd7426b226dc816541c008c7085b7cc6ae5ae",
+      "bom_fingerprint": "3b856d0a18fc996b47e5bb4bb0b4c06a73e28ff2f5a0ce13e08612b27ad3529c"
     },
-    "h215": {
-      "packet_id": "base-erp-h215-operator-workbench-architecture-20260814",
-      "manifest_sha256": "59073c52258fb69e5870dda8bcd9f3eedd915a3be4e394150a81bcf402eb4ba5",
-      "artifact_sha256": "6329746bc9dbce401f5259a385f89a86d787b0d1d702398fb6d5513337e8584a",
-      "handoff_sha256": "8a61bf9f53fa8509d2888ad9c5af89703c1f8092178c4e0fe3f7361bf141a3f6",
-      "exchange_sha256": "45c86fc7ce41428e73452c6a27a65f30dde4b67d1aae417e1268a9dcd88a8d12",
-      "contract_version": "base-erp-h215-operator-workbench-v1",
-      "browser_suite": "4/4",
-      "page_unit_suite": "3/3",
-      "external_actions": 0
-    },
-    "h213_pinned_sha256": "1899acb8147844865d34085b396a0b2f282acbddb7f14823fdaa74b665d4d2ef",
-    "github": {
-      "strict_status": "current_v6_release_receipt_observed",
-      "commit_sha": "e5bb4f36edf5570fd673b05ee012b46e5126db66",
-      "release_url": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v6"
-    },
-    "render": {
-      "strict_status": "v4_current_service_readback_v6_owner_deploy_gate",
-      "service_id": "srv-d9t0bsafngtc7387gqo0",
-      "observed_commit_sha": "e96c13717fcf16d80138852629d82b3b21edce56"
-    },
-    "base_dashboard": {
-      "strict_status": "canonical_route_read_only_no_update",
-      "app_id": "6a7a0717e209a55163497d2d"
-    },
-    "route_acceptance": {
-      "dedicated": "/recurring-settlement.json",
-      "workbench_json": "/workbench.json",
-      "workbench_ui": "/workbench/",
-      "parity": "byte_equivalent"
-    },
-    "runtime_continuity": {
-      "run_id": "02_Build-20260815-122052",
-      "status": "running",
-      "date_cst": "2026-08-15",
-      "external_trace": "0/30",
-      "public_update": "0/10",
-      "eligible_remaining": 1,
-      "autonomous_remaining": 1,
-      "defer_until_next_date": false,
-      "cursor": "Deficit-first dispatch: trace_gap=30; public_gap=10. Trace gap remains: prepare exactly one legitimate corresponding-wallet onchain state-change, open one exact final wallet review, and count it only after a unique successful receipt. Publication gap remains: one material unit needs truthful receipts on every mandatory platform (github, render, base_app, base_dashboard, base_dev, talent, guild, basename_base_org); partial bundles count zero. Execute eligible candidate BASE-PUBLICATION-V6-20260815-01 now; do not rediscover earlier routes.",
-      "runtime_authority_revalidated": true
-    },
-    "full_product_tests": "153/153 pass in clean git-export; Playwright/browser 4/4 and page unit 3/3; local exchange/upstream material excluded and runtime fixture supplied outside public payload"
+    "pre_reseal_receipts_preserved": true,
+    "pre_reseal_readback_ref": "pre_reseal_v6_external_readback",
+    "external_refresh_required": [
+      "github",
+      "render"
+    ]
   },
   "artifact_excluded_from_own_bom": true,
   "post_publication_readback": {
-    "status": "partial_current_github_receipt_render_owner_gate",
-    "receipts": 1,
-    "strict_receipt_platforms": [
-      "github"
-    ]
+    "status": "v7_reseal_ready_external_github_render_refresh_required_remaining_six_surfaces_fail_closed",
+    "receipts": 0,
+    "strict_receipt_platforms": [],
+    "pre_reseal_receipts": 2,
+    "release_id": "base-erp-public-product-20260815-v7",
+    "release_fingerprint": "bfd8e57684b0c43bb92dbc9ac3bcd7426b226dc816541c008c7085b7cc6ae5ae",
+    "bom_fingerprint": "3b856d0a18fc996b47e5bb4bb0b4c06a73e28ff2f5a0ce13e08612b27ad3529c"
   },
   "deployment_surface": {
     "start_command": "npm start",
@@ -402,7 +360,7 @@
     "public_write_authorized": false,
     "owner_authorization": "explicit_BASE_GitHub_Render_publication_authorization_received"
   },
-  "immutable_bom_sha256": "140ae63e054c60724d868e4d26221de8b2c5f854e4e74abf00fccd40dc3dacea",
+  "immutable_bom_sha256": "3b856d0a18fc996b47e5bb4bb0b4c06a73e28ff2f5a0ce13e08612b27ad3529c",
   "h215_packet": {
     "packet_id": "base-erp-h215-operator-workbench-architecture-20260814",
     "manifest_sha256": "59073c52258fb69e5870dda8bcd9f3eedd915a3be4e394150a81bcf402eb4ba5",
@@ -438,5 +396,95 @@
       "release_join.bom_fingerprint"
     ],
     "reason": "BOM digest uses the canonical readback projection to avoid a recursive release/BOM self-hash cycle; immutable_bom_sha256 is the finalized BOM fingerprint."
+  },
+  "release_reseal": {
+    "schema_version": "base-erp-release-reseal-v1",
+    "previous_release_id": "base-erp-public-product-20260815-v6",
+    "release_id": "base-erp-public-product-20260815-v7",
+    "reason": "material fail-closed resolveCommit correction requires a new immutable release identity",
+    "source_path": "src/server.mjs",
+    "candidate_commit": "PENDING_OWNER_PUBLIC_COMMIT",
+    "candidate_commit_is_deployment_evidence": false,
+    "deployment_commit_source": "owner_visible_GitHub_and_Render_readback_only",
+    "previous_v6_receipts": "historical_until_v7_exact_commit_is_published_and_read_back",
+    "h217_v6_rebind_required": true,
+    "source_paths": [
+      "src/server.mjs",
+      "src/base-erp-scenario-router.mjs"
+    ],
+    "source_sha256": {
+      "src/server.mjs": "c422fdd4da6f000ab7fe11f94b29f60836bead70534c0881ba7b270b332a267b",
+      "src/base-erp-scenario-router.mjs": "00ef279e9b42426175860d1d1edb2549a80539450753d5d286d374bf1697d78f"
+    },
+    "new_release_fingerprint": "bfd8e57684b0c43bb92dbc9ac3bcd7426b226dc816541c008c7085b7cc6ae5ae",
+    "new_bom_fingerprint": "3b856d0a18fc996b47e5bb4bb0b4c06a73e28ff2f5a0ce13e08612b27ad3529c"
+  },
+  "pre_reseal_v6_external_readback": {
+    "observed_at": "2026-08-15T14:06:31+08:00",
+    "source": "parent_independent_github_render_dashboard_readback",
+    "strict_receipt_count": 2,
+    "strict_receipt_platforms": [
+      "github",
+      "render"
+    ],
+    "release_join": {
+      "release_id": "base-erp-public-product-20260815-v6",
+      "release_fingerprint": "cb062fb7e1f81b0d0741fdbdbfb6a13616d1e3be273febdee443a1b7e07f897b",
+      "bom_fingerprint": "140ae63e054c60724d868e4d26221de8b2c5f854e4e74abf00fccd40dc3dacea"
+    },
+    "h215": {
+      "packet_id": "base-erp-h215-operator-workbench-architecture-20260814",
+      "manifest_sha256": "59073c52258fb69e5870dda8bcd9f3eedd915a3be4e394150a81bcf402eb4ba5",
+      "artifact_sha256": "6329746bc9dbce401f5259a385f89a86d787b0d1d702398fb6d5513337e8584a",
+      "handoff_sha256": "8a61bf9f53fa8509d2888ad9c5af89703c1f8092178c4e0fe3f7361bf141a3f6",
+      "exchange_sha256": "45c86fc7ce41428e73452c6a27a65f30dde4b67d1aae417e1268a9dcd88a8d12",
+      "contract_version": "base-erp-h215-operator-workbench-v1",
+      "browser_suite": "4/4",
+      "page_unit_suite": "3/3",
+      "external_actions": 0
+    },
+    "h213_pinned_sha256": "1899acb8147844865d34085b396a0b2f282acbddb7f14823fdaa74b665d4d2ef",
+    "github": {
+      "strict_status": "current_v6_release_receipt_observed",
+      "commit_sha": "e5bb4f36edf5570fd673b05ee012b46e5126db66",
+      "release_url": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v6"
+    },
+    "render": {
+      "strict_status": "current_v6_release_receipt_observed",
+      "service_id": "srv-d9t0bsafngtc7387gqo0",
+      "deployment_id": "dep-da000fm1egvs73fib5c0",
+      "observed_commit_sha": "e5bb4f36edf5570fd673b05ee012b46e5126db66",
+      "release_id": "base-erp-public-product-20260815-v6",
+      "release_fingerprint": "cb062fb7e1f81b0d0741fdbdbfb6a13616d1e3be273febdee443a1b7e07f897b",
+      "bom_fingerprint": "140ae63e054c60724d868e4d26221de8b2c5f854e4e74abf00fccd40dc3dacea",
+      "health_ready": true,
+      "current_release_match": true
+    },
+    "base_dashboard": {
+      "strict_status": "canonical_app_identity_current_domain_join_no_separate_receipt",
+      "app_id": "6a7a0717e209a55163497d2d",
+      "primary_domain": "base-erp-settlement-workbench.onrender.com",
+      "release_mapping_observed": true,
+      "separate_release_receipt": false
+    },
+    "route_acceptance": {
+      "dedicated": "/recurring-settlement.json",
+      "workbench_json": "/workbench.json",
+      "workbench_ui": "/workbench/",
+      "parity": "byte_equivalent"
+    },
+    "runtime_continuity": {
+      "run_id": "02_Build-20260815-122052",
+      "status": "running",
+      "date_cst": "2026-08-15",
+      "external_trace": "0/30",
+      "public_update": "0/10",
+      "eligible_remaining": 1,
+      "autonomous_remaining": 1,
+      "defer_until_next_date": false,
+      "cursor": "Deficit-first dispatch: trace_gap=30; public_gap=10. Trace gap remains: prepare exactly one legitimate corresponding-wallet onchain state-change, open one exact final wallet review, and count it only after a unique successful receipt. Publication gap remains: one material unit needs truthful receipts on every mandatory platform (github, render, base_app, base_dashboard, base_dev, talent, guild, basename_base_org); partial bundles count zero. Execute eligible candidate BASE-PUBLICATION-V6-20260815-01 now; do not rediscover earlier routes.",
+      "runtime_authority_revalidated": true
+    },
+    "full_product_tests": "153/153 pass in clean git-export; Playwright/browser 4/4 and page unit 3/3; local exchange/upstream material excluded and runtime fixture supplied outside public payload"
   }
 }

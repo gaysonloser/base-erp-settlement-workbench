@@ -74,9 +74,9 @@ function resolveCommit({ candidate, env }) {
   if (typeof source === "string" && COMMIT_PATTERN.test(source.trim())) {
     return { value: source.trim(), placeholder: !FULL_COMMIT_PATTERN.test(source.trim()), source: "environment" };
   }
-  if (typeof candidate?.git_commit === "string" && FULL_COMMIT_PATTERN.test(candidate.git_commit.trim())) {
-    return { value: candidate.git_commit.trim(), placeholder: false, source: "release_candidate" };
-  }
+  // The candidate commit identifies the intended release, not the bytes that
+  // the current process is actually serving.  Without a deployment-provided
+  // commit we cannot prove those identities match, so health must fail closed.
   return { value: DEFAULT_COMMIT_PLACEHOLDER, placeholder: true, source: "owner_public_commit_pending" };
 }
 
