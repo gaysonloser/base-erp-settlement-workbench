@@ -490,6 +490,34 @@
     "circle_isolation_required": true,
     "wallet_or_onchain_authority": false
   },
+  "runtime_continuity": {
+    "source": "projects/2026-06_Base_Guild_Onchain_Score/runtime/current_run.json",
+    "runtime_sha256": "8139a8863c036155fb7b6c79827e0935b4174356db3eca9ad918ff320f4cd7f3",
+    "run_id": "02_Build-20260815-122052",
+    "date_cst": "2026-08-15",
+    "status": "running",
+    "external_trace": "0/30",
+    "public_update": "0/10",
+    "eligible_remaining": 0,
+    "autonomous_remaining": 0,
+    "external_trace_exhausted": true,
+    "public_update_exhausted": true,
+    "defer_until_next_date": true,
+    "deferred_at_cst": "2026-08-15T14:51:03+08:00",
+    "cursor": "Same-day real-candidate queue exhausted below hard floor; keep runtime running and resume on the next date. Before any new action, re-read the owner ledger and generate a fresh official queue. Do not fill the deficit with research, observations, duplicate lifecycle evidence or replayed releases.",
+    "writer_idle_authority": {
+      "schema_version": "base-erp-runtime-authority-v1",
+      "source": "projects/2026-06_Base_Guild_Onchain_Score/runtime/current_run.json",
+      "runtime_sha256": "8139a8863c036155fb7b6c79827e0935b4174356db3eca9ad918ff320f4cd7f3",
+      "writer_idle": true,
+      "observed_at": "2026-08-15T06:53:20.300Z",
+      "event_id": "base-erp-runtime-rebind-20260815-v7-publication-deferred",
+      "record_sha256": "9e583dc13912940ea781b7d0acd3c591d09cde8c8f22ceaa50c2699e90ff9b01"
+    },
+    "runtime_authority_revalidated": true,
+    "observed_at_cst": "2026-08-15T14:53:20+08:00",
+    "defer_reason": "v7 has truthful current GitHub and Render receipts but no complete eight-surface current-release bundle; partial evidence remains zero-credit and counters are unchanged."
+  },
   "pre_reseal_v6_readback": {
     "schema_version": "base-erp-publication-readback-v1",
     "observed_at_cst": "2026-08-15T14:06:31+08:00",

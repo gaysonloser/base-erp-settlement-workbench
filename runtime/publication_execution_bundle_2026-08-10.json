@@ -1,8 +1,8 @@
 {
   "schema_version": "base-erp-publication-execution-bundle-v1",
   "bundle_id": "base-erp-public-product-publication-execution-bundle-20260815-v7",
-  "generated_at_cst": "2026-08-15T14:31:28+08:00",
-  "execution_mode": "v7_github_render_current_receipts_remaining_six_surfaces_fail_closed",
+  "generated_at_cst": "2026-08-15T14:53:20+08:00",
+  "execution_mode": "v7_github_render_current_receipts_remaining_six_surfaces_fail_closed_deferred",
   "public_write_authorized": false,
   "counting": {
     "external_trace_units": 0,
@@ -46,20 +46,26 @@
   "runtime_snapshot": {
     "source": "projects/2026-06_Base_Guild_Onchain_Score/runtime/current_run.json",
     "mutable": true,
-    "runtime_sha256": "813fa7d2286faaeffc66ff1ab2cb493e0dfc87c58976d516ba2d0c33b9721230",
+    "runtime_sha256": "8139a8863c036155fb7b6c79827e0935b4174356db3eca9ad918ff320f4cd7f3",
     "run_id": "02_Build-20260815-122052",
     "date_cst": "2026-08-15",
     "status": "running",
     "cursor_source": "top-level cursor when non-empty, otherwise resume.cursor",
-    "cursor": "Deficit-first dispatch: trace_gap=30; public_gap=10. Trace gap remains: prepare exactly one legitimate corresponding-wallet onchain state-change, open one exact final wallet review, and count it only after a unique successful receipt. Publication gap remains: one material unit needs truthful receipts on every mandatory platform (github, render, base_app, base_dashboard, base_dev, talent, guild, basename_base_org); partial bundles count zero. Execute eligible candidate BASE-PUBLICATION-V7-FAILCLOSED-20260815-01 now; do not rediscover earlier routes.",
+    "cursor": "Same-day real-candidate queue exhausted below hard floor; keep runtime running and resume on the next date. Before any new action, re-read the owner ledger and generate a fresh official queue. Do not fill the deficit with research, observations, duplicate lifecycle evidence or replayed releases.",
+    "eligible_remaining": 0,
+    "autonomous_remaining": 0,
+    "external_trace_exhausted": true,
+    "public_update_exhausted": true,
+    "defer_until_next_date": true,
+    "deferred_at_cst": "2026-08-15T14:51:03+08:00",
     "writer_idle_authority": {
       "schema_version": "base-erp-runtime-authority-v1",
       "source": "projects/2026-06_Base_Guild_Onchain_Score/runtime/current_run.json",
-      "runtime_sha256": "813fa7d2286faaeffc66ff1ab2cb493e0dfc87c58976d516ba2d0c33b9721230",
+      "runtime_sha256": "8139a8863c036155fb7b6c79827e0935b4174356db3eca9ad918ff320f4cd7f3",
       "writer_idle": true,
-      "observed_at": "2026-08-15T06:31:28.000Z",
-      "event_id": "base-erp-runtime-rebind-20260815-v7-prepublication",
-      "record_sha256": "d86fd246e5f3432e499777fa6990c7857c6085cd2eee1747bd813e46d65352b7"
+      "observed_at": "2026-08-15T06:53:20.300Z",
+      "event_id": "base-erp-runtime-rebind-20260815-v7-publication-deferred",
+      "record_sha256": "9e583dc13912940ea781b7d0acd3c591d09cde8c8f22ceaa50c2699e90ff9b01"
     },
     "invalidation": "Any byte change to current_run.json or any authority-record hash/cursor/writer-idle drift invalidates this snapshot and requires fresh Build revalidation."
   },
@@ -115,7 +121,7 @@
   },
   "authoritative_current_readback": {
     "path": "runtime/publication_readback_2026-08-14.json",
-    "observed_at_cst": "2026-08-15T14:31:28+08:00",
+    "observed_at_cst": "2026-08-15T14:53:20+08:00",
     "release_id": "base-erp-public-product-20260815-v7",
     "release_fingerprint": "bfd8e57684b0c43bb92dbc9ac3bcd7426b226dc816541c008c7085b7cc6ae5ae",
     "bom_fingerprint": "3b856d0a18fc996b47e5bb4bb0b4c06a73e28ff2f5a0ce13e08612b27ad3529c",

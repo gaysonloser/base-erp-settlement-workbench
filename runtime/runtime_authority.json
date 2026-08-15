@@ -1,9 +1,9 @@
 {
   "schema_version": "base-erp-runtime-authority-v1",
   "source": "projects/2026-06_Base_Guild_Onchain_Score/runtime/current_run.json",
-  "runtime_sha256": "813fa7d2286faaeffc66ff1ab2cb493e0dfc87c58976d516ba2d0c33b9721230",
+  "runtime_sha256": "8139a8863c036155fb7b6c79827e0935b4174356db3eca9ad918ff320f4cd7f3",
   "writer_idle": true,
-  "observed_at": "2026-08-15T06:31:28.000Z",
-  "event_id": "base-erp-runtime-rebind-20260815-v7-prepublication",
-  "record_sha256": "d86fd246e5f3432e499777fa6990c7857c6085cd2eee1747bd813e46d65352b7"
+  "observed_at": "2026-08-15T06:53:20.300Z",
+  "event_id": "base-erp-runtime-rebind-20260815-v7-publication-deferred",
+  "record_sha256": "9e583dc13912940ea781b7d0acd3c591d09cde8c8f22ceaa50c2699e90ff9b01"
 }
