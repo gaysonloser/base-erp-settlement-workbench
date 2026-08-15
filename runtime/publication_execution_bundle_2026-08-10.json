@@ -1,8 +1,8 @@
 {
   "schema_version": "base-erp-publication-execution-bundle-v1",
   "bundle_id": "base-erp-public-product-publication-execution-bundle-20260815-v6",
-  "generated_at_cst": "2026-08-15T13:11:42.300+08:00",
-  "execution_mode": "owner_authorized_base_publication_pending_current_release_readback",
+  "generated_at_cst": "2026-08-15T13:30:00+08:00",
+  "execution_mode": "github_current_receipt_render_owner_gate_pending",
   "public_write_authorized": false,
   "counting": {
     "external_trace_units": 0,
@@ -106,23 +106,25 @@
       "current workspace fail-closed gate permits the specific platform write",
       "for wallet lanes only: live Base MCP namespace, one help probe, get_wallets primary_base_account confirmation and one native owner review window"
     ],
-    "current_gate": "owner_authorized_github_render_pending_current_release_readback; remaining_five_surfaces_fail_closed",
+    "current_gate": "github_v6_current_receipt; render_owner_surface_absent; remaining_six_surfaces_fail_closed",
     "base_mcp": "current task live namespace exposed 15 callable tools; Docs=3 and /get-started/base.mdx head probe passed; help/get_wallets returned the primary Base Account; one Base Sepolia rehearsal reached terminal surface_missing/not_broadcast and is replay-locked; no signature, transaction hash or receipt",
-    "owner_gate": "explicit owner authorization received; root gh auth status recheck and exact Render owner surface pending",
+    "owner_gate": "GitHub owner receipt observed; exact Render owner credential/surface absent; no other platform owner surfaces observed",
     "receipts": "runtime/publication_readback_2026-08-14.json"
   },
   "authoritative_current_readback": {
     "path": "runtime/publication_readback_2026-08-14.json",
-    "observed_at_cst": "2026-08-15T13:11:42.300+08:00",
+    "observed_at_cst": "2026-08-15T13:30:00+08:00",
     "release_id": "base-erp-public-product-20260815-v6",
     "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
     "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
-    "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT",
+    "commit_sha": "1689ca9e66042919939654f65a7c2eaa3417ac15",
     "github_release": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v6",
     "render_service_id": "srv-d9t0bsafngtc7387gqo0",
     "render_deployment_id": null,
-    "strict_receipt_count": 0,
-    "strict_receipt_platforms": [],
+    "strict_receipt_count": 1,
+    "strict_receipt_platforms": [
+      "github"
+    ],
     "complete_eight_surface_bundle": false,
     "public_update_units": 0
   },
@@ -243,7 +245,7 @@
       "target": {
         "repository": "gaysonloser/base-erp-settlement-workbench",
         "branch": "main",
-        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT"
+        "commit_sha": "1689ca9e66042919939654f65a7c2eaa3417ac15"
       },
       "canonical_surface": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v6",
       "write_operation": "create_or_update_current_release_artifact",
@@ -254,8 +256,24 @@
         "artifact_path": "runtime/release_candidate_2026-08-10.json"
       },
       "required_auth": "owner-authenticated repository with write permission",
-      "status": "owner_publication_pending_current_release",
-      "receipt": null,
+      "status": "current_release_receipt_observed",
+      "receipt": {
+        "owner": "gaysonloser",
+        "repo": "base-erp-settlement-workbench",
+        "branch": "main",
+        "commit_sha": "1689ca9e66042919939654f65a7c2eaa3417ac15",
+        "release_tag": "base-erp-public-product-20260815-v6",
+        "release_url": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v6",
+        "proof_ref": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v6",
+        "release_id": "base-erp-public-product-20260815-v6",
+        "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
+        "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
+        "material_outcome": "H215 server-owned operator workbench with dual-origin decision canvas, independent truth layers, deterministic browser acceptance and fail-closed external gates",
+        "current": true,
+        "historical": false,
+        "synthetic": false,
+        "evidence_origin": "native_git_push_and_github_release_public_readback"
+      },
       "candidate_reference": {
         "platform": "GitHub",
         "receipt_id": "github:gaysonloser/base-erp-settlement-workbench@main:3880de0b116baeef70f8482e7449bd3e597b2030",
@@ -274,7 +292,7 @@
       "target": {
         "service": "base-erp-settlement-workbench",
         "environment": "production",
-        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT",
+        "commit_sha": "1689ca9e66042919939654f65a7c2eaa3417ac15",
         "service_id": "srv-d9t0bsafngtc7387gqo0"
       },
       "canonical_surface": "https://base-erp-settlement-workbench.onrender.com/release.json",
@@ -286,7 +304,7 @@
         "source_artifact": "projects/2026-08_Base_ERP_Settlement_Workbench"
       },
       "required_auth": "owner-authenticated Render service and deploy permission",
-      "status": "owner_deploy_pending_current_release",
+      "status": "v4_current_service_readback_v6_owner_deploy_gate",
       "receipt": null,
       "candidate_reference": {
         "platform": "Render",
@@ -299,6 +317,17 @@
         "synthetic": false,
         "evidence_origin": "official_platform_readback",
         "proof_ref": "https://base-erp-settlement-workbench.onrender.com/release.json"
+      },
+      "current_public_readback": {
+        "proof_ref": "https://base-erp-settlement-workbench.onrender.com/release.json",
+        "service_id": "srv-d9t0bsafngtc7387gqo0",
+        "observed_commit_sha": "e96c13717fcf16d80138852629d82b3b21edce56",
+        "observed_release_id": "base-erp-public-product-20260814-v4",
+        "observed_release_fingerprint": "5962684e0f5df38691ecdaa0b75ba023dcf1a64bf85cc15e512d8e307704ea4f",
+        "observed_bom_fingerprint": "2b617a7ae4e2ef976e97310ab533f8f067c758dd0feaf3013709a06d01a6d612",
+        "health_ready": true,
+        "current_v6_release_match": false,
+        "owner_surface": "credential_absent"
       }
     },
     {

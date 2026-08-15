@@ -302,22 +302,24 @@
     "runtime_authority_note": "Fresh writer-idle authority rebind base-erp-runtime-rebind-20260815-v6-publication verified against the current run before v6 publication preparation."
   },
   "limitations": [
-    "Owner explicitly authorized the exact BASE GitHub/Render publication lane; current external receipts remain pending until each owner-visible gate is observed.",
+    "Owner explicitly authorized the exact BASE GitHub/Render publication lane; GitHub v6 receipt is observed, while Render remains an exact owner-surface gate.",
     "Formal historical capability health: Base Docs live tools=3/probe passed and Base MCP live tools=15/help passed; this publication lane performs no wallet, signature, transaction, deployment or public write through Base MCP.",
     "H215 is a visitor-safe, non-executable projection; Base Sepolia is descriptor-only and Base Mainnet remains owner-gated.",
     "The H215 readback is included in the immutable BOM over the documented canonical readback-placeholder projection to avoid a recursive release/BOM self-hash cycle.",
     "Runtime is bound to the current mutable run 02_Build-20260815-122052 with writer-idle authority af169879865c40dc0a347520708769dbd93dbdd2f12dad58952a6dd81753d543; a fresh rebind is required after any runtime or authority byte change.",
-    "No Base Mainnet receipt, authoritative ERP posting readback, current GitHub release, current Render deploy or complete eight-surface public receipt has been observed for v6 in this local preparation state.",
+    "GitHub v6 release receipt is current and joined to commit 1689ca9e66042919939654f65a7c2eaa3417ac15, release_id, release_fingerprint and bom_fingerprint; exact Render service remains on v4 pending its owner credential/surface, and no complete eight-surface receipt exists.",
     "The public payload is product-only; two local fixture-bearing paths are excluded from the v6 BOM and publication staging without deleting local files.",
     "BASE/CIRCLE isolation was checked against the matrix; no CIRCLE repository, service, app, domain, release or receipt was touched.",
     "Full local npm test passes 227/227, including the runtime-authority import path and Playwright/browser acceptance; external publication remains fail-closed until exact owner gates are verified.",
     "Runtime counters and queue/cursor are authoritative only through runctl; local release evidence cannot increment the 30/10 ledger."
   ],
   "latest_build_readback": {
-    "observed_at": "2026-08-15T13:11:42.300+08:00",
+    "observed_at": "2026-08-15T13:30:00+08:00",
     "source": "H215_parent_revalidation_after_runtime_authority_rebind",
-    "strict_receipt_count": 0,
-    "strict_receipt_platforms": [],
+    "strict_receipt_count": 1,
+    "strict_receipt_platforms": [
+      "github"
+    ],
     "release_join": {
       "release_id": "base-erp-public-product-20260815-v6",
       "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
@@ -336,11 +338,14 @@
     },
     "h213_pinned_sha256": "1899acb8147844865d34085b396a0b2f282acbddb7f14823fdaa74b665d4d2ef",
     "github": {
-      "strict_status": "owner_authorization_received_gh_status_recheck_pending"
+      "strict_status": "current_v6_release_receipt_observed",
+      "commit_sha": "1689ca9e66042919939654f65a7c2eaa3417ac15",
+      "release_url": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v6"
     },
     "render": {
-      "strict_status": "owner_authorization_received_exact_render_surface_pending",
-      "service_id": "srv-d9t0bsafngtc7387gqo0"
+      "strict_status": "v4_current_service_readback_v6_owner_deploy_gate",
+      "service_id": "srv-d9t0bsafngtc7387gqo0",
+      "observed_commit_sha": "e96c13717fcf16d80138852629d82b3b21edce56"
     },
     "base_dashboard": {
       "strict_status": "canonical_route_read_only_no_update",
@@ -368,8 +373,11 @@
   },
   "artifact_excluded_from_own_bom": true,
   "post_publication_readback": {
-    "status": "owner_authorized_publication_pending_current_release_readback",
-    "receipts": 0
+    "status": "partial_current_github_receipt_render_owner_gate",
+    "receipts": 1,
+    "strict_receipt_platforms": [
+      "github"
+    ]
   },
   "deployment_surface": {
     "start_command": "npm start",
