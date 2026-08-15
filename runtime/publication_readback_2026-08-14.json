@@ -18,7 +18,7 @@
       "target": "gaysonloser/base-erp-settlement-workbench",
       "target_identity_verified": true,
       "circle_target_absent": true,
-      "status": "pre_reseal_v6_receipt_preserved_v7_refresh_required",
+      "status": "owner_publication_ready_v7_exact_commit",
       "historical_receipt": {
         "owner": "gaysonloser",
         "repo": "base-erp-settlement-workbench",
@@ -40,7 +40,7 @@
         "release_id": "base-erp-public-product-20260815-v7",
         "release_fingerprint": "bfd8e57684b0c43bb92dbc9ac3bcd7426b226dc816541c008c7085b7cc6ae5ae",
         "bom_fingerprint": "3b856d0a18fc996b47e5bb4bb0b4c06a73e28ff2f5a0ce13e08612b27ad3529c",
-        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT"
+        "commit_sha": "5459eaf3b8000b5a85197516d0b72a5cc46e03a5"
       },
       "receipt": {
         "owner": "gaysonloser",
@@ -86,10 +86,10 @@
       "target": "base-erp-settlement-workbench.onrender.com",
       "target_identity_verified": true,
       "circle_target_absent": true,
-      "status": "pre_reseal_v6_receipt_preserved_v7_refresh_required",
+      "status": "owner_publication_ready_v7_exact_commit",
       "service_id": "srv-d9t0bsafngtc7387gqo0",
       "deployment_id": "dep-da000fm1egvs73fib5c0",
-      "expected_commit_sha": "e5bb4f36edf5570fd673b05ee012b46e5126db66",
+      "expected_commit_sha": "5459eaf3b8000b5a85197516d0b72a5cc46e03a5",
       "historical_receipt": {
         "service_id": "srv-d9t0bsafngtc7387gqo0",
         "deployment_id": "dep-d9v62q3m8hqs73fi1lug",
@@ -124,7 +124,7 @@
         "release_id": "base-erp-public-product-20260815-v7",
         "release_fingerprint": "bfd8e57684b0c43bb92dbc9ac3bcd7426b226dc816541c008c7085b7cc6ae5ae",
         "bom_fingerprint": "3b856d0a18fc996b47e5bb4bb0b4c06a73e28ff2f5a0ce13e08612b27ad3529c",
-        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT"
+        "commit_sha": "5459eaf3b8000b5a85197516d0b72a5cc46e03a5"
       },
       "current_public_readback": {
         "proof_ref": "https://base-erp-settlement-workbench.onrender.com/release.json",
@@ -456,12 +456,12 @@
     "base_owner_tab_count": null,
     "external_write_performed": false,
     "circle_target_touched": false,
-    "gate": "v7 reseal prepared; pre-reseal v6 GitHub/Render receipts preserved as historical; exact v7 commit publication and Render readback required; Base App readiness only; remaining Talent/Guild/Basename gates remain fail-closed.",
+    "gate": "v7 product commit 5459eaf3b8000b5a85197516d0b72a5cc46e03a5 pushed to exact BASE main; GitHub v7 release and exact Render deploy/readback pending; Dashboard+Base.dev canonical identity, Base App readiness-only, Talent/Guild/Basename remain fail-closed; no CIRCLE or wallet action.",
     "reseal_release_id": "base-erp-public-product-20260815-v7",
     "reseal_release_fingerprint": "bfd8e57684b0c43bb92dbc9ac3bcd7426b226dc816541c008c7085b7cc6ae5ae",
     "reseal_bom_fingerprint": "3b856d0a18fc996b47e5bb4bb0b4c06a73e28ff2f5a0ce13e08612b27ad3529c"
   },
-  "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT",
+  "commit_sha": "5459eaf3b8000b5a85197516d0b72a5cc46e03a5",
   "owner_authorization": {
     "scope": "BASE GitHub repository main and exact BASE Render service only",
     "received": true,
@@ -914,7 +914,14 @@
     "source_paths": [
       "src/server.mjs",
       "src/base-erp-scenario-router.mjs"
-    ]
+    ],
+    "actual_commit_reseal": {
+      "product_commit_sha": "5459eaf3b8000b5a85197516d0b72a5cc46e03a5",
+      "product_commit_source": "git_rev_parse_HEAD_after_product_only_main_commit",
+      "observed_at_cst": "2026-08-15T06:44:57.472Z",
+      "immutable_bom_unchanged": true,
+      "candidate_git_commit_remains_placeholder": true
+    }
   },
   "reseal_current_receipt_count": 0,
   "pre_reseal_receipt_count": 2

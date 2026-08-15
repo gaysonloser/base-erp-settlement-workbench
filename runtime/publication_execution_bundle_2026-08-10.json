@@ -2,7 +2,7 @@
   "schema_version": "base-erp-publication-execution-bundle-v1",
   "bundle_id": "base-erp-public-product-publication-execution-bundle-20260815-v7",
   "generated_at_cst": "2026-08-15T14:31:28+08:00",
-  "execution_mode": "v7_reseal_ready_github_render_current_receipts_pending_exact_commit",
+  "execution_mode": "v7_exact_commit_bound_github_render_publication_pending_release_and_deploy",
   "public_write_authorized": false,
   "counting": {
     "external_trace_units": 0,
@@ -110,7 +110,7 @@
     ],
     "current_gate": "v7_reseal_ready_github_render_current_receipts_pending_exact_commit; Dashboard+Base.dev canonical identity; Base App readiness only; remaining four release surfaces fail_closed",
     "base_mcp": "current task live namespace exposed 15 callable tools; Docs=3 and /get-started/base.mdx head probe passed; help/get_wallets returned the primary Base Account; one Base Sepolia rehearsal reached terminal surface_missing/not_broadcast and is replay-locked; no signature, transaction hash or receipt",
-    "owner_gate": "Owner authorization is valid for exact BASE GitHub main and Render service; v7 exact commit publication and readback are pending; no CIRCLE or wallet authority.",
+    "owner_gate": "Owner authorization is valid for exact BASE GitHub main and Render service; v7 product commit 5459eaf3b8000b5a85197516d0b72a5cc46e03a5 is pushed; GitHub v7 release and Render exact-commit deploy/readback are pending; no CIRCLE or wallet authority.",
     "receipts": "runtime/publication_readback_2026-08-14.json"
   },
   "authoritative_current_readback": {
@@ -119,7 +119,7 @@
     "release_id": "base-erp-public-product-20260815-v7",
     "release_fingerprint": "bfd8e57684b0c43bb92dbc9ac3bcd7426b226dc816541c008c7085b7cc6ae5ae",
     "bom_fingerprint": "3b856d0a18fc996b47e5bb4bb0b4c06a73e28ff2f5a0ce13e08612b27ad3529c",
-    "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT",
+    "commit_sha": "5459eaf3b8000b5a85197516d0b72a5cc46e03a5",
     "github_release": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v7",
     "render_service_id": "srv-d9t0bsafngtc7387gqo0",
     "render_deployment_id": null,
@@ -246,7 +246,7 @@
       "target": {
         "repository": "gaysonloser/base-erp-settlement-workbench",
         "branch": "main",
-        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT"
+        "commit_sha": "5459eaf3b8000b5a85197516d0b72a5cc46e03a5"
       },
       "canonical_surface": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v7",
       "write_operation": "create_or_update_current_release_artifact",
@@ -257,7 +257,7 @@
         "artifact_path": "runtime/release_candidate_2026-08-10.json"
       },
       "required_auth": "owner-authenticated repository with write permission",
-      "status": "owner_publication_pending_v7_exact_commit",
+      "status": "owner_publication_ready_v7_exact_commit",
       "receipt": null,
       "candidate_reference": {
         "platform": "GitHub",
@@ -303,7 +303,7 @@
       "target": {
         "service": "base-erp-settlement-workbench",
         "environment": "production",
-        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT",
+        "commit_sha": "5459eaf3b8000b5a85197516d0b72a5cc46e03a5",
         "service_id": "srv-d9t0bsafngtc7387gqo0"
       },
       "canonical_surface": "https://base-erp-settlement-workbench.onrender.com/release.json",
@@ -315,7 +315,7 @@
         "source_artifact": "projects/2026-08_Base_ERP_Settlement_Workbench"
       },
       "required_auth": "owner-authenticated Render service and deploy permission",
-      "status": "owner_publication_pending_v7_exact_commit",
+      "status": "owner_publication_ready_v7_exact_commit",
       "receipt": null,
       "candidate_reference": {
         "platform": "Render",
@@ -555,6 +555,13 @@
     "source_sha256": {
       "src/server.mjs": "c422fdd4da6f000ab7fe11f94b29f60836bead70534c0881ba7b270b332a267b",
       "src/base-erp-scenario-router.mjs": "00ef279e9b42426175860d1d1edb2549a80539450753d5d286d374bf1697d78f"
+    },
+    "actual_commit_reseal": {
+      "product_commit_sha": "5459eaf3b8000b5a85197516d0b72a5cc46e03a5",
+      "product_commit_source": "git_rev_parse_HEAD_after_product_only_main_commit",
+      "observed_at_cst": "2026-08-15T06:44:57.472Z",
+      "immutable_bom_unchanged": true,
+      "candidate_git_commit_remains_placeholder": true
     }
   }
 }
