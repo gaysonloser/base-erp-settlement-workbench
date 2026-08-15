@@ -1,0 +1,16 @@
+import test from 'node:test'; import assert from 'node:assert/strict'; import {evaluatePlatformEvidence,collapseAlias,CANONICAL_APP_ID,CANONICAL_PRIMARY_URL} from '../src/base-platform-feasibility-contract.mjs';
+const good={platform:'base_dashboard',app_id:CANONICAL_APP_ID,primary_url:CANONICAL_PRIMARY_URL,owner_verified:true};
+test('H212-01 canonical alias collapse',()=>assert.equal(collapseAlias([evaluatePlatformEvidence(good),evaluatePlatformEvidence({...good,platform:'base.dev'})]).duplicate_receipts,0));
+test('H212-02 generic redirect gates',()=>assert.equal(evaluatePlatformEvidence({platform:'base.dev'}).state,'owner_platform_gate'));
+test('H212-03 stale mini app gates',()=>assert.equal(evaluatePlatformEvidence({platform:'base_app',app_id:'old'}).state,'base_app_readiness_required'));
+test('H212-04 complete metadata readiness',()=>{const metadata={name:1,icon:1,tagline:1,description:1,screenshots:1,category:1,builder_code:1}; assert.equal(evaluatePlatformEvidence({platform:'base_app',app_id:CANONICAL_APP_ID,metadata}).state,'base_app_readiness')});
+test('H212-05 notification is not receipt',()=>assert.equal(evaluatePlatformEvidence({platform:'base_dashboard'}).receipt_eligible,false));
+test('H212-06 homepage gates',()=>assert.equal(evaluatePlatformEvidence({platform:'base_app'}).receipt_eligible,false));
+test('H212-07 talent read gates',()=>assert.equal(evaluatePlatformEvidence({platform:'talent'}).state,'talent_platform_gate'));
+test('H212-08 talent profile excluded',()=>assert.equal(evaluatePlatformEvidence({platform:'talent'}).publication_unit,0));
+test('H212-09 guild object non-release',()=>assert.equal(evaluatePlatformEvidence({platform:'guild'}).state,'guild_platform_gate'));
+test('H212-10 generic guild gates',()=>assert.equal(evaluatePlatformEvidence({platform:'guild'}).receipt_eligible,false));
+test('H212-11 basename identity non-release',()=>assert.equal(evaluatePlatformEvidence({platform:'basename_base_org'}).state,'basename_wallet_gate'));
+test('H212-12 basename text record still gated',()=>assert.equal(evaluatePlatformEvidence({platform:'basename_base_org'}).publication_unit,0));
+test('H212-13 missing release fields',()=>assert.equal(evaluatePlatformEvidence({platform:'unknown',native_release_fields:false}).state,'platform_gate'));
+test('H212-14 circle collision',()=>assert.equal(evaluatePlatformEvidence({platform:'base_dashboard',target:'CIRCLE service'}).state,'owner_platform_gate_no_overwrite'));

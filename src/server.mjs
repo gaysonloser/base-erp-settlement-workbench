@@ -1,12 +1,13 @@
 import { createServer } from "node:http";
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { lstatSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 
 import { digest } from "./base-neutral-receipt-controls.mjs";
 import {
   buildEventAdmissionPreview,
+  buildPlatformGatesProjection,
   buildOperatorWorkbench,
   buildRecurringSettlementProjection,
   buildReadOnlySimulation,
@@ -19,12 +20,46 @@ import { evaluateRefundProposal } from "./base-refund-ceiling-guard.mjs";
 const PROJECT_ROOT = fileURLToPath(new URL("../", import.meta.url));
 const DEFAULT_RELEASE_PATH = resolve(PROJECT_ROOT, "runtime/release_candidate_2026-08-10.json");
 const PRIMARY_BASE_ACCOUNT = "0xba36d092db2999bb1fabbaf281ac956a97189c25";
-const COMMIT_PATTERN = /^[0-9a-f]{7,40}$/i;
-const FULL_COMMIT_PATTERN = /^[0-9a-f]{40}$/i;
-const DIGEST_PATTERN = /^[0-9a-f]{64}$/i;
+const FULL_COMMIT_PATTERN = /^[0-9a-f]{40}$/;
+const DIGEST_PATTERN = /^[0-9a-f]{64}$/;
 const DEFAULT_COMMIT_PLACEHOLDER = "PENDING_OWNER_PUBLIC_COMMIT";
+const H219_RELEASE_ID = "base-erp-public-product-20260815-v8";
+const H219_BOM_SCHEMA_VERSION = "base-erp-v8-bom-v1";
+const H219_RELEASE_SCHEMA_VERSION = "base-erp-v8-release-identity-v1";
+const H219_BASE_TARGET = Object.freeze({
+  github_repo: "gaysonloser/base-erp-settlement-workbench",
+  render_service_id: "srv-d9t0bsafngtc7387gqo0",
+  render_domain: "base-erp-settlement-workbench.onrender.com",
+  dashboard_app_id: "6a7a0717e209a55163497d2d",
+  canonical_primary_url: "https://base-erp-settlement-workbench.onrender.com",
+});
+const H219_BOM_PATH_ALLOWLIST = Object.freeze([
+  "projects/2026-08_Base_ERP_Settlement_Workbench/assets/base-app/base-erp-workbench-screenshot-source.png",
+  "projects/2026-08_Base_ERP_Settlement_Workbench/assets/base-app/base-erp-workbench-thumbnail-source.png",
+  "projects/2026-08_Base_ERP_Settlement_Workbench/config/base_erp_product_contract_v1.json",
+  "projects/2026-08_Base_ERP_Settlement_Workbench/config/release_identity_and_exposure_contract_v1.json",
+  "projects/2026-08_Base_ERP_Settlement_Workbench/package-lock.json",
+  "projects/2026-08_Base_ERP_Settlement_Workbench/package.json",
+  "projects/2026-08_Base_ERP_Settlement_Workbench/render.yaml",
+  "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-erp-workbench.mjs",
+  "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-native-platform-evidence-contract.mjs",
+  "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-native-platform-execution-gates.mjs",
+  "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-platform-feasibility-contract.mjs",
+  "projects/2026-08_Base_ERP_Settlement_Workbench/src/operator-workbench-page.mjs",
+  "projects/2026-08_Base_ERP_Settlement_Workbench/src/server.mjs",
+  "projects/2026-08_Base_ERP_Settlement_Workbench/test/base-native-platform-execution-gates.test.mjs",
+  "projects/2026-08_Base_ERP_Settlement_Workbench/test/operator-workbench-browser.test.mjs",
+  "projects/2026-08_Base_ERP_Settlement_Workbench/test/operator-workbench-page.test.mjs",
+  "projects/2026-08_Base_ERP_Settlement_Workbench/test/server.test.mjs",
+]);
 const H214_READBACK_PATH = "runtime/h214_recurring_settlement_readback_2026-08-14.json";
 const H215_READBACK_PATH = "runtime/h215_operator_workbench_readback_2026-08-14.json";
+const H217_MODULE_PATH = "src/base-native-platform-execution-gates.mjs";
+const H217_READBACK_PATH = "runtime/h217_remaining_platform_readback_2026-08-15.json";
+const CIRCLE_MATRIX_PATH = "config/base_circle_platform_isolation_matrix_v1.json";
+const H217_MODULE_SHA256 = "96f9839cbebb6bff775a5b0cc84a7ae7d71b0168847f2a1eb08c0b59d6f80b42";
+const H217_READBACK_SHA256 = "f7aea1ec1ea6d3377334f8f1d32938054f4bd4b809f622673fb056868be2c8b1";
+const CIRCLE_MATRIX_SHA256 = "c538e47c4b7951f341b36e351858bf3e1c28dd772d7d3f9c3588f1f0093f19de";
 const PUBLIC_PLATFORM_ORDER = Object.freeze([
   "github",
   "render",
@@ -60,9 +95,140 @@ const PUBLIC_ASSETS = Object.freeze({
   }),
 });
 
+function parseStrictJson(text) {
+  let index = 0;
+  const source = String(text);
+  const whitespace = () => { while (/\s/.test(source[index] ?? "")) index += 1; };
+  const fail = () => { throw new SyntaxError("invalid JSON or duplicate object key"); };
+  const parseString = () => {
+    if (source[index] !== '"') fail();
+    const start = index;
+    index += 1;
+    let escaped = false;
+    while (index < source.length) {
+      const char = source[index++];
+      if (escaped) { escaped = false; continue; }
+      if (char === "\\") { escaped = true; continue; }
+      if (char === '"') return JSON.parse(source.slice(start, index));
+      if (char < " ") fail();
+    }
+    fail();
+  };
+  const parseNumber = () => {
+    const match = source.slice(index).match(/^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/);
+    if (!match) fail();
+    index += match[0].length;
+    const value = Number(match[0]);
+    if (!Number.isFinite(value)) fail();
+    return value;
+  };
+  const parseValue = () => {
+    whitespace();
+    const char = source[index];
+    if (char === '"') return parseString();
+    if (char === "{") {
+      index += 1; whitespace();
+      const object = {}; const keys = new Set();
+      if (source[index] === "}") { index += 1; return object; }
+      while (index < source.length) {
+        whitespace();
+        const key = parseString();
+        if (keys.has(key)) fail();
+        keys.add(key); whitespace();
+        if (source[index++] !== ":") fail();
+        object[key] = parseValue(); whitespace();
+        if (source[index] === "}") { index += 1; return object; }
+        if (source[index++] !== ",") fail();
+      }
+      fail();
+    }
+    if (char === "[") {
+      index += 1; whitespace(); const array = [];
+      if (source[index] === "]") { index += 1; return array; }
+      while (index < source.length) {
+        array.push(parseValue()); whitespace();
+        if (source[index] === "]") { index += 1; return array; }
+        if (source[index++] !== ",") fail();
+      }
+      fail();
+    }
+    if (source.startsWith("true", index)) { index += 4; return true; }
+    if (source.startsWith("false", index)) { index += 5; return false; }
+    if (source.startsWith("null", index)) { index += 4; return null; }
+    return parseNumber();
+  };
+  const value = parseValue(); whitespace();
+  if (index !== source.length) fail();
+  return value;
+}
+
 function readJsonFile(filePath) {
   const resolvedPath = filePath instanceof URL ? filePath : resolve(String(filePath));
-  return JSON.parse(readFileSync(resolvedPath, "utf8"));
+  return parseStrictJson(readFileSync(resolvedPath, "utf8"));
+}
+
+function canonicalizeH219(value) {
+  if (typeof value === "string") return JSON.stringify(value.normalize("NFC"));
+  if (value === null || typeof value === "boolean") return JSON.stringify(value);
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) throw new TypeError("non-finite JSON number");
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) return `[${value.map(canonicalizeH219).join(",")}]`;
+  if (value && typeof value === "object") {
+    const keys = Object.keys(value).map((key) => key.normalize("NFC"));
+    if (new Set(keys).size !== keys.length) throw new TypeError("duplicate normalized object key");
+    keys.sort((left, right) => Buffer.from(left, "utf8").compare(Buffer.from(right, "utf8")));
+    return `{${keys.map((key) => `${JSON.stringify(key)}:${canonicalizeH219(value[key])}`).join(",")}}`;
+  }
+  throw new TypeError("unsupported JSON value");
+}
+
+function canonicalDigest(value) {
+  return createHash("sha256").update(canonicalizeH219(value), "utf8").digest("hex");
+}
+
+function h219BaseTargetEqual(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const expectedKeys = Object.keys(H219_BASE_TARGET);
+  const actualKeys = Object.keys(value);
+  return actualKeys.length === expectedKeys.length
+    && expectedKeys.every((key) => Object.prototype.hasOwnProperty.call(value, key) && value[key] === H219_BASE_TARGET[key]);
+}
+
+function currentV8ReleaseReady(release) {
+  return release?.schema_version === "base-erp-v8-public-release-v1"
+    && release.release_schema_version === H219_RELEASE_SCHEMA_VERSION
+    && release.release_id === H219_RELEASE_ID
+    && release.release_identity_valid === true
+    && h219BaseTargetEqual(release.base_target)
+    && release.bom_verified === true
+    && release.bom_fingerprint_valid === true
+    && release.bom_files_verified === true
+    && release.bom_source_bytes_safe === true
+    && typeof release.bom_fingerprint === "string"
+    && DIGEST_PATTERN.test(release.bom_fingerprint)
+    && release.immutable_bom_sha256 === release.bom_fingerprint
+    && typeof release.release_fingerprint === "string"
+    && DIGEST_PATTERN.test(release.release_fingerprint)
+    && typeof release.git_commit === "string"
+    && FULL_COMMIT_PATTERN.test(release.git_commit)
+    && release.commit_placeholder === false;
+}
+
+const CURRENT_V8_UNAVAILABLE = Object.freeze({
+  error: "release_unavailable",
+  reason: "current_v8_identity_unready",
+});
+
+function resolveProjectPath(filePath) {
+  const raw = String(filePath).normalize("NFC");
+  const prefix = "projects/2026-08_Base_ERP_Settlement_Workbench/";
+  const relative = raw.startsWith(prefix) ? raw.slice(prefix.length) : raw;
+  if (!relative || relative.startsWith("/") || relative.includes("\\") || relative.split("/").some((part) => !part || part === "." || part === "..")) {
+    throw new Error("invalid BOM path");
+  }
+  return resolve(PROJECT_ROOT, relative);
 }
 
 function asNonEmptyString(value, fallback) {
@@ -71,8 +237,8 @@ function asNonEmptyString(value, fallback) {
 
 function resolveCommit({ candidate, env }) {
   const source = env?.RENDER_GIT_COMMIT ?? env?.RENDER_GIT_COMMIT_SHA ?? env?.GIT_COMMIT_SHA ?? env?.SOURCE_VERSION;
-  if (typeof source === "string" && COMMIT_PATTERN.test(source.trim())) {
-    return { value: source.trim(), placeholder: !FULL_COMMIT_PATTERN.test(source.trim()), source: "environment" };
+  if (typeof source === "string" && FULL_COMMIT_PATTERN.test(source.trim())) {
+    return { value: source.trim(), placeholder: false, source: "environment" };
   }
   // The candidate commit identifies the intended release, not the bytes that
   // the current process is actually serving.  Without a deployment-provided
@@ -82,7 +248,7 @@ function resolveCommit({ candidate, env }) {
 
 function sha256File(filePath) {
   try {
-    const raw = readFileSync(resolve(PROJECT_ROOT, filePath));
+    const raw = readFileSync(resolveProjectPath(filePath));
     // The H214 readback carries the final release/BOM fingerprints. Its BOM
     // entry is therefore sealed over a placeholder projection so the release
     // identity can join the readback without an impossible self-hash cycle.
@@ -112,22 +278,61 @@ function sha256File(filePath) {
 
 function verifyBom(candidate) {
   const entries = Array.isArray(candidate?.immutable_release_bom) ? candidate.immutable_release_bom : [];
+  const rawEntries = entries.map((entry) => ({
+    path: typeof entry?.path === "string" ? entry.path.normalize("NFC") : null,
+    digest: typeof entry?.digest === "string" ? entry.digest : null,
+  }));
+  const h219AllowlistValid = candidate.schema_version !== "base-erp-v8-release-candidate-v1"
+    || (rawEntries.length === H219_BOM_PATH_ALLOWLIST.length
+      && rawEntries.every((entry, index) => entry.path === H219_BOM_PATH_ALLOWLIST[index]));
   const normalizedBom = entries
-    .filter((entry) => entry && typeof entry.path === "string" && typeof entry.digest === "string")
-    .map((entry) => ({ path: entry.path, digest: entry.digest.toLowerCase() }))
-    .sort((left, right) => left.path.localeCompare(right.path));
+    .map((entry) => ({
+      path: typeof entry?.path === "string" ? entry.path.normalize("NFC") : null,
+      digest: typeof entry?.digest === "string" ? entry.digest : null,
+    }))
+    .filter((entry) => entry.path !== null && entry.digest !== null)
+    .sort((left, right) => Buffer.from(left.path, "utf8").compare(Buffer.from(right.path, "utf8")));
+  const normalizedPaths = normalizedBom.map((entry) => entry.path);
+  const caseFoldPaths = normalizedPaths.map((path) => path.toLocaleLowerCase("en-US"));
   const structureValid = normalizedBom.length === entries.length
     && normalizedBom.length > 0
+    && h219AllowlistValid
+    && (candidate.schema_version === "base-erp-v8-release-candidate-v1" ? normalizedBom.length === 17 : true)
     && normalizedBom.every((entry) => DIGEST_PATTERN.test(entry.digest))
-    && new Set(normalizedBom.map((entry) => entry.path)).size === normalizedBom.length;
+    && new Set(normalizedPaths).size === normalizedPaths.length
+    && new Set(caseFoldPaths).size === caseFoldPaths.length
+    && normalizedPaths.every((path) => {
+      try {
+        const stat = lstatSync(resolveProjectPath(path));
+        return stat.isFile() && !stat.isSymbolicLink();
+      } catch { return false; }
+    });
+  const bomFiles = normalizedBom.map((entry) => ({ path: entry.path, sha256: entry.digest }));
+  const bomPayload = { schema_version: H219_BOM_SCHEMA_VERSION, files: bomFiles };
+  const expectedBomFingerprint = candidate.schema_version === "base-erp-v8-release-candidate-v1"
+    ? canonicalDigest(bomPayload)
+    : digest(normalizedBom);
   const fingerprintValid = structureValid
     && typeof candidate.bom_fingerprint === "string"
-    && candidate.bom_fingerprint.toLowerCase() === digest(normalizedBom);
+    && DIGEST_PATTERN.test(candidate.bom_fingerprint)
+    && candidate.bom_fingerprint === expectedBomFingerprint;
   const filesVerified = structureValid && normalizedBom.every((entry) => sha256File(entry.path) === entry.digest);
+  const sourceBytesSafe = candidate.schema_version !== "base-erp-v8-release-candidate-v1"
+    || normalizedBom.every((entry) => {
+      try {
+        const bytes = readFileSync(resolveProjectPath(entry.path));
+        const actualCommit = FULL_COMMIT_PATTERN.test(String(candidate.git_commit ?? "")) ? String(candidate.git_commit) : null;
+        return (!actualCommit || !bytes.includes(Buffer.from(actualCommit, "utf8")))
+          && !bytes.includes(Buffer.from(String(candidate.release_fingerprint ?? ""), "utf8"))
+          && !bytes.includes(Buffer.from(String(candidate.bom_fingerprint ?? ""), "utf8"));
+      } catch { return false; }
+    });
   return {
-    bom_verified: Boolean(fingerprintValid && filesVerified),
+    bom_verified: Boolean(fingerprintValid && filesVerified && sourceBytesSafe),
     bom_fingerprint_valid: Boolean(fingerprintValid),
     bom_files_verified: Boolean(filesVerified),
+    bom_source_bytes_safe: Boolean(sourceBytesSafe),
+    bom_schema_version: candidate.schema_version === "base-erp-v8-release-candidate-v1" ? H219_BOM_SCHEMA_VERSION : null,
   };
 }
 
@@ -148,8 +353,25 @@ export function readReleaseDocument({ releasePath = DEFAULT_RELEASE_PATH, env = 
     "This local candidate has no Base Mainnet receipt, ERP authoritative readback, or complete eight-surface public receipt.",
     "Public writes and wallet actions are disabled until an owner-visible gate is satisfied.",
   ]));
+  const releaseIdentity = candidate.schema_version === "base-erp-v8-release-candidate-v1"
+    ? {
+      schema_version: H219_RELEASE_SCHEMA_VERSION,
+      release_id: candidate.release_id,
+      bom_fingerprint: candidate.bom_fingerprint,
+      base_target: candidate.base_target,
+    }
+    : null;
+  const releaseIdentityFingerprintValid = releaseIdentity
+    ? releaseIdentity.release_id === H219_RELEASE_ID
+      && h219BaseTargetEqual(releaseIdentity.base_target)
+      && typeof releaseIdentity.bom_fingerprint === "string"
+      && DIGEST_PATTERN.test(releaseIdentity.bom_fingerprint)
+      && typeof candidate.release_fingerprint === "string"
+      && DIGEST_PATTERN.test(candidate.release_fingerprint)
+      && canonicalDigest(releaseIdentity) === candidate.release_fingerprint
+    : true;
   return Object.freeze({
-    schema_version: "base-erp-public-release-v1",
+    schema_version: candidate.schema_version === "base-erp-v8-release-candidate-v1" ? "base-erp-v8-public-release-v1" : "base-erp-public-release-v1",
     project_name: asNonEmptyString(candidate.project_name, "Base ERP Settlement Workbench"),
     release_id: asNonEmptyString(candidate.release_id, "unbound-release"),
     release_fingerprint: asNonEmptyString(candidate.release_fingerprint, ""),
@@ -170,7 +392,9 @@ export function readReleaseDocument({ releasePath = DEFAULT_RELEASE_PATH, env = 
     release_identity_valid: typeof candidate.release_id === "string"
       && candidate.release_id.trim() !== ""
       && DIGEST_PATTERN.test(typeof candidate.release_fingerprint === "string" ? candidate.release_fingerprint : "")
-      && DIGEST_PATTERN.test(typeof candidate.bom_fingerprint === "string" ? candidate.bom_fingerprint : ""),
+      && DIGEST_PATTERN.test(typeof candidate.bom_fingerprint === "string" ? candidate.bom_fingerprint : "")
+      && releaseIdentityFingerprintValid,
+    ...(releaseIdentity ? { base_target: Object.freeze({ ...(releaseIdentity.base_target ?? {}) }), release_schema_version: H219_RELEASE_SCHEMA_VERSION } : {}),
     public_write_authorized: false,
     publication_status: "local_candidate_non_public_receipt",
     evidence_level: asNonEmptyString(candidate.evidence_level, "L1_local_tests"),
@@ -192,9 +416,7 @@ export function readHealth({ release = readReleaseDocument(), runtimeReader = nu
       runtimeReason = error instanceof Error ? error.message : "runtime binding unreadable";
     }
   }
-  const ready = release.release_identity_valid === true
-    && release.bom_verified === true
-    && FULL_COMMIT_PATTERN.test(release.git_commit);
+  const ready = currentV8ReleaseReady(release);
   return Object.freeze({
     ready,
     status: ready ? "ok" : "degraded",
@@ -491,7 +713,38 @@ function hasUnsupportedWorkbenchQuery(parsedUrl) {
   return [...parsedUrl.searchParams.keys()].some((key) => key !== "profile_id");
 }
 
-export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = process.env, runtimeReader = null } = {}) {
+function readPlatformGatesProjection(release, platformGatesSourceReader = null) {
+  try {
+    const source = typeof platformGatesSourceReader === "function" ? platformGatesSourceReader() : null;
+    const matrix = source?.matrix ?? readJsonFile(resolve(PROJECT_ROOT, CIRCLE_MATRIX_PATH));
+    const matrixTargetValid = matrix?.schema_version === "base-circle-platform-isolation-matrix-v1"
+      && matrix?.base_identity?.repository === "gaysonloser/base-erp-settlement-workbench"
+      && matrix?.base_identity?.render_url === "https://base-erp-settlement-workbench.onrender.com";
+    const matrixSha = source?.matrix_sha256 ?? sha256File(CIRCLE_MATRIX_PATH);
+    if (!matrixTargetValid || matrixSha !== CIRCLE_MATRIX_SHA256) throw new Error("isolation_matrix_invalid");
+    const h217Readback = source?.h217_readback ?? readJsonFile(resolve(PROJECT_ROOT, H217_READBACK_PATH));
+    const moduleSha = source?.h217_module_sha256 ?? sha256File(H217_MODULE_PATH);
+    const readbackSha = source?.h217_readback_sha256 ?? sha256File(H217_READBACK_PATH);
+    if (moduleSha !== H217_MODULE_SHA256 || readbackSha !== H217_READBACK_SHA256) throw new Error("h217_source_invalid_or_circle_collision");
+    return buildPlatformGatesProjection({
+      release,
+      h217_readback: h217Readback,
+      h217_module_sha256: moduleSha,
+      h217_readback_sha256: readbackSha,
+      circle_matrix_sha256: matrixSha,
+    });
+  } catch {
+    throw new Error("h217_source_invalid_or_circle_collision");
+  }
+}
+
+function hasRequestBody(request) {
+  const contentLength = request.headers["content-length"];
+  if (contentLength !== undefined && Number(contentLength) > 0) return true;
+  return request.headers["transfer-encoding"] !== undefined;
+}
+
+export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = process.env, runtimeReader = null, platformGatesSourceReader = null } = {}) {
   return createServer((request, response) => {
     const head = request.method === "HEAD";
     if (request.method !== "GET" && !head) {
@@ -525,6 +778,10 @@ export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = proc
       return;
     }
     if (pathname === "/release.json") {
+      if (!currentV8ReleaseReady(release)) {
+        writeResponse(response, 503, CURRENT_V8_UNAVAILABLE, "application/json; charset=utf-8", { head });
+        return;
+      }
       writeResponse(response, 200, release, "application/json; charset=utf-8", { head });
       return;
     }
@@ -544,15 +801,40 @@ export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = proc
       writeResponse(response, 200, buildRecurringSettlementProjection({ release }), "application/json; charset=utf-8", { head });
       return;
     }
+    if (pathname === "/platform-gates.json") {
+      if (parsedUrl.searchParams.size > 0 || hasRequestBody(request)) {
+        writeResponse(response, 400, { error: "client_binding_not_accepted" }, "application/json; charset=utf-8", { head });
+        return;
+      }
+      if (!currentV8ReleaseReady(release)) {
+        writeResponse(response, 503, CURRENT_V8_UNAVAILABLE, "application/json; charset=utf-8", { head });
+        return;
+      }
+      try {
+        writeResponse(response, 200, readPlatformGatesProjection(release, platformGatesSourceReader), "application/json; charset=utf-8", { head });
+      } catch {
+        writeResponse(response, 503, { error: "platform_gates_unavailable", reason: "h217_source_invalid_or_circle_collision" }, "application/json; charset=utf-8", { head });
+      }
+      return;
+    }
     if (pathname === "/workbench.json") {
       if (hasUnsupportedWorkbenchQuery(parsedUrl)) {
         writeResponse(response, 400, { error: "workbench_input_invalid", reason: "client_binding_not_accepted" }, "application/json; charset=utf-8", { head });
         return;
       }
+      if (!currentV8ReleaseReady(release)) {
+        writeResponse(response, 503, CURRENT_V8_UNAVAILABLE, "application/json; charset=utf-8", { head });
+        return;
+      }
       try {
-        writeResponse(response, 200, buildOperatorWorkbench({ release, selected_profile_id: parsedUrl.searchParams.get("profile_id") ?? undefined }), "application/json; charset=utf-8", { head });
+        const platform_gates = readPlatformGatesProjection(release, platformGatesSourceReader);
+        writeResponse(response, 200, buildOperatorWorkbench({ release, selected_profile_id: parsedUrl.searchParams.get("profile_id") ?? undefined, platform_gates }), "application/json; charset=utf-8", { head });
       } catch (error) {
-        writeResponse(response, 400, { error: "workbench_input_invalid", reason: error instanceof Error ? error.message : "invalid workbench input" }, "application/json; charset=utf-8", { head });
+        if (error instanceof Error && error.message === "h217_source_invalid_or_circle_collision") {
+          writeResponse(response, 503, { error: "platform_gates_unavailable", reason: "h217_source_invalid_or_circle_collision" }, "application/json; charset=utf-8", { head });
+        } else {
+          writeResponse(response, 400, { error: "workbench_input_invalid", reason: error instanceof Error ? error.message : "invalid workbench input" }, "application/json; charset=utf-8", { head });
+        }
       }
       return;
     }
@@ -624,10 +906,19 @@ export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = proc
         writeResponse(response, 400, { error: "workbench_input_invalid", reason: "client_binding_not_accepted" }, "application/json; charset=utf-8", { head });
         return;
       }
+      if (!currentV8ReleaseReady(release)) {
+        writeResponse(response, 503, CURRENT_V8_UNAVAILABLE, "application/json; charset=utf-8", { head });
+        return;
+      }
       try {
-        writeResponse(response, 200, renderOperatorWorkbenchPage(buildOperatorWorkbench({ release, selected_profile_id: parsedUrl.searchParams.get("profile_id") ?? undefined })), "text/html; charset=utf-8", { head });
+        const platform_gates = readPlatformGatesProjection(release, platformGatesSourceReader);
+        writeResponse(response, 200, renderOperatorWorkbenchPage(buildOperatorWorkbench({ release, selected_profile_id: parsedUrl.searchParams.get("profile_id") ?? undefined, platform_gates })), "text/html; charset=utf-8", { head });
       } catch (error) {
-        writeResponse(response, 400, { error: "workbench_input_invalid", reason: error instanceof Error ? error.message : "invalid workbench input" }, "application/json; charset=utf-8", { head });
+        if (error instanceof Error && error.message === "h217_source_invalid_or_circle_collision") {
+          writeResponse(response, 503, { error: "platform_gates_unavailable", reason: "h217_source_invalid_or_circle_collision" }, "application/json; charset=utf-8", { head });
+        } else {
+          writeResponse(response, 400, { error: "workbench_input_invalid", reason: error instanceof Error ? error.message : "invalid workbench input" }, "application/json; charset=utf-8", { head });
+        }
       }
       return;
     }
@@ -645,8 +936,8 @@ function parsePort(value) {
   return port;
 }
 
-export function listenServer({ host = process.env.HOST || "0.0.0.0", port = parsePort(process.env.PORT || "3000"), releasePath = DEFAULT_RELEASE_PATH, env = process.env, runtimeReader = null } = {}) {
-  const server = createAppServer({ releasePath, env, runtimeReader });
+export function listenServer({ host = process.env.HOST || "0.0.0.0", port = parsePort(process.env.PORT || "3000"), releasePath = DEFAULT_RELEASE_PATH, env = process.env, runtimeReader = null, platformGatesSourceReader = null } = {}) {
+  const server = createAppServer({ releasePath, env, runtimeReader, platformGatesSourceReader });
   return new Promise((resolvePromise, rejectPromise) => {
     const onError = (error) => {
       server.removeListener("listening", onListening);

@@ -47,3 +47,23 @@ test("H215 page preserves independent truth labels and keyboard contract hooks",
   assert.match(html, /setAttribute\("aria-label", "Case queue"\)/)
   assert.match(html, /setOpen\(false\)/)
 })
+
+test("H218 page renders one named platform-gates panel with four safe rows", () => {
+  const workbench = buildOperatorWorkbench({ release: RELEASE })
+  const platform_gates = {
+    schema_version: "base-erp-h218-platform-gates-public-v1",
+    mode: "visitor_read_only",
+    rows: [
+      "base_sepolia_rehearsal",
+      "talent_native_domain",
+      "guild_native_domain",
+      "basename_base_org_identity",
+    ].map((platform_row_id) => ({ platform_row_id, evidence_state: "owner_gate", owner_gate: "owner readback required" })),
+  }
+  const html = renderOperatorWorkbenchPage({ ...workbench, platform_gates })
+  assert.match(html, /id="platform-gates-panel"/)
+  assert.match(html, /href="\/platform-gates\.json"/)
+  assert.equal((html.match(/data-platform-gate="/g) ?? []).length, 4)
+  assert.match(html, /Native receipt: null · release receipt: false · credit: 0/)
+  assert.doesNotMatch(html, /0x[a-fA-F0-9]{40}/)
+})

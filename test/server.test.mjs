@@ -1,11 +1,43 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
-import { createAppServer } from "../src/server.mjs";
-import { buildOperatorWorkbench, buildRecurringSettlementProjection } from "../src/base-erp-workbench.mjs";
+import { createAppServer, readHealth, readReleaseDocument } from "../src/server.mjs";
+import { buildOperatorWorkbench, buildPlatformGatesProjection, buildRecurringSettlementProjection } from "../src/base-erp-workbench.mjs";
 import { renderOperatorWorkbenchPage } from "../src/operator-workbench-page.mjs";
 
 const TEST_COMMIT = "a".repeat(40);
+
+function canonicalH219(value) {
+  if (typeof value === "string") return JSON.stringify(value.normalize("NFC"));
+  if (value === null || typeof value === "boolean") return JSON.stringify(value);
+  if (typeof value === "number") return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(canonicalH219).join(",")}]`;
+  if (value && typeof value === "object") {
+    const keys = Object.keys(value).map((key) => key.normalize("NFC"));
+    keys.sort((left, right) => Buffer.from(left, "utf8").compare(Buffer.from(right, "utf8")));
+    return `{${keys.map((key) => `${JSON.stringify(key)}:${canonicalH219(value[key])}`).join(",")}}`;
+  }
+  throw new TypeError("unsupported test JSON value");
+}
+
+function sha256(value) {
+  return createHash("sha256").update(value, "utf8").digest("hex");
+}
+
+async function withTempCandidate(candidate, run) {
+  const directory = mkdtempSync(join(tmpdir(), "base-erp-h219-candidate-"));
+  const releasePath = join(directory, "release.json");
+  writeFileSync(releasePath, JSON.stringify(candidate, null, 2));
+  try {
+    return await run(releasePath);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+}
 
 const TEST_RELEASE = Object.freeze({
   release_id: "base-erp-public-product-20260814-v5",
@@ -100,8 +132,8 @@ const RECURRING_SPEND_PERMISSION_RECORD = Object.freeze({
   observed: Object.freeze({ amount: "20.00" }),
 });
 
-async function withServer(run, { env = { ...process.env, GIT_COMMIT_SHA: TEST_COMMIT }, runtimeReader = null } = {}) {
-  const server = createAppServer({ env, runtimeReader });
+async function withServer(run, { env = { ...process.env, GIT_COMMIT_SHA: TEST_COMMIT }, runtimeReader = null, platformGatesSourceReader = null, releasePath = undefined } = {}) {
+  const server = createAppServer({ env, runtimeReader, platformGatesSourceReader, releasePath });
   await new Promise((resolve, reject) => {
     server.once("error", reject);
     server.listen(0, "127.0.0.1", resolve);
@@ -115,23 +147,158 @@ async function withServer(run, { env = { ...process.env, GIT_COMMIT_SHA: TEST_CO
   }
 }
 
-test("HTTP health endpoint reports the writer-idle runtime binding", async () => {
+async function assertCurrentV8SurfacesFailClosed(baseUrl) {
+  for (const pathname of ["/release.json", "/healthz", "/platform-gates.json", "/workbench.json", "/workbench", "/workbench/"]) {
+    const response = await fetch(`${baseUrl}${pathname}`);
+    assert.equal(response.status, 503, pathname);
+    const body = await response.json();
+    if (pathname === "/healthz") {
+      assert.equal(body.ready, false, pathname);
+      assert.equal(body.status, "degraded", pathname);
+    } else {
+      assert.deepEqual(body, { error: "release_unavailable", reason: "current_v8_identity_unready" }, pathname);
+    }
+  }
+}
+
+test("H219 local health remains fail-closed until a deployment-injected commit is present", async () => {
   await withServer(async (baseUrl) => {
     const response = await fetch(`${baseUrl}/healthz`);
-    assert.equal(response.status, 200);
+    assert.equal(response.status, 503);
     assert.match(response.headers.get("content-type"), /application\/json/);
     const body = await response.json();
-    assert.equal(body.status, "ok");
-    assert.equal(body.ready, true);
+    assert.equal(body.status, "degraded");
+    assert.equal(body.ready, false);
     assert.equal(body.runtime_status, "not_required");
     assert.equal(body.public_write_authorized, false);
     assert.match(body.release_id, /^base-erp-/);
     assert.match(body.release_fingerprint, /^[0-9a-f]{64}$/);
     assert.match(body.bom_fingerprint, /^[0-9a-f]{64}$/);
     assert.equal(body.immutable_bom_sha256, body.bom_fingerprint);
-    assert.equal(body.git_commit, TEST_COMMIT);
+    assert.equal(body.git_commit, "PENDING_OWNER_PUBLIC_COMMIT");
     assert.match(body.observed_at, /^2026|^20/);
+  }, { env: { ...process.env } });
+});
+
+test("H219 BOM accepts only the exact normalized ordered 17-path allowlist", async () => {
+  const candidate = JSON.parse(readFileSync("runtime/release_candidate_2026-08-10.json", "utf8"));
+  const cases = {
+    missing: (value) => { value.immutable_release_bom = value.immutable_release_bom.slice(0, -1); },
+    extra: (value) => { value.immutable_release_bom.push({ path: "projects/2026-08_Base_ERP_Settlement_Workbench/src/extra.mjs", digest: "0".repeat(64) }); },
+    reordered: (value) => {
+      [value.immutable_release_bom[0], value.immutable_release_bom[1]] = [value.immutable_release_bom[1], value.immutable_release_bom[0]];
+    },
+  };
+  for (const [label, mutate] of Object.entries(cases)) {
+    const tampered = structuredClone(candidate);
+    mutate(tampered);
+    await withTempCandidate(tampered, (releasePath) => {
+      const release = readReleaseDocument({ releasePath, env: {} });
+      assert.equal(release.bom_verified, false, label);
+      assert.equal(release.bom_fingerprint_valid, false, label);
+      assert.equal(readHealth({ release }).ready, false, label);
+    });
+  }
+});
+
+test("H219 rejects alternate base targets even when their release fingerprint is recomputed", async () => {
+  const candidate = JSON.parse(readFileSync("runtime/release_candidate_2026-08-10.json", "utf8"));
+  const alternate = structuredClone(candidate);
+  alternate.base_target.render_domain = "alternate-base-target.invalid";
+  alternate.release_fingerprint = sha256(canonicalH219({
+    schema_version: "base-erp-v8-release-identity-v1",
+    release_id: alternate.release_id,
+    bom_fingerprint: alternate.bom_fingerprint,
+    base_target: alternate.base_target,
+  }));
+  await withTempCandidate(alternate, async (releasePath) => {
+    const release = readReleaseDocument({ releasePath, env: { GIT_COMMIT_SHA: TEST_COMMIT } });
+    assert.equal(release.release_identity_valid, false);
+    assert.equal(readHealth({ release }).ready, false);
+    await withServer(async (baseUrl) => {
+      const health = await fetch(`${baseUrl}/healthz`);
+      assert.equal(health.status, 503);
+      assert.equal((await health.json()).ready, false);
+      const platform = await fetch(`${baseUrl}/platform-gates.json`);
+      assert.equal(platform.status, 503);
+      assert.deepEqual(await platform.json(), { error: "release_unavailable", reason: "current_v8_identity_unready" });
+    }, { releasePath, env: { ...process.env, GIT_COMMIT_SHA: TEST_COMMIT } });
   });
+});
+
+test("H219 all current-v8 public surfaces share fail-closed readiness", async () => {
+  const candidate = JSON.parse(readFileSync("runtime/release_candidate_2026-08-10.json", "utf8"));
+  const recompute = (value) => {
+    value.release_fingerprint = sha256(canonicalH219({
+      schema_version: "base-erp-v8-release-identity-v1",
+      release_id: value.release_id,
+      bom_fingerprint: value.bom_fingerprint,
+      base_target: value.base_target,
+    }));
+  };
+  const cases = {
+    alternate: (value) => {
+      value.base_target.render_domain = "alternate-base-target.invalid";
+      recompute(value);
+    },
+    circle: (value) => {
+      value.base_target = {
+        github_repo: "gaysonloser/arc-payment-receipt",
+        render_service_id: "srv-d9cumml8nd3s73c9nehg",
+        render_domain: "arc-payment-receipt.onrender.com",
+        dashboard_app_id: "circle-collision-app",
+        canonical_primary_url: "https://arc-payment-receipt.onrender.com",
+      };
+      recompute(value);
+    },
+    stale: (value) => {
+      value.release_id = "base-erp-public-product-20260815-v7";
+      recompute(value);
+    },
+    missing: (value) => {
+      delete value.base_target;
+    },
+  };
+  for (const [label, mutate] of Object.entries(cases)) {
+    const tampered = structuredClone(candidate);
+    mutate(tampered);
+    await withTempCandidate(tampered, async (releasePath) => {
+      await withServer((baseUrl) => assertCurrentV8SurfacesFailClosed(baseUrl), {
+        releasePath,
+        env: { ...process.env, GIT_COMMIT_SHA: TEST_COMMIT },
+      });
+    });
+    assert.ok(label);
+  }
+  await withServer((baseUrl) => assertCurrentV8SurfacesFailClosed(baseUrl), { env: {} });
+});
+
+test("H219 requires lowercase BOM/release digests and deployment commit", async () => {
+  const candidate = JSON.parse(readFileSync("runtime/release_candidate_2026-08-10.json", "utf8"));
+  const uppercaseBom = structuredClone(candidate);
+  uppercaseBom.immutable_release_bom[0].digest = uppercaseBom.immutable_release_bom[0].digest.toUpperCase();
+  await withTempCandidate(uppercaseBom, (releasePath) => {
+    const release = readReleaseDocument({ releasePath, env: {} });
+    assert.equal(release.bom_verified, false);
+    assert.equal(release.bom_fingerprint_valid, false);
+  });
+
+  const uppercaseRelease = structuredClone(candidate);
+  uppercaseRelease.release_fingerprint = uppercaseRelease.release_fingerprint.toUpperCase();
+  await withTempCandidate(uppercaseRelease, (releasePath) => {
+    const release = readReleaseDocument({ releasePath, env: { GIT_COMMIT_SHA: TEST_COMMIT } });
+    assert.equal(release.release_identity_valid, false);
+    assert.equal(readHealth({ release }).ready, false);
+  });
+
+  await withServer(async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/healthz`);
+    assert.equal(response.status, 503);
+    const body = await response.json();
+    assert.equal(body.ready, false);
+    assert.equal(body.commit_placeholder, true);
+    assert.equal(body.git_commit, "PENDING_OWNER_PUBLIC_COMMIT");
+  }, { env: { ...process.env, GIT_COMMIT_SHA: TEST_COMMIT.toUpperCase() } });
 });
 
 test("release endpoint binds the public document to the current release identity", async () => {
@@ -140,7 +307,7 @@ test("release endpoint binds the public document to the current release identity
     assert.equal(response.status, 200);
     assert.match(response.headers.get("content-type"), /application\/json/);
     const body = await response.json();
-    assert.equal(body.schema_version, "base-erp-public-release-v1");
+    assert.equal(body.schema_version, "base-erp-v8-public-release-v1");
     assert.equal(body.project_name, "Base ERP Settlement Workbench");
     assert.match(body.release_fingerprint, /^[0-9a-f]{64}$/);
     assert.match(body.bom_fingerprint, /^[0-9a-f]{64}$/);
@@ -150,7 +317,7 @@ test("release endpoint binds the public document to the current release identity
     assert.equal(body.public_identity.basename, "gaysonloser.base.eth");
     assert.equal(body.public_identity.primary_base_account.toLowerCase(), "0xba36d092db2999bb1fabbaf281ac956a97189c25");
     assert.ok(Array.isArray(body.immutable_release_bom));
-    assert.ok(body.immutable_release_bom.some((entry) => entry.path === "src/server.mjs"));
+    assert.ok(body.immutable_release_bom.some((entry) => entry.path.endsWith("/src/server.mjs")));
   });
 });
 
@@ -338,6 +505,106 @@ test("operator workbench rejects unknown case profiles without falling through",
     assert.equal(htmlResponse.status, 400);
     assert.equal((await htmlResponse.json()).error, "workbench_input_invalid");
   });
+});
+
+test("H218 platform-gates route is deterministic, read-only and fail-closed on bindings", async () => {
+  await withServer(async (baseUrl) => {
+    const [firstResponse, secondResponse, headResponse] = await Promise.all([
+      fetch(`${baseUrl}/platform-gates.json`),
+      fetch(`${baseUrl}/platform-gates.json`),
+      fetch(`${baseUrl}/platform-gates.json`, { method: "HEAD" }),
+    ]);
+    assert.equal(firstResponse.status, 200);
+    assert.equal(secondResponse.status, 200);
+    assert.equal(headResponse.status, 200);
+    assert.match(firstResponse.headers.get("content-type") ?? "", /application\/json/);
+    assert.equal(Number(headResponse.headers.get("content-length")), Number(firstResponse.headers.get("content-length")));
+    assert.equal(await headResponse.text(), "");
+    const first = await firstResponse.json();
+    const second = await secondResponse.json();
+    assert.deepEqual(first, second);
+    assert.equal(first.schema_version, "base-erp-h218-platform-gates-public-v1");
+    assert.equal(first.mode, "visitor_read_only");
+    assert.deepEqual(first.rows.map((row) => row.platform_row_id), [
+      "base_sepolia_rehearsal",
+      "talent_native_domain",
+      "guild_native_domain",
+      "basename_base_org_identity",
+    ]);
+    assert.equal(first.aggregate.credit, 0);
+    assert.equal(first.aggregate.native_receipt_count, 0);
+    assert.equal(first.safety.public_write_authorized, false);
+    assert.equal(first.isolation.action_enabled, false);
+    const method = await fetch(`${baseUrl}/platform-gates.json`, { method: "POST" });
+    assert.equal(method.status, 405);
+    assert.deepEqual(await method.json(), { error: "method_not_allowed", allowed: ["GET", "HEAD"] });
+    const query = await fetch(`${baseUrl}/platform-gates.json?release_id=secret-value`);
+    assert.equal(query.status, 400);
+    assert.deepEqual(await query.json(), { error: "client_binding_not_accepted" });
+    assert.doesNotMatch(await (await fetch(`${baseUrl}/platform-gates.json?release_id=secret-value`)).text(), /secret-value/);
+  });
+});
+
+test("H218 projection composes one shared four-row object and keeps identity redacted", async () => {
+  await withServer(async (baseUrl) => {
+    const projection = await (await fetch(`${baseUrl}/platform-gates.json`)).json();
+    const workbench = await (await fetch(`${baseUrl}/workbench.json?profile_id=customer_invoice_receipt`)).json();
+    assert.deepEqual(workbench.platform_gates, projection);
+    const page = await (await fetch(`${baseUrl}/workbench/`)).text();
+    assert.match(page, /id="platform-gates-panel"/);
+    assert.equal((page.match(/data-platform-gate="/g) ?? []).length, 4);
+    assert.match(page, /href="\/platform-gates\.json"/);
+    assert.match(page, /Native receipt: null · release receipt: false · credit: 0/);
+    assert.doesNotMatch(JSON.stringify(projection), /0x[a-f0-9]{40}/i);
+    assert.doesNotMatch(JSON.stringify(projection), /wallet_sendCalls|0x[a-f0-9]{40}|gaysonloser\.base\.eth/i);
+    for (const row of projection.rows) {
+      assert.equal(row.receipt.native_receipt, null);
+      assert.equal(row.receipt.release_receipt, false);
+      assert.equal(row.credit, 0);
+      assert.equal(row.publication_unit_credit, 0);
+    }
+  });
+});
+
+test("H219 HTTP surface fails closed for injected H217 hash drift and stale closure", async () => {
+  const h217Readback = JSON.parse(readFileSync("runtime/h217_remaining_platform_readback_2026-08-15.json", "utf8"));
+  const matrix = JSON.parse(readFileSync("config/base_circle_platform_isolation_matrix_v1.json", "utf8"));
+  const validSource = {
+    matrix,
+    matrix_sha256: "c538e47c4b7951f341b36e351858bf3e1c28dd772d7d3f9c3588f1f0093f19de",
+    h217_readback: h217Readback,
+    h217_module_sha256: "96f9839cbebb6bff775a5b0cc84a7ae7d71b0168847f2a1eb08c0b59d6f80b42",
+    h217_readback_sha256: "f7aea1ec1ea6d3377334f8f1d32938054f4bd4b809f622673fb056868be2c8b1",
+  };
+  await withServer(async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/platform-gates.json`);
+    assert.equal(response.status, 503);
+    assert.deepEqual(await response.json(), { error: "platform_gates_unavailable", reason: "h217_source_invalid_or_circle_collision" });
+  }, { platformGatesSourceReader: () => ({ ...validSource, h217_module_sha256: "0".repeat(64) }) });
+
+  const stale = structuredClone(h217Readback);
+  stale.packet_revalidation.occurrence = 2;
+  await withServer(async (baseUrl) => {
+    for (const path of ["/platform-gates.json", "/workbench.json", "/workbench/"]) {
+      const response = await fetch(`${baseUrl}${path}`);
+      assert.equal(response.status, 503, path);
+      const body = await response.json();
+      assert.deepEqual(body, { error: "platform_gates_unavailable", reason: "h217_source_invalid_or_circle_collision" });
+    }
+  }, { platformGatesSourceReader: () => ({ ...validSource, h217_readback: stale }) });
+});
+
+test("H218 projection rejects stale H217 source closure and isolation collisions", () => {
+  const h217Readback = JSON.parse(readFileSync("runtime/h217_remaining_platform_readback_2026-08-15.json", "utf8"));
+  const release = {
+    release_id: "base-erp-public-product-20260815-v7",
+    release_fingerprint: "bfd8e57684b0c43bb92dbc9ac3bcd7426b226dc816541c008c7085b7cc6ae5ae",
+    bom_fingerprint: "3b856d0a18fc996b47e5bb4bb0b4c06a73e28ff2f5a0ce13e08612b27ad3529c",
+  };
+  assert.throws(() => buildPlatformGatesProjection({ release, h217_readback: h217Readback, h217_readback_sha256: "0".repeat(64) }), /h217_source_invalid_or_circle_collision/);
+  const collision = structuredClone(h217Readback);
+  collision.evidence_envelope.release_join = { ...collision.evidence_envelope.release_join, release_id: "circle-collision" };
+  assert.throws(() => buildPlatformGatesProjection({ release, h217_readback: collision }), /h217_source_invalid_or_circle_collision/);
 });
 
 test("H215 operator surface preserves the seven-row queue, dual origins and independent truth lanes", () => {

@@ -182,6 +182,33 @@ test("operator workbench routes: /workbench and /workbench/ are byte-equivalent 
   })
 })
 
+test("H218 browser surface renders the shared platform-gates panel without exposing identity or errors", async () => {
+  const browser = await launchBrowser()
+  try {
+    await withServer(async (baseUrl) => {
+      for (const vector of VIEWPORT_VECTORS) {
+        const { context, page, errors } = await openVectorPage(browser, vector, `${baseUrl}/workbench/`)
+        try {
+          const panel = page.locator("#platform-gates-panel")
+          assert.equal(await panel.count(), 1)
+          assert.ok(await panel.isVisible())
+          assert.equal(await panel.locator("[data-platform-gate]").count(), 4)
+          assert.ok(await panel.getByRole("link", { name: "Platform gates JSON" }).isVisible())
+          assert.ok(await panel.getByText(/Native receipt: null · release receipt: false · credit: 0/).count() === 4)
+          assert.doesNotMatch(await panel.textContent(), /0x[a-fA-F0-9]{40}|gaysonloser\.base\.eth/)
+          const projection = await page.evaluate(async () => (await fetch("/platform-gates.json")).json())
+          assert.equal(projection.rows.length, 4)
+          assert.deepEqual(errors, [])
+        } finally {
+          await context.close()
+        }
+      }
+    })
+  } finally {
+    await browser.close()
+  }
+})
+
 test("operator workbench browser surface: four named landmarks, dual-origin lanes and aria/live state at every viewport vector", async () => {
   const browser = await launchBrowser()
   try {

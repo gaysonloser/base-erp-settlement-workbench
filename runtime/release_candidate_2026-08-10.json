@@ -1,490 +1,113 @@
 {
-  "schema_version": "1.0",
-  "release_id": "base-erp-public-product-20260815-v7",
-  "generated_at_cst": "2026-08-15T14:31:28+08:00",
+  "schema_version": "base-erp-v8-release-candidate-v1",
+  "release_id": "base-erp-public-product-20260815-v8",
+  "generated_at_cst": "2026-08-15T18:00:00+08:00",
   "project_name": "Base ERP Settlement Workbench",
-  "material_outcome": "H215 server-owned operator workbench with dual-origin decision canvas, independent truth layers, deterministic browser acceptance, and deployment-commit fail-closed public health",
+  "material_outcome": "H219 deterministic v8 release envelope over the H218 server-owned platform-gates projection; no wallet, transaction or external write",
   "basename": "gaysonloser.base.eth",
   "primary_base_account": "0xBa36D092dB2999bb1FaBbaf281AC956A97189C25",
   "network": "Base Sepolia descriptor-only; Base Mainnet owner gate required; no chain action",
-  "release_fingerprint_algorithm": "sha256(canonical_current_release_fields)",
-  "release_fingerprint": "bfd8e57684b0c43bb92dbc9ac3bcd7426b226dc816541c008c7085b7cc6ae5ae",
-  "bom_fingerprint": "3b856d0a18fc996b47e5bb4bb0b4c06a73e28ff2f5a0ce13e08612b27ad3529c",
+  "base_target": {
+    "github_repo": "gaysonloser/base-erp-settlement-workbench",
+    "render_service_id": "srv-d9t0bsafngtc7387gqo0",
+    "render_domain": "base-erp-settlement-workbench.onrender.com",
+    "dashboard_app_id": "6a7a0717e209a55163497d2d",
+    "canonical_primary_url": "https://base-erp-settlement-workbench.onrender.com"
+  },
+  "release_fingerprint_algorithm": "base-erp-v8-release-identity-v1 canonical JSON; actual commit excluded",
+  "release_fingerprint": "606bf4abd676b61decaf5dcb618f32e4c017c4bafaee8874f4d371683b5350d0",
+  "bom_fingerprint": "41ca71034c5cf71486b760de8a4e2f0623f4d4d4b1332c2ea9b1c63a0a5142dd",
+  "immutable_bom_sha256": "41ca71034c5cf71486b760de8a4e2f0623f4d4d4b1332c2ea9b1c63a0a5142dd",
   "immutable_release_bom": [
-    {
-      "path": "assets/base-app/base-erp-workbench-screenshot-1284x2778.jpg",
-      "digest": "6bbb39333c880e853f664408042190c8e8306e888d73a2b9861f2c7d99db80ff"
-    },
-    {
-      "path": "assets/base-app/base-erp-workbench-screenshot-source.png",
-      "digest": "020ce9f0e79a3228f5ee132c9bb51b12faeccaa2420cb7d2b0522aa4641c53e9"
-    },
-    {
-      "path": "assets/base-app/base-erp-workbench-thumbnail-1200x628.jpg",
-      "digest": "1226f5fbc96747129413451c485ae4a26d77157b1329fc500dfc4dfb1b2b42e0"
-    },
-    {
-      "path": "assets/base-app/base-erp-workbench-thumbnail-source.png",
-      "digest": "e378d750fbf1e0222b8a66d2842e185a13367d95f955bcc0070f35f30bf2f9a4"
-    },
-    {
-      "path": "config/base_erp_product_contract_v1.json",
-      "digest": "aaa157f96b40ac02a415c69f4cc433d974031eaf3bcf4cf10e8ecdd2b4ae90f8"
-    },
-    {
-      "path": "config/release_identity_and_exposure_contract_v1.json",
-      "digest": "29a1aa765d40f6660885542955eb4e5605c2e4b549a3b0131bdb63bb100cc269"
-    },
-    {
-      "path": "package-lock.json",
-      "digest": "3ee329115a151100a013181c77019890b02ad45ec695558fa6f8f045abc2cdcc"
-    },
-    {
-      "path": "package.json",
-      "digest": "eeb44ec3a92bdb410eeb0a1becdce73ce489938e0cdd8d334e0e97f9ea6682b8"
-    },
-    {
-      "path": "render.yaml",
-      "digest": "324b437cb9d858d143a11dd458821c79ba2a9741d9476a1abe08896464181010"
-    },
-    {
-      "path": "runtime/h215_operator_workbench_readback_2026-08-14.json",
-      "digest": "d4296a97e029a6ef227f57458f7a845ae0a514f3684c290fd641ec130bf8bdfd"
-    },
-    {
-      "path": "src/base-erp-scenario-router.mjs",
-      "digest": "00ef279e9b42426175860d1d1edb2549a80539450753d5d286d374bf1697d78f"
-    },
-    {
-      "path": "src/base-erp-workbench.mjs",
-      "digest": "64218d75d77d39067a974f76b81b23e46785509e0806dbfa2f61610feb876f71"
-    },
-    {
-      "path": "src/base-recurring-settlement-contract.mjs",
-      "digest": "1899acb8147844865d34085b396a0b2f282acbddb7f14823fdaa74b665d4d2ef"
-    },
-    {
-      "path": "src/base-refund-ceiling-guard.mjs",
-      "digest": "96f21c0007df08d862f93be8ae50e84ee809705cd2564d2b310feb46cbf0b900"
-    },
-    {
-      "path": "src/operator-workbench-page.mjs",
-      "digest": "7b523274c7b64825172d6866457434154dbc518560e9b5fc4d5764a68655cec8"
-    },
-    {
-      "path": "src/server.mjs",
-      "digest": "c422fdd4da6f000ab7fe11f94b29f60836bead70534c0881ba7b270b332a267b"
-    },
-    {
-      "path": "test/base-erp-scenario-router.test.mjs",
-      "digest": "0132409977aedcb8f43ac5761e6802d72701e44f7ca9a2f7a320d3d9a304fccb"
-    },
-    {
-      "path": "test/base-recurring-settlement-contract.test.mjs",
-      "digest": "bfe8b729577ee487cae4030080874f0b6643fce45527a79054b755dcfea94e49"
-    },
-    {
-      "path": "test/base-refund-ceiling-guard.test.mjs",
-      "digest": "e05a56922a4f1c21a093812e4afa9b0e2c214ed52c8ad03d4fd564d4821e56e6"
-    },
-    {
-      "path": "test/operator-workbench-browser.test.mjs",
-      "digest": "0b06ce7c45fbfa9d9a00e04a92767e0675f03e888eeef43dd0d3a968ee7094db"
-    },
-    {
-      "path": "test/operator-workbench-page.test.mjs",
-      "digest": "9b22f37943b1c359c154cc75d2138b65597a5ebc50767f30fe4fe9341982f7ba"
-    },
-    {
-      "path": "test/server.test.mjs",
-      "digest": "c8220c1419573f19683e7ccf00301b7988393015dcfe79e8a3d2d5a9dc7eeed2"
-    }
+    { "path": "projects/2026-08_Base_ERP_Settlement_Workbench/assets/base-app/base-erp-workbench-screenshot-source.png", "digest": "020ce9f0e79a3228f5ee132c9bb51b12faeccaa2420cb7d2b0522aa4641c53e9" },
+    { "path": "projects/2026-08_Base_ERP_Settlement_Workbench/assets/base-app/base-erp-workbench-thumbnail-source.png", "digest": "e378d750fbf1e0222b8a66d2842e185a13367d95f955bcc0070f35f30bf2f9a4" },
+    { "path": "projects/2026-08_Base_ERP_Settlement_Workbench/config/base_erp_product_contract_v1.json", "digest": "aaa157f96b40ac02a415c69f4cc433d974031eaf3bcf4cf10e8ecdd2b4ae90f8" },
+    { "path": "projects/2026-08_Base_ERP_Settlement_Workbench/config/release_identity_and_exposure_contract_v1.json", "digest": "29a1aa765d40f6660885542955eb4e5605c2e4b549a3b0131bdb63bb100cc269" },
+    { "path": "projects/2026-08_Base_ERP_Settlement_Workbench/package-lock.json", "digest": "3ee329115a151100a013181c77019890b02ad45ec695558fa6f8f045abc2cdcc" },
+    { "path": "projects/2026-08_Base_ERP_Settlement_Workbench/package.json", "digest": "eeb44ec3a92bdb410eeb0a1becdce73ce489938e0cdd8d334e0e97f9ea6682b8" },
+    { "path": "projects/2026-08_Base_ERP_Settlement_Workbench/render.yaml", "digest": "324b437cb9d858d143a11dd458821c79ba2a9741d9476a1abe08896464181010" },
+    { "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-erp-workbench.mjs", "digest": "d46e36bb102ada8dcff901a246c1bdcdb82278529b7bc5f8089bfa73231cc813" },
+    { "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-native-platform-evidence-contract.mjs", "digest": "f3c14395e712cb8de881fc50ebaa7b7fbd76a47ba2f04f7739103afa5353bfb6" },
+    { "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-native-platform-execution-gates.mjs", "digest": "96f9839cbebb6bff775a5b0cc84a7ae7d71b0168847f2a1eb08c0b59d6f80b42" },
+    { "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-platform-feasibility-contract.mjs", "digest": "ecb10c73b00c8abaf4f804299cb21cc23dd49763bb4420d10d3d786bb1e7ba5d" },
+    { "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/operator-workbench-page.mjs", "digest": "4d04ba89b76894f257a7d9f1b77204810f63a276f4f917eab51ebbb7e0ec2164" },
+    { "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/server.mjs", "digest": "981f8938c6b9040e19f24a1333dd9bf0fb7e778d728b601c0ec096cb2b009f63" },
+    { "path": "projects/2026-08_Base_ERP_Settlement_Workbench/test/base-native-platform-execution-gates.test.mjs", "digest": "b26f27c4bcefa4c9fab65f4ee1ea3a88d8088f16dac185cb23c0333c8e55f762" },
+    { "path": "projects/2026-08_Base_ERP_Settlement_Workbench/test/operator-workbench-browser.test.mjs", "digest": "24a6ad22ccbb75b60dc20af25b082d41def1171cd643a6716a8982ae7ea27f2a" },
+    { "path": "projects/2026-08_Base_ERP_Settlement_Workbench/test/operator-workbench-page.test.mjs", "digest": "c3dd5c493a1963c8a1f6f8c8a12a62c84be57965d6586bae2051ac57c9315809" },
+    { "path": "projects/2026-08_Base_ERP_Settlement_Workbench/test/server.test.mjs", "digest": "55074dce6897e5d4fe30fc399339df4c5759871ef882a59b910d960169421a38" }
   ],
-  "current_release_delta": {
-    "batch": "BASE_NATIVE_OPERATOR_WORKBENCH_PUBLIC_SURFACE",
-    "control": "non_executable_server_owned_public_projection",
-    "version": "7",
-    "change": "H215 public operator workbench plus deployment-provided commit proof: resolveCommit never treats candidate metadata as served-byte evidence, /healthz fails closed without an injected deployment commit, and BOM validators honor the H214/H215 placeholder projection; no external write"
-  },
-  "interaction_evidence": {
-    "source": "Base Docs live read-only discovery plus Base MCP live help/get_wallets; no wallet request, signing, broadcast, transaction, deployment or public write",
-    "base_docs_tools": 3,
-    "base_mcp_tools": 15,
-    "docs_probe": "probe_passed",
-    "mcp_probe": "help_and_get_wallets_probe_passed",
-    "external_actions": 0
-  },
-  "acceptance_state": {
-    "independent_sol_medium": "pass_P0_P1_P2_0_0_0",
-    "owner_gate": "owner_authorized_github_render_v7_publication_pending_exact_commit",
-    "execution_authority": "02_Build_v7_reseal_and_publication_lane_owner_authorized",
-    "source_packet_review": "pass_h215_hashes_revalidated",
-    "product_increment": "operator_workbench_h215_public_surface_v7_fail_closed_deployment_identity",
-    "local_parent_review": "pass_clean_git_export_153_of_153_with_fail_closed_external_gate; local_exchange_and_upstream_material_excluded",
-    "browser_acceptance": "4/4_browser_plus_3/3_page_unit_plus_153/153_clean_git_export"
-  },
   "git_commit": "PENDING_OWNER_PUBLIC_COMMIT",
   "render_url": "https://base-erp-settlement-workbench.onrender.com",
   "contract_addresses_or_not_applicable_reason": "not_applicable_no_contract_change",
-  "transaction_receipts_or_not_yet_available": "no transaction hash, receipt or finality; chain_count_zero; H215 is non-executable projection only",
+  "transaction_receipts_or_not_yet_available": "no transaction hash, receipt or finality; chain_count_zero; H219 is a non-executable release envelope",
   "erp_readback_level": "non_posting_readback_pending",
-  "evidence_level": "L2_local_h215_acceptance",
-  "eight_surface_evidence_map": {
-    "github": {
-      "status": "owner_publication_pending_current_release",
-      "historical_candidate_reference": {
-        "owner": "gaysonloser",
-        "repo": "base-erp-settlement-workbench",
-        "branch": "main",
-        "commit_sha": "e96c13717fcf16d80138852629d82b3b21edce56",
-        "release_tag": "base-erp-public-product-20260814-v4",
-        "release_url": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260814-v4",
-        "proof_ref": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260814-v4",
-        "release_id": "base-erp-public-product-20260814-v4",
-        "release_fingerprint": "5962684e0f5df38691ecdaa0b75ba023dcf1a64bf85cc15e512d8e307704ea4f",
-        "bom_fingerprint": "2b617a7ae4e2ef976e97310ab533f8f067c758dd0feaf3013709a06d01a6d612",
-        "material_outcome": "Base-native operator workbench with seven scenario queues, causal evidence timeline, deterministic simulation and cumulative refund ceiling guard",
-        "current": false,
-        "historical": true,
-        "synthetic": false,
-        "evidence_origin": "native_git_push_and_github_release_public_readback"
-      },
-      "owner_gate": "explicit_owner_authorization_received; gh auth status recheck pending"
-    },
-    "render": {
-      "status": "owner_deploy_pending_current_release",
-      "candidate_reference": {
-        "platform": "Render",
-        "receipt_id": "render:base-erp-settlement-workbench:3880de0b116baeef70f8482e7449bd3e597b2030",
-        "release_id": "base-erp-public-product-20260810-v1",
-        "release_fingerprint": "07bd1356e27be3267ad569e2b1f41396083fbb5b700799bf2b418a49f6fc1788",
-        "bom_fingerprint": "4373cc6b58e50b09e7e302fbe3534aedfee1de526b7a76936bbdd285ef38c1e4",
-        "current": false,
-        "historical": true,
-        "synthetic": false,
-        "evidence_origin": "official_platform_readback",
-        "proof_ref": "https://base-erp-settlement-workbench.onrender.com/release.json",
-        "service_url": "https://base-erp-settlement-workbench.onrender.com",
-        "commit_sha": "3880de0b116baeef70f8482e7449bd3e597b2030"
-      },
-      "historical_candidate_reference": {
-        "platform": "Render",
-        "receipt_id": "render:base-erp-settlement-workbench:3880de0b116baeef70f8482e7449bd3e597b2030",
-        "release_id": "base-erp-public-product-20260810-v1",
-        "release_fingerprint": "07bd1356e27be3267ad569e2b1f41396083fbb5b700799bf2b418a49f6fc1788",
-        "bom_fingerprint": "4373cc6b58e50b09e7e302fbe3534aedfee1de526b7a76936bbdd285ef38c1e4",
-        "current": false,
-        "historical": true,
-        "synthetic": false,
-        "evidence_origin": "official_platform_readback",
-        "proof_ref": "https://base-erp-settlement-workbench.onrender.com/release.json",
-        "service_url": "https://base-erp-settlement-workbench.onrender.com",
-        "commit_sha": "3880de0b116baeef70f8482e7449bd3e597b2030"
-      },
-      "owner_gate": "explicit_owner_authorization_received; exact Render service credential/surface pending"
-    },
-    "base_app": {
-      "status": "blocked_public_landing_no_release_mapping",
-      "readback": {
-        "proof_ref": "https://base.app/",
-        "http_status": 200,
-        "page_title": "Base App | Trade &amp; Earn",
-        "continue_on_web_visible": true,
-        "release_mapping_observed": false,
-        "primary_url_observed": false,
-        "observed_at": "2026-08-13T17:10:25Z"
-      }
-    },
-    "base_dashboard": {
-      "status": "blocked_current_owner_surface_unavailable",
-      "candidate_reference": {
-        "platform": "Base Dashboard",
-        "receipt_id": "base_dashboard:6a7a0717e209a55163497d2d:base-erp-settlement-workbench.onrender.com",
-        "release_id": "base-erp-public-product-20260810-v1",
-        "release_fingerprint": "07bd1356e27be3267ad569e2b1f41396083fbb5b700799bf2b418a49f6fc1788",
-        "bom_fingerprint": "4373cc6b58e50b09e7e302fbe3534aedfee1de526b7a76936bbdd285ef38c1e4",
-        "current": false,
-        "historical": true,
-        "synthetic": false,
-        "evidence_origin": "official_platform_readback",
-        "proof_ref": "https://dashboard.base.org/apps/6a7a0717e209a55163497d2d",
-        "app_id": "6a7a0717e209a55163497d2d",
-        "primary_domain": "base-erp-settlement-workbench.onrender.com"
-      },
-      "readback": {
-        "proof_ref": "https://dashboard.base.org/apps/6a7a0717e209a55163497d2d",
-        "http_status": 200,
-        "page_title": "Overview | Base Dashboard",
-        "page_content": "public shell; no owner app metadata or release mapping exposed",
-        "primary_domain_observed": false,
-        "ownership_verification_observed": false,
-        "observed_at": "2026-08-13T17:10:25Z"
-      },
-      "historical_candidate_reference": {
-        "platform": "Base Dashboard",
-        "receipt_id": "base_dashboard:6a7a0717e209a55163497d2d:base-erp-settlement-workbench.onrender.com",
-        "release_id": "base-erp-public-product-20260810-v1",
-        "release_fingerprint": "07bd1356e27be3267ad569e2b1f41396083fbb5b700799bf2b418a49f6fc1788",
-        "bom_fingerprint": "4373cc6b58e50b09e7e302fbe3534aedfee1de526b7a76936bbdd285ef38c1e4",
-        "current": false,
-        "historical": true,
-        "synthetic": false,
-        "evidence_origin": "official_platform_readback",
-        "proof_ref": "https://dashboard.base.org/apps/6a7a0717e209a55163497d2d",
-        "app_id": "6a7a0717e209a55163497d2d",
-        "primary_domain": "base-erp-settlement-workbench.onrender.com"
-      }
-    },
-    "base_dev": {
-      "status": "blocked_generic_dashboard_redirect_no_distinct_target",
-      "readback": {
-        "proof_ref": "https://base.dev/",
-        "final_url": "https://dashboard.base.org/",
-        "http_status": 200,
-        "page_title": "Base Dashboard",
-        "distinct_project_target_observed": false,
-        "release_mapping_observed": false,
-        "observed_at": "2026-08-13T17:10:25Z"
-      }
-    },
-    "talent": {
-      "status": "blocked_security_checkpoint_429",
-      "readback": {
-        "proof_ref": "https://talent.app/",
-        "http_status": 429,
-        "final_url": "https://talent.app/",
-        "page_title": "Vercel Security Checkpoint",
-        "visitor_profile_or_project_observed": false,
-        "release_mapping_observed": false,
-        "observed_at": "2026-08-13T17:10:25Z"
-      }
-    },
-    "guild": {
-      "status": "blocked_sign_in_no_release_mapping",
-      "readback": {
-        "proof_ref": "https://guild.xyz/base",
-        "http_status": 200,
-        "page_title": "Base | Guild",
-        "base_guild_visible": true,
-        "member_count_visible": "617K",
-        "sign_in_gate_visible": true,
-        "release_mapping_observed": false,
-        "observed_at": "2026-08-13T17:10:25Z"
-      }
-    },
-    "basename_base_org": {
-      "status": "blocked_read_only_profile_no_current_release_receipt",
-      "readback": {
-        "proof_ref": "https://www.base.org/name/gaysonloser",
-        "http_status": 200,
-        "page_title": "Basenames | gaysonloser.base.eth",
-        "basename_visible": "gaysonloser.base.eth",
-        "fresh_primary_name_resolution_observed": false,
-        "release_mapping_observed": false,
-        "observed_at": "2026-08-13T17:10:25Z"
-      }
-    }
+  "evidence_level": "L2_local_h219_reseal_candidate",
+  "interaction_evidence": {
+    "source": "historical formal health only; no current Base MCP call in H219 turn",
+    "base_docs_tools": 3,
+    "base_mcp_tools": 0,
+    "docs_probe": "historical_formal_probe_passed",
+    "mcp_probe": "not_called_current_turn_invalid_grant_state_preserved",
+    "external_actions": 0
   },
-  "runtime_binding": {
-    "schema_version": "base-erp-runtime-binding-v1",
+  "acceptance_state": {
+    "independent_sol_medium": "pending_fresh_review",
+    "owner_gate": "none_external_write_authorized",
+    "execution_authority": "none_until_02_Build_revalidates",
+    "source_packet_review": "H219 exact hashes revalidated",
+    "product_increment": "v8 release identity and H218 projection rebind",
+    "local_parent_review": "pending focused/full suite",
+    "browser_acceptance": "pending all viewport vectors"
+  },
+  "eight_surface_evidence_map": {
+    "github": { "status": "absent_current_v8_receipt", "readback": null, "receipt": null, "credit": 0 },
+    "render": { "status": "absent_current_v8_receipt", "readback": null, "receipt": null, "credit": 0 },
+    "base_app": { "status": "readiness_only_not_receipt", "readback": null, "receipt": null, "credit": 0 },
+    "base_dashboard": { "status": "canonical_identity_unrevalidated_for_v8", "readback": null, "receipt": null, "credit": 0 },
+    "base_dev": { "status": "canonical_identity_unrevalidated_for_v8", "readback": null, "receipt": null, "credit": 0 },
+    "talent": { "status": "owner_gate_absent", "readback": null, "receipt": null, "credit": 0 },
+    "guild": { "status": "owner_gate_absent", "readback": null, "receipt": null, "credit": 0 },
+    "basename_base_org": { "status": "account_singleton_owner_gate_absent", "readback": null, "receipt": null, "credit": 0 }
+  },
+  "h218_accepted_closure": {
+    "packet_id": "base-erp-h218-platform-gates-public-surface-20260815",
+    "occurrence": 1,
+    "manifest_sha256": "08978962a4a0cd3bbbe59d5d095679fc80bd991c8299d63bf2b28b319b706e1f",
+    "artifact_sha256": "d77211c599dba80c8e708b5bdd231cdfdaa6424a4b21bfae0aed6cd4707dcb9e",
+    "handoff_sha256": "523e0074d0010b5733d6805f4c29e36292f135f4903f2a4b9dd667002c6db04a",
+    "execution_authority": "none_until_02_Build_revalidates"
+  },
+  "h217_dependencies": {
+    "module_sha256": "96f9839cbebb6bff775a5b0cc84a7ae7d71b0168847f2a1eb08c0b59d6f80b42",
+    "readback_sha256": "f7aea1ec1ea6d3377334f8f1d32938054f4bd4b809f622673fb056868be2c8b1"
+  },
+  "platform_defaults": {
+    "native_receipt": null,
+    "release_receipt": false,
+    "rehearsal_receipt": null,
+    "credit": 0,
+    "publication_unit_credit": 0,
+    "mainnet_30_credit": 0
+  },
+  "runtime_semantics": {
     "source": "projects/2026-06_Base_Guild_Onchain_Score/runtime/current_run.json",
-    "mutable_source": true,
-    "snapshot_only": true,
-    "snapshot": {
-      "runtime_sha256": "8139a8863c036155fb7b6c79827e0935b4174356db3eca9ad918ff320f4cd7f3",
-      "run_id": "02_Build-20260815-122052",
-      "date_cst": "2026-08-15",
-      "status": "running",
-      "cursor": "Same-day real-candidate queue exhausted below hard floor; keep runtime running and resume on the next date. Before any new action, re-read the owner ledger and generate a fresh official queue. Do not fill the deficit with research, observations, duplicate lifecycle evidence or replayed releases.",
-      "observed_at": "2026-08-15T06:53:20.300Z"
-    },
-    "authority_record": {
-      "path": "runtime/runtime_authority.json",
-      "schema_version": "base-erp-runtime-authority-v1",
-      "source": "projects/2026-06_Base_Guild_Onchain_Score/runtime/current_run.json",
-      "runtime_sha256": "8139a8863c036155fb7b6c79827e0935b4174356db3eca9ad918ff320f4cd7f3",
-      "writer_idle": true,
-      "observed_at": "2026-08-15T06:53:20.300Z",
-      "event_id": "base-erp-runtime-rebind-20260815-v7-publication-deferred",
-      "record_sha256": "9e583dc13912940ea781b7d0acd3c591d09cde8c8f22ceaa50c2699e90ff9b01"
-    },
-    "fingerprint_scope": "runtime snapshot is excluded from immutable release fingerprint and checked separately against live runtime/authority",
-    "invalidation": "Any byte change to current_run.json or authority record requires fresh runtime rebind before execution or publication.",
-    "runtime_authority_revalidated": true,
-    "runtime_authority_note": "Fresh writer-idle authority rebind base-erp-runtime-rebind-20260815-v7-publication-deferred verified after truthful v7 GitHub and Render readbacks; defer_until_next_date remains true."
+    "mutated": false,
+    "queue_cursor_exchange_mutated": false,
+    "counters": { "external_trace_units": 0, "public_update_units": 0 }
   },
   "limitations": [
-    "v7 is a new release identity after the fail-closed resolveCommit correction; v6 receipts remain historical until exact v7 commit/deploy readbacks are observed.",
-    "Candidate git_commit is an explicit placeholder and is never deployment evidence; only injected Render/GitHub owner-visible commit readbacks can prove served bytes.",
-    "Runtime is bound to the current mutable run 02_Build-20260815-122052 with writer-idle authority 9e583dc13912940ea781b7d0acd3c591d09cde8c8f22ceaa50c2699e90ff9b01; defer_until_next_date is true and a fresh rebind is required after any runtime or authority byte change.",
-    "The H215 readback remains a descriptor-only pinned dependency with placeholder self-hash semantics; the H217 v6 envelope must be re-bound by 03_Base for v7.",
-    "No complete eight-surface current receipt exists; partial evidence remains zero-credit and runtime counters remain 0/30 and 0/10.",
-    "BASE/CIRCLE isolation is checked against the exact matrix; no CIRCLE repository, service, app, domain, release or receipt is touched."
+    "v7 public receipts are historical inputs only and are not relabelled as v8",
+    "All current v8 GitHub, Render, Dashboard/Base.dev, Talent, Guild and Basename receipt slots begin absent/null/false with credit zero",
+    "A deployment-injected full 40-hex commit is required before local /healthz can become ready",
+    "No Base Mainnet receipt, ERP authoritative close or complete eight-surface public receipt exists",
+    "Public writes, wallet actions, credentials, transactions and CIRCLE actions are disabled"
   ],
-  "latest_build_readback": {
-    "observed_at": "2026-08-15T14:31:28+08:00",
-    "source": "v7_local_reseal_pre_external_refresh",
-    "strict_receipt_count": 0,
-    "strict_receipt_platforms": [],
-    "complete_eight_surface_bundle": false,
-    "release_join": {
-      "release_id": "base-erp-public-product-20260815-v7",
-      "release_fingerprint": "bfd8e57684b0c43bb92dbc9ac3bcd7426b226dc816541c008c7085b7cc6ae5ae",
-      "bom_fingerprint": "3b856d0a18fc996b47e5bb4bb0b4c06a73e28ff2f5a0ce13e08612b27ad3529c"
-    },
-    "pre_reseal_receipts_preserved": true,
-    "pre_reseal_readback_ref": "pre_reseal_v6_external_readback",
-    "external_refresh_required": [
-      "github",
-      "render"
-    ]
-  },
-  "artifact_excluded_from_own_bom": true,
-  "post_publication_readback": {
-    "status": "v7_reseal_ready_external_github_render_refresh_required_remaining_six_surfaces_fail_closed",
-    "receipts": 0,
-    "strict_receipt_platforms": [],
-    "pre_reseal_receipts": 2,
-    "release_id": "base-erp-public-product-20260815-v7",
-    "release_fingerprint": "bfd8e57684b0c43bb92dbc9ac3bcd7426b226dc816541c008c7085b7cc6ae5ae",
-    "bom_fingerprint": "3b856d0a18fc996b47e5bb4bb0b4c06a73e28ff2f5a0ce13e08612b27ad3529c"
-  },
-  "deployment_surface": {
-    "start_command": "npm start",
-    "bind": "0.0.0.0:$PORT",
-    "health_path": "/healthz",
-    "release_path": "/release.json",
-    "public_path": "/",
-    "render_config": "render.yaml",
-    "package_lock": "package-lock.json",
-    "public_write_authorized": false,
-    "owner_authorization": "explicit_BASE_GitHub_Render_publication_authorization_received"
-  },
-  "immutable_bom_sha256": "3b856d0a18fc996b47e5bb4bb0b4c06a73e28ff2f5a0ce13e08612b27ad3529c",
-  "h215_packet": {
-    "packet_id": "base-erp-h215-operator-workbench-architecture-20260814",
-    "manifest_sha256": "59073c52258fb69e5870dda8bcd9f3eedd915a3be4e394150a81bcf402eb4ba5",
-    "artifact_sha256": "6329746bc9dbce401f5259a385f89a86d787b0d1d702398fb6d5513337e8584a",
-    "handoff_sha256": "8a61bf9f53fa8509d2888ad9c5af89703c1f8092178c4e0fe3f7361bf141a3f6",
-    "exchange_sha256_at_revalidation": "45c86fc7ce41428e73452c6a27a65f30dde4b67d1aae417e1268a9dcd88a8d12",
-    "unique": true,
-    "status": "accepted_local_non_executable_h215",
-    "release_join": {
-      "release_id": "base-erp-public-product-20260815-v6",
-      "release_fingerprint": "cb062fb7e1f81b0d0741fdbdbfb6a13616d1e3be273febdee443a1b7e07f897b",
-      "bom_fingerprint": "140ae63e054c60724d868e4d26221de8b2c5f854e4e74abf00fccd40dc3dacea"
-    }
-  },
-  "deepseek_child": {
-    "native_id": "019fffe8-4c07-7e01-9eac-b4c37fb2923b",
-    "task": "/root/deepseek_h215_browser_test",
-    "model": "deepseek-v4-flash",
-    "reasoning": "high",
-    "v2": true,
-    "outcome": "partially_adopted",
-    "failure": "transport",
-    "retry": false,
-    "parent_work_saved": true
-  },
   "self_hash_rule": {
-    "mode": "canonical_readback_placeholder",
-    "readback_paths": [
-      "runtime/h215_operator_workbench_readback_2026-08-14.json"
-    ],
-    "placeholder_fields": [
-      "release_join.release_fingerprint",
-      "release_join.bom_fingerprint"
-    ],
-    "reason": "BOM digest uses the canonical readback projection to avoid a recursive release/BOM self-hash cycle; immutable_bom_sha256 is the finalized BOM fingerprint."
-  },
-  "release_reseal": {
-    "schema_version": "base-erp-release-reseal-v1",
-    "previous_release_id": "base-erp-public-product-20260815-v6",
-    "release_id": "base-erp-public-product-20260815-v7",
-    "reason": "material fail-closed resolveCommit correction requires a new immutable release identity",
-    "source_path": "src/server.mjs",
-    "candidate_commit": "PENDING_OWNER_PUBLIC_COMMIT",
-    "candidate_commit_is_deployment_evidence": false,
-    "deployment_commit_source": "owner_visible_GitHub_and_Render_readback_only",
-    "previous_v6_receipts": "historical_until_v7_exact_commit_is_published_and_read_back",
-    "h217_v6_rebind_required": true,
-    "source_paths": [
-      "src/server.mjs",
-      "src/base-erp-scenario-router.mjs"
-    ],
-    "source_sha256": {
-      "src/server.mjs": "c422fdd4da6f000ab7fe11f94b29f60836bead70534c0881ba7b270b332a267b",
-      "src/base-erp-scenario-router.mjs": "00ef279e9b42426175860d1d1edb2549a80539450753d5d286d374bf1697d78f"
-    },
-    "new_release_fingerprint": "bfd8e57684b0c43bb92dbc9ac3bcd7426b226dc816541c008c7085b7cc6ae5ae",
-    "new_bom_fingerprint": "3b856d0a18fc996b47e5bb4bb0b4c06a73e28ff2f5a0ce13e08612b27ad3529c"
-  },
-  "pre_reseal_v6_external_readback": {
-    "observed_at": "2026-08-15T14:06:31+08:00",
-    "source": "parent_independent_github_render_dashboard_readback",
-    "strict_receipt_count": 2,
-    "strict_receipt_platforms": [
-      "github",
-      "render"
-    ],
-    "release_join": {
-      "release_id": "base-erp-public-product-20260815-v6",
-      "release_fingerprint": "cb062fb7e1f81b0d0741fdbdbfb6a13616d1e3be273febdee443a1b7e07f897b",
-      "bom_fingerprint": "140ae63e054c60724d868e4d26221de8b2c5f854e4e74abf00fccd40dc3dacea"
-    },
-    "h215": {
-      "packet_id": "base-erp-h215-operator-workbench-architecture-20260814",
-      "manifest_sha256": "59073c52258fb69e5870dda8bcd9f3eedd915a3be4e394150a81bcf402eb4ba5",
-      "artifact_sha256": "6329746bc9dbce401f5259a385f89a86d787b0d1d702398fb6d5513337e8584a",
-      "handoff_sha256": "8a61bf9f53fa8509d2888ad9c5af89703c1f8092178c4e0fe3f7361bf141a3f6",
-      "exchange_sha256": "45c86fc7ce41428e73452c6a27a65f30dde4b67d1aae417e1268a9dcd88a8d12",
-      "contract_version": "base-erp-h215-operator-workbench-v1",
-      "browser_suite": "4/4",
-      "page_unit_suite": "3/3",
-      "external_actions": 0
-    },
-    "h213_pinned_sha256": "1899acb8147844865d34085b396a0b2f282acbddb7f14823fdaa74b665d4d2ef",
-    "github": {
-      "strict_status": "current_v6_release_receipt_observed",
-      "commit_sha": "e5bb4f36edf5570fd673b05ee012b46e5126db66",
-      "release_url": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v6"
-    },
-    "render": {
-      "strict_status": "current_v6_release_receipt_observed",
-      "service_id": "srv-d9t0bsafngtc7387gqo0",
-      "deployment_id": "dep-da000fm1egvs73fib5c0",
-      "observed_commit_sha": "e5bb4f36edf5570fd673b05ee012b46e5126db66",
-      "release_id": "base-erp-public-product-20260815-v6",
-      "release_fingerprint": "cb062fb7e1f81b0d0741fdbdbfb6a13616d1e3be273febdee443a1b7e07f897b",
-      "bom_fingerprint": "140ae63e054c60724d868e4d26221de8b2c5f854e4e74abf00fccd40dc3dacea",
-      "health_ready": true,
-      "current_release_match": true
-    },
-    "base_dashboard": {
-      "strict_status": "canonical_app_identity_current_domain_join_no_separate_receipt",
-      "app_id": "6a7a0717e209a55163497d2d",
-      "primary_domain": "base-erp-settlement-workbench.onrender.com",
-      "release_mapping_observed": true,
-      "separate_release_receipt": false
-    },
-    "route_acceptance": {
-      "dedicated": "/recurring-settlement.json",
-      "workbench_json": "/workbench.json",
-      "workbench_ui": "/workbench/",
-      "parity": "byte_equivalent"
-    },
-    "runtime_continuity": {
-      "run_id": "02_Build-20260815-122052",
-      "status": "running",
-      "date_cst": "2026-08-15",
-      "external_trace": "0/30",
-      "public_update": "0/10",
-      "eligible_remaining": 1,
-      "autonomous_remaining": 1,
-      "defer_until_next_date": false,
-      "cursor": "Deficit-first dispatch: trace_gap=30; public_gap=10. Trace gap remains: prepare exactly one legitimate corresponding-wallet onchain state-change, open one exact final wallet review, and count it only after a unique successful receipt. Publication gap remains: one material unit needs truthful receipts on every mandatory platform (github, render, base_app, base_dashboard, base_dev, talent, guild, basename_base_org); partial bundles count zero. Execute eligible candidate BASE-PUBLICATION-V6-20260815-01 now; do not rediscover earlier routes.",
-      "runtime_authority_revalidated": true
-    },
-    "full_product_tests": "153/153 pass in clean git-export; Playwright/browser 4/4 and page unit 3/3; local exchange/upstream material excluded and runtime fixture supplied outside public payload"
+    "mode": "readback_only",
+    "candidate_excluded_from_own_bom": true,
+    "readback_excluded_from_bom": true,
+    "placeholder_fields": ["release_fingerprint", "bom_fingerprint", "git_commit"],
+    "reason": "freeze release identity and immutable BOM before separate owner commit binding"
   }
 }

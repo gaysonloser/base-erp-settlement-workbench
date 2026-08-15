@@ -1,0 +1,470 @@
+{
+  "schema_version": "base-erp-h217-platform-execution-gates-readback-v1",
+  "readback_id": "h217-remaining-platform-readback-20260815-v7",
+  "packet_id": "base-erp-h217-remaining-platform-execution-gates-20260815",
+  "batch_id": "BASE_ERP_H217_REMAINING_PLATFORM_EXECUTION_GATES_20260815",
+  "observed_at_cst": "2026-08-15T15:03:56+08:00",
+  "execution_authority": "none_until_02_Build_revalidates",
+  "packet_revalidation": {
+    "schema_version": "base-erp-h217-platform-execution-gates-v1",
+    "ok": true,
+    "fail_closed": false,
+    "state": "accepted_once_revalidated",
+    "reason": "fresh_sol_medium_pass_and_exact_hash_closure",
+    "failure_id": null,
+    "accepted_once": true,
+    "occurrence": 1,
+    "execution_authority": "none_until_02_Build_revalidates",
+    "source_hashes": {
+      "manifest_sha256": "dbd6b5257aa5472a8e4621ec1ecd0c9a8ea2270c37b821912d86a9229f82b4a8",
+      "artifact_sha256": "a886f3d35ddff84852448de5ca5832087bf879c7d840b70bc9e6719e7e92acc8",
+      "handoff_sha256": "853970cc363c22a1d366ea0c6b217f9fe73fd70c01da1e1e4c595f3c0bc32124"
+    },
+    "exchange_sha256": "dcbab1831d14ce36bec6a14579c2b8d1d991992435f693b440a12939bab6300e",
+    "exchange_mode": "0444",
+    "review": {
+      "status": "reviewed",
+      "verdict": "pass",
+      "reviewer": "independent fresh root gpt-5.6-sol/medium",
+      "severity": {
+        "p0": 0,
+        "p1": 0,
+        "p2": 0
+      }
+    },
+    "credit": 0,
+    "external_actions": 0
+  },
+  "source_queue_continuity": {
+    "session": "03_Base",
+    "completed": 51,
+    "active": null,
+    "blocked": 0,
+    "queue_sha256": "618e067d4bfa65d4b1a5f41c5e35ce15430c82e6814b48ec7ed25e649c3dc54a",
+    "cursor_sha256": "3682682ef13ae611c2db3f5522c876098568fcab0dfe202c3c7239c20cce4fa1",
+    "source": "03_Base acceptance closed; no Build runtime mutation"
+  },
+  "implementation": {
+    "exact_write_set": [
+      "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-native-platform-execution-gates.mjs",
+      "projects/2026-08_Base_ERP_Settlement_Workbench/test/base-native-platform-execution-gates.test.mjs",
+      "projects/2026-08_Base_ERP_Settlement_Workbench/runtime/h217_remaining_platform_readback_2026-08-15.json"
+    ],
+    "source": "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-native-platform-execution-gates.mjs",
+    "source_sha256": "96f9839cbebb6bff775a5b0cc84a7ae7d71b0168847f2a1eb08c0b59d6f80b42",
+    "test": "projects/2026-08_Base_ERP_Settlement_Workbench/test/base-native-platform-execution-gates.test.mjs",
+    "test_sha256": "b26f27c4bcefa4c9fab65f4ee1ea3a88d8088f16dac185cb23c0333c8e55f762",
+    "runtime_readback": "projects/2026-08_Base_ERP_Settlement_Workbench/runtime/h217_remaining_platform_readback_2026-08-15.json",
+    "product_bom_mutated": false,
+    "external_actions": 0
+  },
+  "contract_counts": {
+    "platform_rows": 4,
+    "test_vectors": 16,
+    "failure_modes": 16,
+    "default_row_credit": 0,
+    "aggregate_publication_unit_credit": 0
+  },
+  "controls": [
+    "Base Sepolia descriptor-only chain_id=84532/0x14a34 with basescan descriptor; receipt/finality remain separate",
+    "Talent, Guild and Basename remain native-domain/identity owner gates with no release receipt",
+    "v7 release_id+release_fingerprint+bom_fingerprint joins GitHub/Render and canonical Dashboard/Base.dev identity",
+    "Base App readiness is not a release receipt and H217 never creates eight publication receipts",
+    "strict BASE/CIRCLE isolation is fail-closed; all credits and actions remain zero",
+    "no wallet, credential, approval, signature, transaction, deployment or public-write authority"
+  ],
+  "public_envelope": {
+    "schema_version": "base-erp-h217-platform-execution-gates-v1",
+    "ok": true,
+    "fail_closed": false,
+    "state": "current_v7_public_envelope_valid",
+    "reason": "v7_github_render_dashboard_join_valid",
+    "failure_id": null,
+    "release": {
+      "schema_version": "base-erp-h217-platform-execution-gates-v1",
+      "ok": true,
+      "fail_closed": false,
+      "state": "current_release_join_valid",
+      "reason": "current_v7_release_envelope",
+      "failure_id": null,
+      "release_join": {
+        "release_id": "base-erp-public-product-20260815-v7",
+        "release_fingerprint": "bfd8e57684b0c43bb92dbc9ac3bcd7426b226dc816541c008c7085b7cc6ae5ae",
+        "bom_fingerprint": "3b856d0a18fc996b47e5bb4bb0b4c06a73e28ff2f5a0ce13e08612b27ad3529c"
+      },
+      "mismatch_fields": [],
+      "credit": 0,
+      "external_actions": 0
+    },
+    "legs": {
+      "github": true,
+      "render": true,
+      "dashboard": true
+    },
+    "circle_target_absent": true,
+    "credit": 0,
+    "publication_unit_credit": 0,
+    "external_actions": 0,
+    "expected": {
+      "release_id": "base-erp-public-product-20260815-v7",
+      "release_fingerprint": "bfd8e57684b0c43bb92dbc9ac3bcd7426b226dc816541c008c7085b7cc6ae5ae",
+      "bom_fingerprint": "3b856d0a18fc996b47e5bb4bb0b4c06a73e28ff2f5a0ce13e08612b27ad3529c",
+      "commit_sha": "5459eaf3b8000b5a85197516d0b72a5cc46e03a5",
+      "github_release_url": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v7",
+      "render_service_id": "srv-d9t0bsafngtc7387gqo0",
+      "render_deployment_id": "dep-da00nk1t0dsc738jpuv0",
+      "render_release_url": "https://base-erp-settlement-workbench.onrender.com/release.json",
+      "render_health_url": "https://base-erp-settlement-workbench.onrender.com/healthz",
+      "render_http_status": 200,
+      "render_ready": true,
+      "render_status": "ok",
+      "render_git_commit": "5459eaf3b8000b5a85197516d0b72a5cc46e03a5",
+      "canonical_dashboard_app_id": "6a7a0717e209a55163497d2d",
+      "canonical_primary_url": "https://base-erp-settlement-workbench.onrender.com"
+    },
+    "independent_live_readback": {
+      "github": {
+        "http_status": 200,
+        "release_id": "base-erp-public-product-20260815-v7",
+        "target_commitish": "5459eaf3b8000b5a85197516d0b72a5cc46e03a5",
+        "draft": false,
+        "prerelease": false
+      },
+      "render": {
+        "release_http_status": 200,
+        "health_http_status": 200,
+        "service_id": "srv-d9t0bsafngtc7387gqo0",
+        "deployment_id": "dep-da00nk1t0dsc738jpuv0",
+        "release_id": "base-erp-public-product-20260815-v7",
+        "release_fingerprint": "bfd8e57684b0c43bb92dbc9ac3bcd7426b226dc816541c008c7085b7cc6ae5ae",
+        "bom_fingerprint": "3b856d0a18fc996b47e5bb4bb0b4c06a73e28ff2f5a0ce13e08612b27ad3529c",
+        "immutable_bom_sha256": "3b856d0a18fc996b47e5bb4bb0b4c06a73e28ff2f5a0ce13e08612b27ad3529c",
+        "git_commit": "5459eaf3b8000b5a85197516d0b72a5cc46e03a5",
+        "commit_placeholder": false,
+        "bom_verified": true,
+        "bom_files_verified": true,
+        "release_identity_valid": true,
+        "health_ready": true,
+        "health_status": "ok",
+        "health_observed_at": "2026-08-15T07:26:38.938Z",
+        "public_write_authorized": false
+      },
+      "current_v7_join_valid": true,
+      "circle_target_absent": true
+    }
+  },
+  "evidence_envelope": {
+    "schema_version": "base-erp-h217-platform-execution-gates-v1",
+    "packet_id": "base-erp-h217-remaining-platform-execution-gates-20260815",
+    "execution_authority": "none_until_02_Build_revalidates",
+    "platform_rows": [
+      {
+        "platform_row_id": "base_sepolia_rehearsal",
+        "platform": "base_sepolia_rehearsal",
+        "label": "Base Sepolia descriptor/receipt/finality rehearsal",
+        "evidence_class": "rehearsal_descriptor_receipt_finality",
+        "target_identity": null,
+        "owner_readback": null,
+        "native_receipt": null,
+        "release_join": null,
+        "release_receipt": false,
+        "failure_state": {
+          "id": "H217-F16",
+          "code": "not_observed"
+        },
+        "status": "not_accepted",
+        "credit": 0,
+        "publication_unit_credit": 0,
+        "external_actions": 0
+      },
+      {
+        "platform_row_id": "talent_native_domain",
+        "platform": "talent_native_domain",
+        "label": "Talent native-domain project/profile outcome",
+        "evidence_class": "native_domain_profile_project_reputation",
+        "target_identity": null,
+        "owner_readback": null,
+        "native_receipt": null,
+        "release_join": null,
+        "release_receipt": false,
+        "failure_state": {
+          "id": "H217-F16",
+          "code": "not_observed"
+        },
+        "status": "not_accepted",
+        "credit": 0,
+        "publication_unit_credit": 0,
+        "external_actions": 0
+      },
+      {
+        "platform_row_id": "guild_native_domain",
+        "platform": "guild_native_domain",
+        "label": "Guild native-domain community outcome",
+        "evidence_class": "native_domain_community_roles_requirements_rewards",
+        "target_identity": null,
+        "owner_readback": null,
+        "native_receipt": null,
+        "release_join": null,
+        "release_receipt": false,
+        "failure_state": {
+          "id": "H217-F16",
+          "code": "not_observed"
+        },
+        "status": "not_accepted",
+        "credit": 0,
+        "publication_unit_credit": 0,
+        "external_actions": 0
+      },
+      {
+        "platform_row_id": "basename_base_org_identity",
+        "platform": "basename_base_org_identity",
+        "label": "Basename/base.org account-level identity outcome",
+        "evidence_class": "account_level_singleton_identity",
+        "target_identity": null,
+        "owner_readback": null,
+        "native_receipt": null,
+        "release_join": null,
+        "release_receipt": false,
+        "failure_state": {
+          "id": "H217-F16",
+          "code": "not_observed"
+        },
+        "status": "not_accepted",
+        "credit": 0,
+        "publication_unit_credit": 0,
+        "external_actions": 0
+      }
+    ],
+    "platform_rows_by_id": {
+      "base_sepolia_rehearsal": {
+        "platform_row_id": "base_sepolia_rehearsal",
+        "platform": "base_sepolia_rehearsal",
+        "label": "Base Sepolia descriptor/receipt/finality rehearsal",
+        "evidence_class": "rehearsal_descriptor_receipt_finality",
+        "target_identity": null,
+        "owner_readback": null,
+        "native_receipt": null,
+        "release_join": null,
+        "release_receipt": false,
+        "failure_state": {
+          "id": "H217-F16",
+          "code": "not_observed"
+        },
+        "status": "not_accepted",
+        "credit": 0,
+        "publication_unit_credit": 0,
+        "external_actions": 0
+      },
+      "talent_native_domain": {
+        "platform_row_id": "talent_native_domain",
+        "platform": "talent_native_domain",
+        "label": "Talent native-domain project/profile outcome",
+        "evidence_class": "native_domain_profile_project_reputation",
+        "target_identity": null,
+        "owner_readback": null,
+        "native_receipt": null,
+        "release_join": null,
+        "release_receipt": false,
+        "failure_state": {
+          "id": "H217-F16",
+          "code": "not_observed"
+        },
+        "status": "not_accepted",
+        "credit": 0,
+        "publication_unit_credit": 0,
+        "external_actions": 0
+      },
+      "guild_native_domain": {
+        "platform_row_id": "guild_native_domain",
+        "platform": "guild_native_domain",
+        "label": "Guild native-domain community outcome",
+        "evidence_class": "native_domain_community_roles_requirements_rewards",
+        "target_identity": null,
+        "owner_readback": null,
+        "native_receipt": null,
+        "release_join": null,
+        "release_receipt": false,
+        "failure_state": {
+          "id": "H217-F16",
+          "code": "not_observed"
+        },
+        "status": "not_accepted",
+        "credit": 0,
+        "publication_unit_credit": 0,
+        "external_actions": 0
+      },
+      "basename_base_org_identity": {
+        "platform_row_id": "basename_base_org_identity",
+        "platform": "basename_base_org_identity",
+        "label": "Basename/base.org account-level identity outcome",
+        "evidence_class": "account_level_singleton_identity",
+        "target_identity": null,
+        "owner_readback": null,
+        "native_receipt": null,
+        "release_join": null,
+        "release_receipt": false,
+        "failure_state": {
+          "id": "H217-F16",
+          "code": "not_observed"
+        },
+        "status": "not_accepted",
+        "credit": 0,
+        "publication_unit_credit": 0,
+        "external_actions": 0
+      }
+    },
+    "owner_readback": null,
+    "packet_revalidation": {
+      "schema_version": "base-erp-h217-platform-execution-gates-v1",
+      "ok": true,
+      "fail_closed": false,
+      "state": "accepted_once_revalidated",
+      "reason": "fresh_sol_medium_pass_and_exact_hash_closure",
+      "failure_id": null,
+      "accepted_once": true,
+      "occurrence": 1,
+      "execution_authority": "none_until_02_Build_revalidates",
+      "source_hashes": {
+        "manifest_sha256": "dbd6b5257aa5472a8e4621ec1ecd0c9a8ea2270c37b821912d86a9229f82b4a8",
+        "artifact_sha256": "a886f3d35ddff84852448de5ca5832087bf879c7d840b70bc9e6719e7e92acc8",
+        "handoff_sha256": "853970cc363c22a1d366ea0c6b217f9fe73fd70c01da1e1e4c595f3c0bc32124"
+      },
+      "exchange_sha256": "dcbab1831d14ce36bec6a14579c2b8d1d991992435f693b440a12939bab6300e",
+      "exchange_mode": "0444",
+      "review": {
+        "status": "reviewed",
+        "verdict": "pass",
+        "reviewer": "independent fresh root gpt-5.6-sol/medium",
+        "severity": {
+          "p0": 0,
+          "p1": 0,
+          "p2": 0
+        }
+      },
+      "credit": 0,
+      "external_actions": 0
+    },
+    "native_receipt": null,
+    "release_join": {
+      "release_id": "base-erp-public-product-20260815-v7",
+      "release_fingerprint": "bfd8e57684b0c43bb92dbc9ac3bcd7426b226dc816541c008c7085b7cc6ae5ae",
+      "bom_fingerprint": "3b856d0a18fc996b47e5bb4bb0b4c06a73e28ff2f5a0ce13e08612b27ad3529c"
+    },
+    "failure_state": null,
+    "credit": 0,
+    "publication_unit_credit": 0,
+    "aggregate_publication_unit_credit": 0,
+    "external_actions": 0,
+    "wallet_authority": false,
+    "public_write_authority": false,
+    "deployment_authority": false,
+    "circle_target_absent": true,
+    "isolation": {
+      "schema_version": "base-erp-h217-platform-execution-gates-v1",
+      "ok": true,
+      "fail_closed": false,
+      "state": "base_identity_isolated",
+      "reason": "base_target_isolated",
+      "failure_id": null,
+      "platform": "h217_envelope",
+      "circle_collision": false,
+      "circle_target_absent": true,
+      "action_enabled": false,
+      "credit": 0,
+      "publication_unit_credit": 0,
+      "external_actions": 0
+    }
+  },
+  "owner_gate_observations": {
+    "base_sepolia_rehearsal": {
+      "descriptor_valid": true,
+      "transaction_hash_observed": false,
+      "receipt_observed": false,
+      "finality_stage": null,
+      "credit": 0
+    },
+    "talent_native_domain": {
+      "exact_project_search": "Base ERP Settlement Workbench",
+      "projects_found": 0,
+      "project_identity_observed": false,
+      "owner_auth_required": true,
+      "credit": 0
+    },
+    "guild_native_domain": {
+      "generic_base_page_visible": true,
+      "project_identity_observed": false,
+      "release_mapping_observed": false,
+      "owner_auth_required": true,
+      "credit": 0
+    },
+    "basename_base_org_identity": {
+      "account_level_singleton": true,
+      "project_release_mapping_observed": false,
+      "identity_only": true,
+      "credit": 0
+    }
+  },
+  "release_join": {
+    "release_id": "base-erp-public-product-20260815-v7",
+    "release_fingerprint": "bfd8e57684b0c43bb92dbc9ac3bcd7426b226dc816541c008c7085b7cc6ae5ae",
+    "bom_fingerprint": "3b856d0a18fc996b47e5bb4bb0b4c06a73e28ff2f5a0ce13e08612b27ad3529c",
+    "status": "current_v7_github_render_dashboard_join",
+    "credit": 0,
+    "separate_dashboard_basedev_receipt": false,
+    "base_app_readiness_only": true
+  },
+  "runtime": {
+    "path": "projects/2026-06_Base_Guild_Onchain_Score/runtime/current_run.json",
+    "run_id": "02_Build-20260815-122052",
+    "status": "running",
+    "date_cst": "2026-08-15",
+    "runtime_sha256": "8139a8863c036155fb7b6c79827e0935b4174356db3eca9ad918ff320f4cd7f3",
+    "external_trace_units": 0,
+    "public_update_units": 0,
+    "eligible_remaining": 0,
+    "autonomous_remaining": 0,
+    "defer_until_next_date": true,
+    "cursor": "Same-day real-candidate queue exhausted below hard floor; keep runtime running and resume on the next date. Before any new action, re-read the owner ledger and generate a fresh official queue. Do not fill the deficit with research, observations, duplicate lifecycle evidence or replayed releases."
+  },
+  "runtime_authority": {
+    "path": "projects/2026-08_Base_ERP_Settlement_Workbench/runtime/runtime_authority.json",
+    "runtime_sha256": "8139a8863c036155fb7b6c79827e0935b4174356db3eca9ad918ff320f4cd7f3",
+    "writer_idle": true,
+    "record_sha256": "9e583dc13912940ea781b7d0acd3c591d09cde8c8f22ceaa50c2699e90ff9b01"
+  },
+  "tests": {
+    "focused_h217": {
+      "command": "node --test test/base-native-platform-execution-gates.test.mjs",
+      "tests": 23,
+      "passed": 23,
+      "failed": 0
+    },
+    "full_npm_test": {
+      "command": "npm test",
+      "tests": 250,
+      "passed": 250,
+      "failed": 0,
+      "status": "pass",
+      "duration_ms": 8710.220458,
+      "environment": "approved local-listener/Playwright"
+    }
+  },
+  "isolation": {
+    "matrix": "projects/2026-08_Base_ERP_Settlement_Workbench/config/base_circle_platform_isolation_matrix_v1.json",
+    "matrix_sha256": "c538e47c4b7951f341b36e351858bf3e1c28dd772d7d3f9c3588f1f0093f19de",
+    "circle_target_absent": true,
+    "circle_files_or_external_targets_touched": false
+  },
+  "queue_cursor_counters": {
+    "changed": false,
+    "external_trace_units": 0,
+    "public_update_units": 0,
+    "note": "H217 is bounded non-executable evidence work and does not increment 0/30 or 0/10."
+  },
+  "self_hash": "H217_READBACK_SELF_HASH_PLACEHOLDER",
+  "self_hash_rule": {
+    "mode": "explicit_placeholder_allowed",
+    "value": "H217_READBACK_SELF_HASH_PLACEHOLDER",
+    "reason": "The readback is excluded from the immutable v7 BOM; a self-referential SHA is intentionally not materialized under the exact H217 Build write-set contract."
+  }
+}

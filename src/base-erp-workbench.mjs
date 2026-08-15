@@ -1,9 +1,43 @@
+import { createHash } from "node:crypto";
 import { digest } from "./base-neutral-receipt-controls.mjs";
 import { bindRecurringCase, evaluateStatusAdapter, effectivePeriod } from "./base-recurring-settlement-contract.mjs";
+import {
+  BASE_SEPOLIA_DESCRIPTOR,
+  EXECUTION_AUTHORITY,
+  H217_BATCH_ID,
+  H217_PACKET_ID,
+  H217_PLATFORM_ROW_IDS,
+  H217_RELEASE_ENVELOPE,
+  H217_RELEASE_JOIN,
+  H217_SOURCE_HASHES,
+  READBACK_SCHEMA_VERSION,
+  validateBaseCircleIsolation,
+  validateH217Envelope,
+  validateH217PublicEnvelope,
+  validateH217ReleaseEnvelope,
+} from "./base-native-platform-execution-gates.mjs";
 
 const HASH_PATTERN = /^[0-9a-f]{64}$/i;
 const AMOUNT_PATTERN = /^(0|[1-9][0-9]*)(?:\.[0-9]{1,6})?$/;
 const REFERENCE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:/-]{2,79}$/;
+
+const H218_PLATFORM_GATES_SCHEMA_VERSION = "base-erp-h218-platform-gates-public-v1";
+const H217_MODULE_PATH = "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-native-platform-execution-gates.mjs";
+const H217_READBACK_PATH = "projects/2026-08_Base_ERP_Settlement_Workbench/runtime/h217_remaining_platform_readback_2026-08-15.json";
+const H217_MODULE_SHA256 = "96f9839cbebb6bff775a5b0cc84a7ae7d71b0168847f2a1eb08c0b59d6f80b42";
+const H217_READBACK_SHA256 = "f7aea1ec1ea6d3377334f8f1d32938054f4bd4b809f622673fb056868be2c8b1";
+const H217_READBACK_SELF_HASH = "H217_READBACK_SELF_HASH_PLACEHOLDER";
+const CIRCLE_MATRIX_SHA256 = "c538e47c4b7951f341b36e351858bf3e1c28dd772d7d3f9c3588f1f0093f19de";
+const H218_PLATFORM_GATE_ERROR = "h217_source_invalid_or_circle_collision";
+const H219_RELEASE_ID = "base-erp-public-product-20260815-v8";
+const H219_BASE_TARGET = Object.freeze({
+  github_repo: "gaysonloser/base-erp-settlement-workbench",
+  render_service_id: "srv-d9t0bsafngtc7387gqo0",
+  render_domain: "base-erp-settlement-workbench.onrender.com",
+  dashboard_app_id: "6a7a0717e209a55163497d2d",
+  canonical_primary_url: "https://base-erp-settlement-workbench.onrender.com",
+});
+const H219_HASH_PATTERN = /^[0-9a-f]{64}$/;
 
 const NETWORKS = Object.freeze({
   base_mainnet: Object.freeze({ chain_id: 8453, production: true }),
@@ -670,8 +704,332 @@ function buildH215OperatorSurface({ binding, queue, selectedCase, server_record 
   });
 }
 
+function h218Unavailable() {
+  throw new Error(H218_PLATFORM_GATE_ERROR);
+}
+
+function h218Required(value, expected) {
+  return value === expected;
+}
+
+function h218Hash(value) {
+  return typeof value === "string" && HASH_PATTERN.test(value);
+}
+
+function canonicalH219(value) {
+  if (typeof value === "string") return JSON.stringify(value.normalize("NFC"));
+  if (value === null || typeof value === "boolean") return JSON.stringify(value);
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) throw new TypeError("non-finite JSON number");
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) return `[${value.map(canonicalH219).join(",")}]`;
+  if (value && typeof value === "object") {
+    const keys = Object.keys(value).map((key) => key.normalize("NFC"));
+    keys.sort((left, right) => Buffer.from(left, "utf8").compare(Buffer.from(right, "utf8")));
+    return `{${keys.map((key) => `${JSON.stringify(key)}:${canonicalH219(value[key])}`).join(",")}}`;
+  }
+  throw new TypeError("unsupported JSON value");
+}
+
+function h219BaseTargetEqual(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const expectedKeys = Object.keys(H219_BASE_TARGET);
+  const actualKeys = Object.keys(value);
+  return actualKeys.length === expectedKeys.length
+    && expectedKeys.every((key) => Object.prototype.hasOwnProperty.call(value, key) && value[key] === H219_BASE_TARGET[key]);
+}
+
+function validateH219ReleaseIdentity(value) {
+  if (!value || typeof value !== "object") return false;
+  if (value.release_id !== H219_RELEASE_ID
+    || typeof value.release_fingerprint !== "string"
+    || typeof value.bom_fingerprint !== "string"
+    || !H219_HASH_PATTERN.test(value.release_fingerprint)
+    || !H219_HASH_PATTERN.test(value.bom_fingerprint)
+    || !h219BaseTargetEqual(value.base_target)) return false;
+  const expected = createHash("sha256").update(canonicalH219({
+    schema_version: "base-erp-v8-release-identity-v1",
+    release_id: H219_RELEASE_ID,
+    bom_fingerprint: value.bom_fingerprint,
+    base_target: H219_BASE_TARGET,
+  }), "utf8").digest("hex");
+  return value.release_fingerprint === expected && value.release_identity_valid !== false;
+}
+
+function buildH218PublicEnvelopeInputs(readback) {
+  const publicEnvelope = readback?.public_envelope;
+  const expected = publicEnvelope?.expected;
+  const live = publicEnvelope?.independent_live_readback;
+  if (!expected || !live) h218Unavailable();
+  const githubLive = live.github ?? {};
+  const renderLive = live.render ?? {};
+  return {
+    expected,
+    github: {
+      ...expected,
+      repo: "gaysonloser/base-erp-settlement-workbench",
+      branch: "main",
+      commit_sha: expected.commit_sha,
+      ...(githubLive.target_commitish ? { target_commitish: githubLive.target_commitish } : {}),
+    },
+    render: {
+      ...expected,
+      service_id: expected.render_service_id,
+      deployment_id: expected.render_deployment_id,
+      commit_sha: expected.commit_sha,
+      health_ready: renderLive.health_ready,
+      health_status: renderLive.health_status,
+    },
+    dashboard: {
+      app_id: expected.canonical_dashboard_app_id,
+      primary_url: expected.canonical_primary_url,
+    },
+    githubLive,
+    renderLive,
+  };
+}
+
+function validateH218Readback({ release, h217_readback, h217_module_sha256, h217_readback_sha256, circle_matrix_sha256 }) {
+  if (!h217_readback || typeof h217_readback !== "object") h218Unavailable();
+  if (!h218Required(h217_module_sha256, H217_MODULE_SHA256)
+    || !h218Required(h217_readback_sha256, H217_READBACK_SHA256)
+    || !h218Required(circle_matrix_sha256, CIRCLE_MATRIX_SHA256)) h218Unavailable();
+  if (!h218Required(h217_readback.schema_version, READBACK_SCHEMA_VERSION)
+    || !h218Required(h217_readback.packet_id, H217_PACKET_ID)
+    || !h218Required(h217_readback.batch_id, H217_BATCH_ID)
+    || !h218Required(h217_readback.readback_id, "h217-remaining-platform-readback-20260815-v7")
+    || !h218Required(h217_readback.execution_authority, EXECUTION_AUTHORITY)
+    || !h218Required(h217_readback.self_hash, H217_READBACK_SELF_HASH)) h218Unavailable();
+
+  const implementation = h217_readback.implementation ?? {};
+  if (!h218Required(implementation.source, H217_MODULE_PATH)
+    || !h218Required(implementation.source_sha256, H217_MODULE_SHA256)
+    || !h218Required(implementation.runtime_readback, H217_READBACK_PATH)
+    || implementation.product_bom_mutated !== false
+    || implementation.external_actions !== 0) h218Unavailable();
+
+  const packet = h217_readback.packet_revalidation ?? {};
+  const packetHashes = packet.source_hashes ?? {};
+  if (packet.ok !== true
+    || packet.accepted_once !== true
+    || packet.occurrence !== 1
+    || packet.exchange_mode !== "0444"
+    || !h218Hash(packet.exchange_sha256)
+    || packet.execution_authority !== EXECUTION_AUTHORITY
+    || packetHashes.manifest_sha256 !== H217_SOURCE_HASHES.manifest_sha256
+    || packetHashes.artifact_sha256 !== H217_SOURCE_HASHES.artifact_sha256
+    || packetHashes.handoff_sha256 !== H217_SOURCE_HASHES.handoff_sha256) h218Unavailable();
+
+  const envelope = h217_readback.evidence_envelope;
+  if (!envelope || envelope.packet_id !== H217_PACKET_ID || !validateH217Envelope(envelope).ok) h218Unavailable();
+  if (!validateH217ReleaseEnvelope(h217_readback.release_join ?? {}).ok
+    || !validateH219ReleaseIdentity(release)) h218Unavailable();
+  const releaseJoin = h217_readback.release_join ?? {};
+  if (releaseJoin.release_id !== H217_RELEASE_JOIN.release_id
+    || releaseJoin.release_fingerprint !== H217_RELEASE_JOIN.release_fingerprint
+    || releaseJoin.bom_fingerprint !== H217_RELEASE_JOIN.bom_fingerprint
+    || releaseJoin.status !== "current_v7_github_render_dashboard_join"
+    || releaseJoin.credit !== 0
+    || releaseJoin.separate_dashboard_basedev_receipt !== false
+    || releaseJoin.base_app_readiness_only !== true) h218Unavailable();
+
+  const publicInputs = buildH218PublicEnvelopeInputs(h217_readback);
+  const liveGithub = publicInputs.githubLive;
+  const liveRender = publicInputs.renderLive;
+  if (liveGithub.http_status !== 200
+    || liveGithub.target_commitish !== H217_RELEASE_ENVELOPE.commit_sha
+    || liveGithub.draft !== false
+    || liveGithub.prerelease !== false
+    || liveRender.release_http_status !== 200
+    || liveRender.health_http_status !== 200
+    || liveRender.service_id !== H217_RELEASE_ENVELOPE.render_service_id
+    || liveRender.deployment_id !== H217_RELEASE_ENVELOPE.render_deployment_id
+    || liveRender.release_id !== H217_RELEASE_ENVELOPE.release_id
+    || liveRender.release_fingerprint !== H217_RELEASE_ENVELOPE.release_fingerprint
+    || liveRender.bom_fingerprint !== H217_RELEASE_ENVELOPE.bom_fingerprint
+    || liveRender.immutable_bom_sha256 !== H217_RELEASE_ENVELOPE.bom_fingerprint
+    || liveRender.git_commit !== H217_RELEASE_ENVELOPE.commit_sha
+    || liveRender.commit_placeholder !== false
+    || liveRender.bom_verified !== true
+    || liveRender.bom_files_verified !== true
+    || liveRender.release_identity_valid !== true
+    || liveRender.health_ready !== true
+    || liveRender.health_status !== "ok") h218Unavailable();
+  const publicCheck = validateH217PublicEnvelope({
+    release: publicInputs.expected,
+    github: publicInputs.github,
+    render: publicInputs.render,
+    dashboard: publicInputs.dashboard,
+  });
+  if (!publicCheck.ok
+    || h217_readback.public_envelope.ok !== true
+    || h217_readback.public_envelope.legs?.github !== true
+    || h217_readback.public_envelope.legs?.render !== true
+    || h217_readback.public_envelope.legs?.dashboard !== true) h218Unavailable();
+
+  const isolation = validateBaseCircleIsolation({
+    release: publicInputs.expected,
+    github: publicInputs.github,
+    render: publicInputs.render,
+    dashboard: publicInputs.dashboard,
+  }, { platform: "h218_platform_gates" });
+  if (!isolation.ok) h218Unavailable();
+  if (h217_readback.queue_cursor_counters?.changed !== false
+    || h217_readback.queue_cursor_counters?.external_trace_units !== 0
+    || h217_readback.queue_cursor_counters?.public_update_units !== 0) h218Unavailable();
+
+  const observations = h217_readback.owner_gate_observations ?? {};
+  const expectedObservations = {
+    base_sepolia_rehearsal: { descriptor_valid: true, transaction_hash_observed: false, receipt_observed: false, finality_stage: null, credit: 0 },
+    talent_native_domain: { exact_project_search: "Base ERP Settlement Workbench", projects_found: 0, project_identity_observed: false, owner_auth_required: true, credit: 0 },
+    guild_native_domain: { generic_base_page_visible: true, project_identity_observed: false, release_mapping_observed: false, owner_auth_required: true, credit: 0 },
+    basename_base_org_identity: { account_level_singleton: true, project_release_mapping_observed: false, identity_only: true, credit: 0 },
+  };
+  for (const id of H217_PLATFORM_ROW_IDS) {
+    const actual = observations[id];
+    const expectedObservation = expectedObservations[id];
+    if (!actual || !expectedObservation || Object.keys(expectedObservation).some((key) => actual[key] !== expectedObservation[key])) h218Unavailable();
+    const row = envelope.platform_rows?.find((item) => item?.platform_row_id === id);
+    if (!row || row.credit !== 0 || row.publication_unit_credit !== 0 || row.external_actions !== 0 || row.native_receipt !== null || row.release_receipt !== false || row.release_join !== null) h218Unavailable();
+  }
+  const currentIsolation = validateBaseCircleIsolation({
+    release: {
+      release_id: release.release_id,
+      release_fingerprint: release.release_fingerprint,
+      bom_fingerprint: release.bom_fingerprint,
+      ...(release.base_target ?? H219_BASE_TARGET),
+    },
+    github: { repo: H219_BASE_TARGET.github_repo, branch: "main", commit_sha: release.git_commit ?? null, ...H219_BASE_TARGET },
+    render: { service_id: H219_BASE_TARGET.render_service_id, domain: H219_BASE_TARGET.render_domain, commit_sha: release.git_commit ?? null, ...H219_BASE_TARGET },
+    dashboard: { app_id: H219_BASE_TARGET.dashboard_app_id, primary_url: H219_BASE_TARGET.canonical_primary_url },
+  }, { platform: "h219_platform_gates" });
+  if (!currentIsolation.ok) h218Unavailable();
+  return { publicCheck, isolation: currentIsolation, observations };
+}
+
+/**
+ * Project the accepted H217 readback into one deterministic visitor-safe object.
+ * H217 remains the only evaluator; this function only validates its closure and
+ * maps the four already-observed owner-gate rows into the H218 public shape.
+ */
+export function buildPlatformGatesProjection({
+  release,
+  h217_readback,
+  h217_module_sha256 = H217_MODULE_SHA256,
+  h217_readback_sha256 = H217_READBACK_SHA256,
+  circle_matrix_sha256 = CIRCLE_MATRIX_SHA256,
+} = {}) {
+  const { observations } = validateH218Readback({ release, h217_readback, h217_module_sha256, h217_readback_sha256, circle_matrix_sha256 });
+  const releaseJoin = {
+    release_id: release.release_id,
+    release_fingerprint: release.release_fingerprint,
+    bom_fingerprint: release.bom_fingerprint,
+    commit_sha: release.git_commit ?? "PENDING_OWNER_PUBLIC_COMMIT",
+    github_release_url: `https://github.com/${H219_BASE_TARGET.github_repo}/releases/tag/${release.release_id}`,
+    render_release_url: `${H219_BASE_TARGET.canonical_primary_url}/release.json`,
+    render_health_url: `${H219_BASE_TARGET.canonical_primary_url}/healthz`,
+    canonical_dashboard_app_id: H219_BASE_TARGET.dashboard_app_id,
+    canonical_primary_url: H219_BASE_TARGET.canonical_primary_url,
+    dashboard_basedev_one_identity: true,
+    base_app_readiness_only: true,
+    separate_dashboard_basedev_receipt: false,
+    current: true,
+    actual_commit_bound: typeof release.git_commit === "string" && /^[0-9a-f]{40}$/.test(release.git_commit),
+  };
+  const makeRow = (platform_row_id, { receipt_kind, ...fields }) => ({
+    platform_row_id,
+    ...fields,
+    release_join: null,
+    receipt: {
+      native_receipt: null,
+      receipt_kind,
+      release_receipt: false,
+      observed: false,
+    },
+    credit: 0,
+    publication_unit_credit: 0,
+  });
+  const rows = H217_PLATFORM_ROW_IDS.map((platform_row_id) => {
+    switch (platform_row_id) {
+      case "base_sepolia_rehearsal":
+        return makeRow(platform_row_id, {
+          evidence_state: "rehearsal_pending",
+          owner_gate: "owner_authorized_receipt_and_explicit_finality_readback_required",
+          target_identity: { ...BASE_SEPOLIA_DESCRIPTOR },
+          public_context: null,
+          owner_readback: {
+            descriptor_valid: observations.base_sepolia_rehearsal.descriptor_valid,
+            transaction_hash_observed: observations.base_sepolia_rehearsal.transaction_hash_observed,
+            receipt_observed: observations.base_sepolia_rehearsal.receipt_observed,
+            finality_stage: observations.base_sepolia_rehearsal.finality_stage,
+          },
+          failure_state: "sepolia_receipt_missing_or_invalid",
+          receipt_kind: "rehearsal_only",
+        });
+      case "talent_native_domain":
+        return makeRow(platform_row_id, {
+          evidence_state: "owner_gate",
+          owner_gate: "exact_project_owner_readback_required",
+          target_identity: { project_id: null, project_url: null, title: null },
+          public_context: { projects_url: "https://talent.app/~/projects", search_query: "Base ERP Settlement Workbench", projects_found: 0 },
+          owner_readback: {
+            project_identity_observed: observations.talent_native_domain.project_identity_observed,
+            release_mapping_observed: false,
+            owner_auth_required: observations.talent_native_domain.owner_auth_required,
+          },
+          failure_state: "talent_exact_project_absent_or_owner_auth_gate",
+          receipt_kind: "native_domain_outcome",
+        });
+      case "guild_native_domain":
+        return makeRow(platform_row_id, {
+          evidence_state: "context_only",
+          owner_gate: "project_specific_owner_admin_or_visitor_readback_required",
+          target_identity: { guild_slug: null, project_url: null },
+          public_context: { base_guild_url: "https://guild.xyz/base/home", generic_base_page_visible: true, sign_in_or_join_gate_visible: true },
+          owner_readback: {
+            project_identity_observed: observations.guild_native_domain.project_identity_observed,
+            release_mapping_observed: observations.guild_native_domain.release_mapping_observed,
+            owner_auth_required: observations.guild_native_domain.owner_auth_required,
+          },
+          failure_state: "guild_generic_or_sign_in_gate",
+          receipt_kind: "native_domain_outcome",
+        });
+      case "basename_base_org_identity":
+        return makeRow(platform_row_id, {
+          evidence_state: "identity_only",
+          owner_gate: "owner_gated_primary_or_resolver_readback_required",
+          target_identity: { account_level_singleton: true, primary_name: null, resolver: null, profile_url: null },
+          public_context: { names_url: "https://www.base.org/names", identity_value_omitted: true },
+          owner_readback: {
+            identity_only: observations.basename_base_org_identity.identity_only,
+            project_release_mapping_observed: observations.basename_base_org_identity.project_release_mapping_observed,
+            owner_auth_required: true,
+          },
+          failure_state: "basename_identity_not_project_release",
+          receipt_kind: "account_level_identity",
+        });
+      default:
+        return h218Unavailable();
+    }
+  });
+  return Object.freeze({
+    schema_version: H218_PLATFORM_GATES_SCHEMA_VERSION,
+    mode: "visitor_read_only",
+    packet_id: H217_PACKET_ID,
+    readback_id: "h217-remaining-platform-readback-20260815-v7",
+    observed_at: h217_readback.observed_at_cst,
+    release_join: releaseJoin,
+    rows: Object.freeze(rows),
+    aggregate: Object.freeze({ row_count: rows.length, native_receipt_count: 0, release_receipt_count: 0, credit: 0, publication_unit_credit: 0, eight_surface_duplication: false }),
+    isolation: Object.freeze({ circle_collision: false, circle_target_absent: true, state: "base_identity_isolated", fail_closed_on_collision: true, action_enabled: false }),
+    redaction: Object.freeze({ wallet_values_exposed: false, credentials_exposed: false, hidden_identity_exposed: false, raw_calldata_exposed: false, transaction_references_exposed: false, owner_basename_value_exposed: false }),
+    safety: Object.freeze({ external_actions: 0, wallet_write_allowed: false, public_write_authorized: false, deployment_authority: false, execution_authority: EXECUTION_AUTHORITY }),
+  });
+}
+
 /** Build a deterministic visitor-safe operator workbench, never an execution payload. */
-export function buildOperatorWorkbench({ release, selected_profile_id = "customer_invoice_receipt", server_record = null } = {}) {
+export function buildOperatorWorkbench({ release, selected_profile_id = "customer_invoice_receipt", server_record = null, platform_gates } = {}) {
   const binding = releaseBinding(release);
   const selectedProfile = profileFor(selected_profile_id);
   const selectedBlueprint = WORKBENCH_CASE_BLUEPRINTS[selectedProfile.profile_id];
@@ -714,7 +1072,7 @@ export function buildOperatorWorkbench({ release, selected_profile_id = "custome
     }),
   });
   const operator_surface = buildH215OperatorSurface({ binding, queue, selectedCase, server_record });
-  return Object.freeze({
+  const workbench = {
     schema_version: "base-erp-operator-workbench-v1",
     contract_version: "base-erp-h215-operator-workbench-v1",
     mode: "visitor_read_only",
@@ -745,5 +1103,7 @@ export function buildOperatorWorkbench({ release, selected_profile_id = "custome
       signed: false, broadcast: false, synthetic_receipt_credit: 0,
       primary_action: "Review evidence", primary_action_enabled: false, primary_action_blocker: selectedBlueprint.exception,
     }),
-  });
+  };
+  if (platform_gates !== undefined) workbench.platform_gates = platform_gates;
+  return Object.freeze(workbench);
 }

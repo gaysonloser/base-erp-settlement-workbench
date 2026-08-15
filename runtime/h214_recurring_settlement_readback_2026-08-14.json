@@ -1,0 +1,287 @@
+{
+  "schema_version": "base-erp-h214-recurring-settlement-readback-v1",
+  "packet_id": "base-erp-h214-recurring-settlement-public-surface-integration-20260814",
+  "packet_occurrences": 1,
+  "packet_hashes": {
+    "manifest": "372ea725b36f5a02c95571264e686cd9c3aa9f7fa2a6a0e6ad060770368dd634",
+    "artifact": "ba1aa096490b0d2f175451ed1e5044f5f88088d9ffc22c0510c55567baff2006",
+    "handoff": "15ec3ab42324a9b57f3d57d3e830b4cdd95207f443347ef27e946a9fa515763a",
+    "exchange_at_append": "8dbc06921ecfa3344fcdc0baead6a3d7db66761bafc47d85ca656047a6ae8b8e"
+  },
+  "review": {
+    "independent_model": "gpt-5.6-sol/medium",
+    "outcome": "PASS",
+    "P0": 0,
+    "P1": 0,
+    "P2": 0,
+    "execution_authority": "none_until_02_Build_revalidates",
+    "canonical_fixture_sha256": "166ee8683defdeddfcb9b8a5abb33ea1d05ff03206098b6ab706e8fb7a405056"
+  },
+  "owner_continuity": {
+    "session": "02_Build",
+    "native_owner": "019ffe4b-fded-7b31-a23c-d1bc8c0cd967",
+    "model": "gpt-5.6-luna",
+    "reasoning": "max",
+    "v2": true,
+    "runtime_run_id": "02_Build-20260814-010433",
+    "runtime_date_cst": "2026-08-14"
+  },
+  "official_revalidation": {
+    "base_docs_callable_tools": 3,
+    "base_mcp_callable_tools": 0,
+    "docs_probe": "one read-only recurring settlement search passed",
+    "mcp_probe": "not attempted; current task has no callable base_mcp namespace (task_manifest_absent)",
+    "oauth": "not_revalidated_in_current_task",
+    "invalid_grant": "not_observed_in_current_task",
+    "wallet_probe_calls": 0,
+    "wallet_reads": 0,
+    "wallet_requests": 0,
+    "official_source": "https://docs.base.org/base-account/guides/accept-recurring-payments",
+    "semantics_revalidated": [
+      "subscription getStatus(id,testnet) exposes isSubscribed and remainingChargeInPeriod",
+      "manual prepareCharge and prepareRevoke are call-data preparation only",
+      "Base Sepolia chain 84532 and Base Mainnet chain 8453 are distinct",
+      "CDP tx_hash receipt/finality and manual callsId wallet_getCallsStatus routes remain separate"
+    ]
+  },
+  "implementation": {
+    "write_set": [
+      "src/base-erp-workbench.mjs",
+      "src/server.mjs",
+      "src/operator-workbench-page.mjs",
+      "test/server.test.mjs",
+      "runtime/h214_recurring_settlement_readback_2026-08-14.json",
+      "runtime/release_candidate_2026-08-10.json"
+    ],
+    "source_sha256": {
+      "src/base-erp-workbench.mjs": "afb0dc0e3553d35a1d0d7748ac3c7b3f383a3a2a07feae49726ed9699448a62e",
+      "src/server.mjs": "b59aba9a1c43c1107e473181a4a0460845d743797bf1eee5df329a6876d81dd6",
+      "src/operator-workbench-page.mjs": "87a0735f291af63135872a204fefca0703d17b6896f518d9f516059fda13c968",
+      "test/server.test.mjs": "2c0f3020f61d348e5c7f75276cc0f1bc94e5771eae3caf4702cae606d1ee8f72",
+      "src/base-recurring-settlement-contract.mjs": "1899acb8147844865d34085b396a0b2f282acbddb7f14823fdaa74b665d4d2ef"
+    },
+    "h213_contract_sha256_pinned": "1899acb8147844865d34085b396a0b2f282acbddb7f14823fdaa74b665d4d2ef",
+    "h213_consume_only": true,
+    "h213_source_changed": false,
+    "h214_focus_tests": {
+      "tests": 9,
+      "pass": 9
+    },
+    "visitor_route_tests": {
+      "tests": 2,
+      "pass": 2
+    },
+    "parent_review": "canonical fixture, route separation, redaction and fail-closed binding hints reviewed after isolated child contribution",
+    "release_candidate_path": "runtime/release_candidate_2026-08-10.json",
+    "release_candidate_sha256_excluded_from_bom": true,
+    "test_results": {
+      "h214_projection": {
+        "command": "node --test --test-name-pattern 'recurring settlement|operator workbench HTML renders|operator workbench adds the recurring settlement' test/server.test.mjs",
+        "tests": 9,
+        "pass": 9,
+        "fail": 0
+      },
+      "h214_visitor_routes": {
+        "command": "node --test test/server.test.mjs (listener allowed)",
+        "tests": 2,
+        "pass": 2,
+        "fail": 0
+      },
+      "server_full": {
+        "command": "node --test test/server.test.mjs (listener allowed)",
+        "tests": 28,
+        "pass": 28,
+        "fail": 0
+      },
+      "full_product": {
+        "command": "npm test",
+        "tests": 176,
+        "pass": 176,
+        "fail": 0,
+        "exit_code": 0
+      }
+    },
+    "runtime_authority_rebind": {
+      "runtime_sha256": "34cd4ca28873d1fcbd39c68874cf52a426fe501d8c9c3516a8e611bbfd9986d2",
+      "authority_record_sha256": "49e1743bdd24dafe7c562267ac496d61aad83044a6d7e9f3383c2204361d293a",
+      "event_id": "base-erp-runtime-rebind-20260814-h214-correction-final",
+      "writer_idle": true,
+      "source": "runtime/runtime_authority.json",
+      "current_run_unchanged_by_rebind": true
+    }
+  },
+  "projection": {
+    "schema_version": "base-erp-h214-recurring-settlement-public-v1",
+    "mode": "visitor_read_only",
+    "selector": "server_owned_default",
+    "default_status": "status_readback_pending",
+    "observed": false,
+    "network": {
+      "name": "Base Sepolia",
+      "chain_id": 84532,
+      "testnet": true
+    },
+    "tx_hash": null,
+    "calls_id": null,
+    "wallet": null,
+    "calldata": null,
+    "route_previews": {
+      "cdp": {
+        "execution_route": "cdp_tx_hash",
+        "receipt_route": "direct_receipt_finality",
+        "preview_only": true,
+        "calls_status_route": false
+      },
+      "manual": {
+        "execution_route": "manual_wallet_sendCalls",
+        "receipt_route": "calls_status_then_finality",
+        "descriptor_only": true,
+        "atomic_required": true,
+        "calls_status_route": true
+      }
+    },
+    "gates": {
+      "receipt_status": "not_observed",
+      "required_receipt_status": "0x1",
+      "finality": "not_observed",
+      "required_finality": "l1_batch_final",
+      "erp_posting": false,
+      "business_close": false
+    },
+    "redaction": {
+      "raw_addresses_exposed": false,
+      "raw_permission_hash_exposed": false,
+      "raw_calldata_exposed": false,
+      "credentials_exposed": false,
+      "transaction_refs_exposed": false
+    },
+    "execution_authority": "none_until_02_Build_revalidates"
+  },
+  "routes": {
+    "dedicated": {
+      "path": "/recurring-settlement.json",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "query_policy": "empty query only; all client binding hints rejected",
+      "success_status": 200,
+      "binding_hint_status": 400
+    },
+    "workbench_json": {
+      "path": "/workbench.json",
+      "projection_field": "recurring_settlement",
+      "profile_id_only": true,
+      "binding_hint_status": 400
+    },
+    "workbench_ui": {
+      "path": "/workbench/",
+      "projection": "same server-owned recurring_settlement",
+      "binding_hint_status": 400
+    },
+    "method_gate": {
+      "unsupported_method": 405,
+      "unknown_path": 404
+    }
+  },
+  "release_join": {
+    "release_id": "base-erp-public-product-20260814-v5",
+    "release_fingerprint": "a8f27bc8f680757593c60b6152f1a5b363c4ab82afb4c6632c342b82bf42a890",
+    "bom_fingerprint": "113b64375539de509ae47257d564df25f55ea4162908b0957320fe0b84c41026",
+    "material_outcome": "H214 server-owned recurring settlement public projection with fail-closed visitor routes and split CDP/manual execution descriptors",
+    "current": true,
+    "historical": false,
+    "synthetic": false
+  },
+  "release_bom": {
+    "h213_contract_sha256": "1899acb8147844865d34085b396a0b2f282acbddb7f14823fdaa74b665d4d2ef",
+    "h214_readback_digest_basis": "digest(canonical JSON with release_join.release_fingerprint and release_join.bom_fingerprint replaced by <current>)",
+    "bom_fingerprint": "113b64375539de509ae47257d564df25f55ea4162908b0957320fe0b84c41026",
+    "release_fingerprint": "a8f27bc8f680757593c60b6152f1a5b363c4ab82afb4c6632c342b82bf42a890"
+  },
+  "safety": {
+    "external_actions": 0,
+    "wallet_request": null,
+    "signed": false,
+    "broadcast": false,
+    "tx_hash": null,
+    "calls_id": null,
+    "receipt": null,
+    "finality": null,
+    "erp_posting": false,
+    "business_close": false,
+    "platform_writes": 0,
+    "circle_touched": false,
+    "public_write_authorized": false
+  },
+  "platforms": {
+    "github": {
+      "status": "not_attempted_owner_credential_unavailable",
+      "repo": "gaysonloser/base-erp-settlement-workbench",
+      "receipt": null
+    },
+    "render": {
+      "status": "not_attempted_owner_credential_unavailable",
+      "service": "srv-d9t0bsafngtc7387gqo0",
+      "domain": "base-erp-settlement-workbench.onrender.com",
+      "receipt": null
+    },
+    "base_dashboard_base_dev": {
+      "status": "canonical_route_read_only_no_update",
+      "app_id": "6a7a0717e209a55163497d2d",
+      "receipt": null
+    },
+    "base_app": {
+      "status": "readiness_consumer_only_no_update",
+      "receipt": null
+    },
+    "talent_guild_basename": {
+      "status": "native_domain_outcome_only_no_release_receipt",
+      "receipt": null
+    },
+    "eight_surface_receipts": 0
+  },
+  "deepseek": {
+    "native_id": "019fffe8-4c07-7e01-9eac-b4c37fb2923b",
+    "agent_type": "Deepseek",
+    "v2": true,
+    "model": "deepseek-v4-flash",
+    "reasoning": "high",
+    "child_initial_tests": 9,
+    "outcome": "partially_adopted",
+    "failure": "none",
+    "retry": false,
+    "parent_work_saved": true
+  },
+  "runtime_invariant": {
+    "status": "running",
+    "run_id": "02_Build-20260814-010433",
+    "external_trace_units": "0/30",
+    "public_update_units": "0/10",
+    "eligible_remaining": 0,
+    "autonomous_remaining": 0,
+    "defer_until_next_date": true,
+    "candidate": "BASE-H214-RUNTIME-AUTHORITY-REBIND-20260814-01",
+    "candidate_status": "exhausted",
+    "queue_exhausted": false,
+    "cursor": "Same-day real-candidate queue exhausted below hard floor; keep runtime running and resume on the next date. Before any new action, re-read the owner ledger and generate a fresh official queue. Do not fill the deficit with research, observations, duplicate lifecycle evidence or replayed releases.",
+    "counters_reset": false,
+    "queue_reset": false,
+    "cursor_reset": false,
+    "receipt_reset": false,
+    "replay_lock_reset": false,
+    "runctl_record": "recorded non-counting runtime authority correction readback",
+    "runctl_exhaust": "exhausted correction candidate --kind both --defer-until-next-date",
+    "runctl_gate": {
+      "can_finalize": false,
+      "can_yield_owner_action": false,
+      "can_yield_deferred": true
+    },
+    "runtime_sha256": "34cd4ca28873d1fcbd39c68874cf52a426fe501d8c9c3516a8e611bbfd9986d2",
+    "authority_record_sha256": "49e1743bdd24dafe7c562267ac496d61aad83044a6d7e9f3383c2204361d293a",
+    "authority_event_id": "base-erp-runtime-rebind-20260814-h214-correction-final",
+    "authority_rebound": true,
+    "preceding_candidate": "BASE-H214-RECURRING-SETTLEMENT-PUBLIC-20260814-01"
+  },
+  "digest_basis": "H214 readback BOM entry uses canonical placeholder release join to avoid a self-hash cycle; all other BOM entries are raw SHA-256 bytes."
+}
