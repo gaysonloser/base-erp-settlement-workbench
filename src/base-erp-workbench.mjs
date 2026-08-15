@@ -1,4 +1,5 @@
 import { digest } from "./base-neutral-receipt-controls.mjs";
+import { bindRecurringCase, evaluateStatusAdapter, effectivePeriod } from "./base-recurring-settlement-contract.mjs";
 
 const HASH_PATTERN = /^[0-9a-f]{64}$/i;
 const AMOUNT_PATTERN = /^(0|[1-9][0-9]*)(?:\.[0-9]{1,6})?$/;
@@ -8,6 +9,38 @@ const NETWORKS = Object.freeze({
   base_mainnet: Object.freeze({ chain_id: 8453, production: true }),
   base_sepolia: Object.freeze({ chain_id: 84532, production: false }),
 });
+
+export const H215_VISIBLE_STATES = Object.freeze([
+  "loading",
+  "empty",
+  "not_evaluated",
+  "matched",
+  "stale",
+  "mismatch",
+  "validation_required",
+  "confirmation_required",
+  "reorg_pending",
+  "recovery_ready",
+]);
+
+const H215_ORIGIN_DEFINITIONS = Object.freeze([
+  Object.freeze({
+    id: "erp_initiated",
+    label: "ERP initiated",
+    source_kind: "erp_source_and_intention",
+    evidence_required: Object.freeze(["source_document", "business_intent", "same_case_reference"]),
+  }),
+  Object.freeze({
+    id: "chain_observed",
+    label: "Chain observed",
+    source_kind: "release_bound_chain_and_event",
+    evidence_required: Object.freeze(["receipt_status_0x1", "exact_intent", "l1_batch_finality"]),
+  }),
+]);
+
+function h215State(value, fallback = "not_evaluated") {
+  return H215_VISIBLE_STATES.includes(value) ? value : fallback;
+}
 
 const ERP_DOMAINS = Object.freeze([
   "Sales Invoice",
@@ -300,6 +333,221 @@ export function buildStandardWebAppMetadata({ release, primary_url = "https://ba
   });
 }
 
+const RECURRING_SCHEMA_VERSION = "base-erp-h214-recurring-settlement-public-v1";
+
+function recurringReleaseBinding(release, binding) {
+  return Object.freeze({
+    release_id: binding.release_id,
+    release_fingerprint: binding.release_fingerprint,
+    bom_fingerprint: binding.bom_fingerprint,
+    material_outcome: typeof release.material_outcome === "string" && release.material_outcome.trim() !== "" ? release.material_outcome : "not_specified",
+    current: true,
+    historical: false,
+    synthetic: false,
+  });
+}
+
+function recurringNetwork(testnet = true, chain_id = 84532) {
+  return Object.freeze({ name: testnet ? "Base Sepolia" : "Base Mainnet", chain_id, testnet });
+}
+
+function recurringRoutePreview({ operation, manual = false } = {}) {
+  if (manual) {
+    return Object.freeze({
+      operation,
+      execution_route: "manual_wallet_sendCalls",
+      receipt_route: "calls_status_then_finality",
+      calls_status_route: true,
+      preview_only: false,
+      descriptor_only: true,
+      atomic_required: true,
+      action_enabled: false,
+      tx_hash: null,
+      calls_id: null,
+      wallet_request: null,
+      calls_status: Object.freeze({ method: "wallet_getCallsStatus", status: null }),
+    });
+  }
+  return Object.freeze({
+    operation,
+    execution_route: "cdp_tx_hash",
+    receipt_route: "direct_receipt_finality",
+    calls_status_route: false,
+    preview_only: true,
+    descriptor_only: false,
+    action_enabled: false,
+    tx_hash: null,
+    calls_id: null,
+    wallet_request: null,
+  });
+}
+
+function recurringRoutePreviews() {
+  return Object.freeze({
+    charge: Object.freeze({ cdp: recurringRoutePreview({ operation: "charge" }), manual: recurringRoutePreview({ operation: "charge", manual: true }) }),
+    revoke: Object.freeze({ cdp: recurringRoutePreview({ operation: "revoke" }), manual: recurringRoutePreview({ operation: "revoke", manual: true }) }),
+  });
+}
+
+function recurringGates() {
+  return Object.freeze({
+    receipt: Object.freeze({ state: "not_observed", status: null, transaction_hash: null, calls_id: null }),
+    finality: Object.freeze({ state: "not_observed", required: "l1_batch_final" }),
+    erp: Object.freeze({ state: "erp_readback_pending", posting: false, authoritative_readback_required: true, business_close: false }),
+  });
+}
+
+function recurringSafety() {
+  return Object.freeze({
+    external_actions: 0,
+    wallet_request: null,
+    signed: false,
+    broadcast: false,
+    synthetic_receipt_credit: 0,
+    public_write_authorized: false,
+    execution_authority: "none_until_02_Build_revalidates",
+  });
+}
+
+function recurringBase({ release, binding, testnet = true, chain_id = 84532 } = {}) {
+  return {
+    schema_version: RECURRING_SCHEMA_VERSION,
+    mode: "visitor_read_only",
+    selector: "server_owned_default",
+    release: recurringReleaseBinding(release, binding),
+    plan: Object.freeze({
+      status_adapter: "subscription",
+      network: recurringNetwork(testnet, chain_id),
+      recurring_charge: Object.freeze({ value: null, unit: "USDC", state: "not_observed" }),
+      period: Object.freeze({ period_days: null, current_period_start: null, next_period_start: null, no_rollover: true, state: "not_observed" }),
+      remaining_allowance: Object.freeze({ value: null, unit: "USDC", state: "not_observed", source: "owner_status_readback_required" }),
+    }),
+    status: Object.freeze({
+      adapter: "subscription",
+      state: "status_readback_pending",
+      observed: false,
+      source: "owner_status_readback_required",
+      reason: "owner_status_readback_required",
+      subscription: Object.freeze({ is_subscribed: null, remaining_charge_in_period: null, current_period_start: null, next_period_start: null }),
+      spend_permission: null,
+    }),
+    route_previews: recurringRoutePreviews(),
+    gates: recurringGates(),
+    redaction: Object.freeze({ raw_addresses_exposed: false, raw_permission_hash_exposed: false, raw_calldata_exposed: false, credentials_exposed: false, transaction_refs_exposed: false }),
+    safety: recurringSafety(),
+  };
+}
+
+function recurringRecovery(base, failure) {
+  const reason = typeof failure === "string" ? failure : failure?.reason ?? failure?.detail ?? "invalid_server_record";
+  return Object.freeze({
+    ...base,
+    status: Object.freeze({
+      ...base.status,
+      state: "recovery_ready",
+      observed: false,
+      source: "h213_contract_rejected",
+      reason: /^[a-z0-9_]+$/.test(reason) ? reason : "h213_contract_rejected",
+      subscription: null,
+      spend_permission: null,
+    }),
+  });
+}
+
+function mapStatus(bound, status) {
+  const base = {
+    adapter: bound.status_adapter,
+    state: status.state,
+    observed: ["active", "inactive", "expired", "revoked"].includes(status.state),
+    source: "h213_status_readback",
+    reason: null,
+    subscription: null,
+    spend_permission: null,
+  };
+  if (bound.status_adapter === "subscription") {
+    base.subscription = Object.freeze({
+      is_subscribed: status.is_subscribed ?? null,
+      remaining_charge_in_period: status.remaining_charge_in_period ?? null,
+      current_period_start: status.current_period_start ?? null,
+      next_period_start: status.next_period_start ?? null,
+    });
+  } else {
+    base.spend_permission = Object.freeze({
+      is_active: status.is_active ?? null,
+      is_revoked: status.is_revoked ?? null,
+      is_expired: status.is_expired ?? null,
+      remaining_spend: status.remaining_spend ?? null,
+      current_period_start: status.current_period_start ?? null,
+      next_period_start: status.next_period_start ?? null,
+    });
+  }
+  return Object.freeze(base);
+}
+
+function observedPlan({ bound, period, status }) {
+  const periodDays = bound.period_seconds / 86400;
+  const remaining = period?.remaining ?? null;
+  return Object.freeze({
+    status_adapter: bound.status_adapter,
+    network: recurringNetwork(bound.testnet, bound.chain_id),
+    recurring_charge: Object.freeze({ value: bound.recurring_charge, unit: "USDC", state: "server_owned_configured" }),
+    period: Object.freeze({ period_days: periodDays, current_period_start: period?.current_period_start ?? null, next_period_start: period?.next_period_start ?? null, no_rollover: true, state: period ? "observed" : "not_observed" }),
+    remaining_allowance: Object.freeze({ value: remaining, unit: "USDC", state: period ? "observed" : "not_observed", source: period ? "h213_status_readback" : "owner_status_readback_required" }),
+    status_readback: status.state,
+  });
+}
+
+/**
+ * Build a deterministic visitor-safe recurring settlement public projection.
+ * With no server record the projection is status_readback_pending and exposes
+ * only contract metadata; a server-owned record is composed through the pinned
+ * H213 bindRecurringCase/evaluateStatusAdapter/effectivePeriod contract before
+ * any observed value is exposed. Client hints are never accepted.
+ */
+export function buildRecurringSettlementProjection({ release, server_record = null } = {}) {
+  const binding = releaseBinding(release);
+  const base = recurringBase({ release, binding });
+  if (server_record === null || server_record === undefined) {
+    return Object.freeze(base);
+  }
+  if (typeof server_record !== "object" || Array.isArray(server_record)) {
+    return recurringRecovery(base, "server_record_invalid");
+  }
+  if (server_record.client_hints && typeof server_record.client_hints === "object" && Object.keys(server_record.client_hints).length > 0) {
+    return recurringRecovery(base, "browser_client_hints_rejected");
+  }
+  const caseInput = server_record.case;
+  if (!caseInput || typeof caseInput !== "object" || Array.isArray(caseInput)) {
+    return recurringRecovery(base, "server_record_case_required");
+  }
+  const releaseJoin = recurringReleaseBinding(release, binding);
+  const bound = bindRecurringCase({ ...caseInput, release: releaseJoin });
+  if (bound.state !== "permission_bound") return recurringRecovery(base, bound);
+  const status = evaluateStatusAdapter({
+    status_adapter: bound.status_adapter,
+    case: bound,
+    id: bound.permission_hash_digest,
+    testnet: bound.testnet,
+    subscription_readback: server_record.subscription_readback,
+    permission_readback: server_record.permission_readback,
+  });
+  if (status.state === "recovery_ready") return recurringRecovery(base, status);
+  if (status.state === "status_readback_pending") {
+    return Object.freeze({
+      ...base,
+      plan: observedPlan({ bound, status }),
+      status: Object.freeze({ ...mapStatus(bound, status), source: "owner_status_readback_required", reason: "owner_status_readback_required" }),
+    });
+  }
+  const period = effectivePeriod({ case: bound, status_result: status });
+  if (period.state === "recovery_ready") return recurringRecovery(base, period);
+  return Object.freeze({
+    ...base,
+    plan: observedPlan({ bound, period, status }),
+    status: mapStatus(bound, status),
+  });
+}
+
 const WORKBENCH_CASE_BLUEPRINTS = Object.freeze({
   supplier_advance: Object.freeze({
     verb: "Review supplier advance", party: "Northstar Components", amount: "2,500.00 USDC", age: "18m", evidence_tier: "B",
@@ -338,8 +586,92 @@ const WORKBENCH_CASE_BLUEPRINTS = Object.freeze({
   }),
 });
 
+function buildH215OperatorSurface({ binding, queue, selectedCase, server_record }) {
+  const serverOrigin = server_record && typeof server_record === "object" && !Array.isArray(server_record)
+    && H215_ORIGIN_DEFINITIONS.some((origin) => origin.id === server_record.origin)
+    ? server_record.origin
+    : null;
+  const entryPoints = H215_ORIGIN_DEFINITIONS.map((origin) => Object.freeze({
+    ...origin,
+    state: serverOrigin === origin.id ? "validation_required" : "not_evaluated",
+    selected: serverOrigin === origin.id,
+    action_enabled: false,
+  }));
+  const decisionState = h215State(selectedCase.decision_state, "validation_required");
+  const selectedOrigin = serverOrigin;
+  const facts = Object.freeze({
+    chain: Object.freeze({ state: "not_evaluated", route: "none", tx_hash: null, calls_id: null }),
+    receipt: Object.freeze({ state: "not_evaluated", status: null, intent_bound: false }),
+    finality: Object.freeze({ state: "not_evaluated", required: "l1_batch_final" }),
+    erp_posting: Object.freeze({ state: "not_evaluated", claimed: false }),
+    business_close: Object.freeze({ state: "not_evaluated", claimed: false }),
+  });
+  return Object.freeze({
+    shell: Object.freeze({
+      state: "not_evaluated",
+      landmarks: Object.freeze(["global-control-shell", "case-queue", "decision-canvas", "evidence-inspector"]),
+      layout: "global_shell_queue_canvas_inspector",
+      keyboard_contract: Object.freeze({ focus_visible: true, escape_closes_inspector: true, logical_order: true }),
+    }),
+    queue: Object.freeze({
+      state: queue.length === 0 ? "empty" : "not_evaluated",
+      count: queue.length,
+      selected_case_id: selectedCase.case_id,
+      rows: queue,
+      empty_reason: queue.length === 0 ? "no_cases_available" : null,
+    }),
+    entry_points: Object.freeze(entryPoints),
+    selected_origin: selectedOrigin,
+    decision_canvas: Object.freeze({
+      state: decisionState,
+      case_id: selectedCase.case_id,
+      decision: selectedCase.verb,
+      validation: "server_owned_descriptor_required",
+      confirmation: "owner_visible_gate_required",
+      stop_reason: selectedCase.stop_condition,
+    }),
+    evidence_inspector: Object.freeze({
+      state: "not_evaluated",
+      tabs: Object.freeze(["chain", "receipt", "finality", "erp_posting", "business_close", "recovery"]),
+      facts,
+      recovery: Object.freeze({ state: "not_evaluated", reason: null }),
+    }),
+    consequence_inspector: Object.freeze({
+      state: "not_evaluated",
+      chain_success_implies_erp_posting: false,
+      erp_posting_claimed: false,
+      business_close_claimed: false,
+      next_owner: selectedCase.next_owner,
+    }),
+    network_gate: Object.freeze({
+      rehearsal: Object.freeze({ network: "base_sepolia", chain_id: 84532, descriptor_only: true }),
+      mainnet: Object.freeze({ network: "base_mainnet", chain_id: 8453, owner_gate_required: true, enabled: false }),
+    }),
+    platform_gate: Object.freeze({
+      github: "release_gate",
+      render: "deploy_gate",
+      base_dashboard: "canonical_app_route",
+      base_dev: "canonical_app_route_alias",
+      base_app: "readiness_consumer",
+      talent: "native_domain_outcome",
+      guild: "native_domain_outcome",
+      basename_base_org: "native_domain_outcome",
+      receipt_credit_delta: 0,
+    }),
+    safety: Object.freeze({
+      external_actions: 0,
+      wallet_request: null,
+      signed: false,
+      broadcast: false,
+      erp_write_allowed: false,
+      public_write_authorized: false,
+      execution_authority: "none_until_02_Build_revalidates",
+    }),
+  });
+}
+
 /** Build a deterministic visitor-safe operator workbench, never an execution payload. */
-export function buildOperatorWorkbench({ release, selected_profile_id = "customer_invoice_receipt" } = {}) {
+export function buildOperatorWorkbench({ release, selected_profile_id = "customer_invoice_receipt", server_record = null } = {}) {
   const binding = releaseBinding(release);
   const selectedProfile = profileFor(selected_profile_id);
   const selectedBlueprint = WORKBENCH_CASE_BLUEPRINTS[selectedProfile.profile_id];
@@ -360,10 +692,34 @@ export function buildOperatorWorkbench({ release, selected_profile_id = "custome
     });
   });
   const selectedQueueRow = queue.find((row) => row.selected);
+  const selectedCase = Object.freeze({
+    ...selectedQueueRow,
+    verb: selectedBlueprint.verb,
+    source_document: selectedProfile.source_document,
+    source_reference: selectedBlueprint.source_reference,
+    stop_condition: selectedBlueprint.exception,
+    decision_state: selectedBlueprint.evidence_tier === "D" ? "recovery_ready" : "validation_required",
+    timeline: Object.freeze([
+      Object.freeze({ stage: "source", status: "observed", detail: `${selectedProfile.source_document} ${selectedBlueprint.source_reference}` }),
+      Object.freeze({ stage: "match", status: selectedBlueprint.evidence_tier === "D" ? "blocked" : "candidate", detail: `Evidence tier ${selectedBlueprint.evidence_tier}; business meaning remains reviewer-owned` }),
+      Object.freeze({ stage: "wallet", status: "not_requested", detail: "No Base Account approval request exists in visitor mode" }),
+      Object.freeze({ stage: "receipt", status: "not_observed", detail: "No transaction hash, receipt, finality or reorg readback" }),
+      Object.freeze({ stage: "erp", status: "proposal_only", detail: "ERP draft, submit, reconciliation and close remain separate controller gates" }),
+    ]),
+    consequence_preview: Object.freeze({
+      accounting: selectedBlueprint.consequence,
+      chain_success_implies_erp_posting: false,
+      erp_submit_allowed: false,
+      business_close_claimed: false,
+    }),
+  });
+  const operator_surface = buildH215OperatorSurface({ binding, queue, selectedCase, server_record });
   return Object.freeze({
     schema_version: "base-erp-operator-workbench-v1",
+    contract_version: "base-erp-h215-operator-workbench-v1",
     mode: "visitor_read_only",
     release: binding,
+    recurring_settlement: buildRecurringSettlementProjection({ release, server_record }),
     landmarks: Object.freeze(["global-control-shell", "case-queue", "decision-canvas", "evidence-inspector"]),
     saved_views: Object.freeze([
       Object.freeze({ id: "action_required", label: "Action required", count: 7 }),
@@ -372,27 +728,8 @@ export function buildOperatorWorkbench({ release, selected_profile_id = "custome
       Object.freeze({ id: "erp_reconciliation", label: "ERP reconciliation", count: 4 }),
     ]),
     queue: Object.freeze(queue),
-    selected_case: Object.freeze({
-      ...selectedQueueRow,
-      verb: selectedBlueprint.verb,
-      source_document: selectedProfile.source_document,
-      source_reference: selectedBlueprint.source_reference,
-      stop_condition: selectedBlueprint.exception,
-      decision_state: selectedBlueprint.evidence_tier === "D" ? "blocked" : "review_required",
-      timeline: Object.freeze([
-        Object.freeze({ stage: "source", status: "observed", detail: `${selectedProfile.source_document} ${selectedBlueprint.source_reference}` }),
-        Object.freeze({ stage: "match", status: selectedBlueprint.evidence_tier === "D" ? "blocked" : "candidate", detail: `Evidence tier ${selectedBlueprint.evidence_tier}; business meaning remains reviewer-owned` }),
-        Object.freeze({ stage: "wallet", status: "not_requested", detail: "No Base Account approval request exists in visitor mode" }),
-        Object.freeze({ stage: "receipt", status: "not_observed", detail: "No transaction hash, receipt, finality or reorg readback" }),
-        Object.freeze({ stage: "erp", status: "proposal_only", detail: "ERP draft, submit, reconciliation and close remain separate controller gates" }),
-      ]),
-      consequence_preview: Object.freeze({
-        accounting: selectedBlueprint.consequence,
-        chain_success_implies_erp_posting: false,
-        erp_submit_allowed: false,
-        business_close_claimed: false,
-      }),
-    }),
+    selected_case: selectedCase,
+    operator_surface,
     inspector: Object.freeze({
       tabs: Object.freeze(["evidence", "wallet", "erp_consequence", "recovery"]),
       current_tab: "evidence",

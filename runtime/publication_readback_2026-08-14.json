@@ -1,15 +1,15 @@
 {
   "schema_version": "base-erp-publication-readback-v1",
-  "observed_at_cst": "2026-08-14T03:33:00+08:00",
+  "observed_at_cst": "2026-08-15T13:11:42.300+08:00",
   "project": "Base ERP Settlement Workbench",
   "release_join": {
-    "release_id": "base-erp-public-product-20260814-v3",
-    "release_fingerprint": "6e83f83e75624d8179f765770f48486bdedf77a3a3d20dccc9df6567a0b8abdb",
-    "bom_fingerprint": "6978fbbbe62452748195b19b89a4deec0a41ef3f0ea35286417d4401fcc97473",
-    "material_outcome": "Deployable Base-native visitor workbench with deterministic simulation, event admission and eight-surface evidence validation"
+    "release_id": "base-erp-public-product-20260815-v6",
+    "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
+    "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
+    "material_outcome": "H215 server-owned operator workbench with dual-origin decision canvas, independent truth layers, deterministic browser acceptance and fail-closed external gates"
   },
   "public_update_units": 0,
-  "strict_receipt_count": 1,
+  "strict_receipt_count": 0,
   "complete_eight_surface_bundle": false,
   "isolation_matrix": "config/base_circle_platform_isolation_matrix_v1.json",
   "platforms": {
@@ -17,89 +17,106 @@
       "target": "gaysonloser/base-erp-settlement-workbench",
       "target_identity_verified": true,
       "circle_target_absent": true,
-      "status": "current_release_receipt_observed",
-      "receipt": {
+      "status": "owner_publication_pending_current_release",
+      "historical_receipt": {
         "owner": "gaysonloser",
         "repo": "base-erp-settlement-workbench",
         "branch": "main",
-        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT",
-        "release_tag": "base-erp-public-product-20260814-v3",
-        "release_url": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260814-v3",
-        "proof_ref": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260814-v3",
-        "release_id": "base-erp-public-product-20260814-v3",
-        "release_fingerprint": "6e83f83e75624d8179f765770f48486bdedf77a3a3d20dccc9df6567a0b8abdb",
-        "bom_fingerprint": "6978fbbbe62452748195b19b89a4deec0a41ef3f0ea35286417d4401fcc97473",
-        "material_outcome": "Deployable Base-native visitor workbench with deterministic simulation, event admission and eight-surface evidence validation",
-        "current": true,
-        "historical": false,
+        "commit_sha": "e96c13717fcf16d80138852629d82b3b21edce56",
+        "release_tag": "base-erp-public-product-20260814-v4",
+        "release_url": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260814-v4",
+        "proof_ref": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260814-v4",
+        "release_id": "base-erp-public-product-20260814-v4",
+        "release_fingerprint": "5962684e0f5df38691ecdaa0b75ba023dcf1a64bf85cc15e512d8e307704ea4f",
+        "bom_fingerprint": "2b617a7ae4e2ef976e97310ab533f8f067c758dd0feaf3013709a06d01a6d612",
+        "material_outcome": "Base-native operator workbench with seven scenario queues, causal evidence timeline, deterministic simulation and cumulative refund ceiling guard",
+        "current": false,
+        "historical": true,
         "synthetic": false,
         "evidence_origin": "native_git_push_and_github_release_public_readback"
+      },
+      "expected_release": {
+        "release_id": "base-erp-public-product-20260815-v6",
+        "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
+        "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
+        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT"
       }
     },
     "render": {
       "target": "base-erp-settlement-workbench.onrender.com",
       "target_identity_verified": true,
       "circle_target_absent": true,
-      "status": "historical_release_receipt_not_current",
+      "status": "owner_deploy_pending_current_release",
       "service_id": "srv-d9t0bsafngtc7387gqo0",
-      "deployment_id": "dep-d9v0hmm1egvs73e5fe1g",
-      "expected_commit_sha": "b55a8169a1ceb39275802c13101d7ab2d628604f",
-      "public_readback": {
+      "deployment_id": "dep-d9v62q3m8hqs73fi1lug",
+      "expected_commit_sha": "e96c13717fcf16d80138852629d82b3b21edce56",
+      "historical_receipt": {
+        "service_id": "srv-d9t0bsafngtc7387gqo0",
+        "deployment_id": "dep-d9v62q3m8hqs73fi1lug",
+        "commit_sha": "e96c13717fcf16d80138852629d82b3b21edce56",
+        "release_id": "base-erp-public-product-20260814-v4",
+        "release_fingerprint": "5962684e0f5df38691ecdaa0b75ba023dcf1a64bf85cc15e512d8e307704ea4f",
+        "bom_fingerprint": "2b617a7ae4e2ef976e97310ab533f8f067c758dd0feaf3013709a06d01a6d612",
+        "material_outcome": "Base-native operator workbench with seven scenario queues, causal evidence timeline, deterministic simulation and cumulative refund ceiling guard",
+        "current": false,
+        "historical": true,
+        "synthetic": false,
+        "evidence_origin": "owner_triggered_render_deploy_and_public_health_release_evidence_readback"
+      },
+      "historical_public_readback": {
         "proof_ref": "https://base-erp-settlement-workbench.onrender.com/release.json",
         "health_ref": "https://base-erp-settlement-workbench.onrender.com/healthz",
         "evidence_ref": "https://base-erp-settlement-workbench.onrender.com/evidence.json",
         "evidence_page_ref": "https://base-erp-settlement-workbench.onrender.com/evidence/",
-        "observed_commit_sha": "b55a8169a1ceb39275802c13101d7ab2d628604f",
-        "observed_release_fingerprint": "719b2b6b740de2025f444504724d28ea57628ef32614af9dfc6ede245f446d58",
-        "observed_bom_fingerprint": "86712f0fd99576c0de1a9e6e3c50a485a833579bbea922aaf6878271c9476c4f",
+        "workbench_ref": "https://base-erp-settlement-workbench.onrender.com/workbench/",
+        "refund_guard_ref": "https://base-erp-settlement-workbench.onrender.com/refund-preview.json",
+        "observed_commit_sha": "e96c13717fcf16d80138852629d82b3b21edce56",
+        "observed_release_fingerprint": "5962684e0f5df38691ecdaa0b75ba023dcf1a64bf85cc15e512d8e307704ea4f",
+        "observed_bom_fingerprint": "2b617a7ae4e2ef976e97310ab533f8f067c758dd0feaf3013709a06d01a6d612",
         "health_ready": true,
         "release_http_status": 200,
         "health_http_status": 200,
         "evidence_http_status": 200,
         "evidence_page_http_status": 200,
-        "current_release_match": false
+        "current_release_match": true
       },
-      "receipt": {
-        "service_id": "srv-d9t0bsafngtc7387gqo0",
-        "deployment_id": "dep-d9v0hmm1egvs73e5fe1g",
-        "commit_sha": "b55a8169a1ceb39275802c13101d7ab2d628604f",
-        "release_id": "base-erp-public-product-20260810-v1",
-        "release_fingerprint": "719b2b6b740de2025f444504724d28ea57628ef32614af9dfc6ede245f446d58",
-        "bom_fingerprint": "86712f0fd99576c0de1a9e6e3c50a485a833579bbea922aaf6878271c9476c4f",
-        "material_outcome": "Deployable Base ERP settlement workbench with eight-surface public evidence validation",
-        "current": false,
-        "historical": true,
-        "synthetic": false,
-        "evidence_origin": "owner_triggered_render_deploy_and_public_health_release_evidence_readback"
+      "expected_release": {
+        "release_id": "base-erp-public-product-20260815-v6",
+        "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
+        "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
+        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT"
       }
     },
     "base_app": {
       "target": "Base ERP project-specific Base App entry",
       "target_identity_verified": false,
       "circle_target_absent": true,
-      "status": "public_landing_no_release_mapping",
-      "public_readback": {
+      "status": "dashboard_assets_uploaded_to_cdn_but_not_persisted_no_base_app_receipt",
+      "receipt": null,
+      "historical_public_readback": {
         "proof_ref": "https://base.app/",
         "http_status": 200,
         "continue_on_web_visible": true,
         "project_identity_observed": false,
-        "release_mapping_observed": false
+        "release_mapping_observed": false,
+        "dashboard_app_id": "6a7a0717e209a55163497d2d",
+        "screenshot_upload_reached_base_cdn": true,
+        "thumbnail_upload_reached_base_cdn": true,
+        "assets_persisted_after_settings_reopen": false
       },
-      "receipt": null
+      "expected_release": {
+        "release_id": "base-erp-public-product-20260815-v6",
+        "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
+        "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
+        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT"
+      }
     },
     "base_dashboard": {
       "target": "Base ERP project-specific Dashboard entry",
       "target_identity_verified": true,
       "circle_target_absent": true,
-      "status": "historical_release_receipt_not_current",
-      "public_readback": {
-        "proof_ref": "https://dashboard.base.org/apps/6a7a0717e209a55163497d2d",
-        "http_status": 200,
-        "app_id_visible": true,
-        "ownership_verification_observed": true,
-        "release_mapping_observed": true
-      },
-      "receipt": {
+      "status": "blocked_current_owner_surface_unavailable",
+      "historical_receipt": {
         "app_id": "6a7a0717e209a55163497d2d",
         "app_name": "Base ERP Workbench",
         "primary_domain": "base-erp-settlement-workbench.onrender.com",
@@ -107,15 +124,28 @@
         "description_saved": true,
         "weekly_leaderboards": true,
         "builder_code": "bc_gi6sq70f",
-        "release_id": "base-erp-public-product-20260810-v1",
-        "release_fingerprint": "719b2b6b740de2025f444504724d28ea57628ef32614af9dfc6ede245f446d58",
-        "bom_fingerprint": "86712f0fd99576c0de1a9e6e3c50a485a833579bbea922aaf6878271c9476c4f",
-        "material_outcome": "Deployable Base ERP settlement workbench with eight-surface public evidence validation",
+        "release_id": "base-erp-public-product-20260814-v4",
+        "release_fingerprint": "5962684e0f5df38691ecdaa0b75ba023dcf1a64bf85cc15e512d8e307704ea4f",
+        "bom_fingerprint": "2b617a7ae4e2ef976e97310ab533f8f067c758dd0feaf3013709a06d01a6d612",
+        "material_outcome": "Base-native operator workbench with seven scenario queues, causal evidence timeline, deterministic simulation and cumulative refund ceiling guard",
         "current": false,
         "historical": true,
         "synthetic": false,
         "evidence_origin": "owner_visible_base_dashboard_readback",
         "circle_project_id_present": false
+      },
+      "historical_public_readback": {
+        "proof_ref": "https://dashboard.base.org/apps/6a7a0717e209a55163497d2d",
+        "http_status": 200,
+        "app_id_visible": true,
+        "ownership_verification_observed": true,
+        "release_mapping_observed": true
+      },
+      "expected_release": {
+        "release_id": "base-erp-public-product-20260815-v6",
+        "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
+        "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
+        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT"
       }
     },
     "base_dev": {
@@ -123,35 +153,48 @@
       "target_identity_verified": false,
       "circle_target_absent": true,
       "status": "generic_dashboard_redirect",
-      "public_readback": {
+      "receipt": null,
+      "historical_public_readback": {
         "proof_ref": "https://base.dev/",
         "http_status": 302,
         "final_url": "https://dashboard.base.org/",
         "distinct_project_target_observed": false,
         "release_mapping_observed": false
       },
-      "receipt": null
+      "expected_release": {
+        "release_id": "base-erp-public-product-20260815-v6",
+        "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
+        "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
+        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT"
+      }
     },
     "talent": {
       "target": "Base ERP project-specific Talent entry",
       "target_identity_verified": false,
       "circle_target_absent": true,
       "status": "security_checkpoint_429",
-      "public_readback": {
+      "receipt": null,
+      "historical_public_readback": {
         "proof_ref": "https://talent.app/",
         "http_status": 429,
         "page_title": "Vercel Security Checkpoint",
         "project_identity_observed": false,
         "release_mapping_observed": false
       },
-      "receipt": null
+      "expected_release": {
+        "release_id": "base-erp-public-product-20260815-v6",
+        "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
+        "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
+        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT"
+      }
     },
     "guild": {
       "target": "Base ERP project-specific Guild entry",
       "target_identity_verified": false,
       "circle_target_absent": true,
       "status": "sign_in_no_release_mapping",
-      "public_readback": {
+      "receipt": null,
+      "historical_public_readback": {
         "proof_ref": "https://guild.xyz/base",
         "http_status": 200,
         "base_guild_visible": true,
@@ -159,21 +202,32 @@
         "sign_in_gate_visible": true,
         "release_mapping_observed": false
       },
-      "receipt": null
+      "expected_release": {
+        "release_id": "base-erp-public-product-20260815-v6",
+        "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
+        "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
+        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT"
+      }
     },
     "basename_base_org": {
       "target": "gaysonloser.base.eth / www.base.org/name/gaysonloser",
       "target_identity_verified": false,
       "circle_target_absent": true,
       "status": "read_only_identity_no_release_receipt",
-      "public_readback": {
+      "receipt": null,
+      "historical_public_readback": {
         "proof_ref": "https://www.base.org/name/gaysonloser",
         "http_status": 200,
         "basename_visible": "gaysonloser.base.eth",
         "fresh_primary_name_resolution_observed": false,
         "release_mapping_observed": false
       },
-      "receipt": null
+      "expected_release": {
+        "release_id": "base-erp-public-product-20260815-v6",
+        "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
+        "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
+        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT"
+      }
     }
   },
   "base_sepolia_readback": {
@@ -200,13 +254,20 @@
     "chain_count_credit": 0
   },
   "owner_surface_probe": {
-    "observed_at_cst": "2026-08-14T02:22:32+08:00",
+    "observed_at_cst": "2026-08-15T13:11:42.300+08:00",
     "browser_family": "Chrome",
     "profile_scope": "existing owner-visible Gayson Chrome only",
     "base_owner_surface_available": false,
     "base_owner_tab_count": 0,
     "external_write_performed": false,
     "circle_target_touched": false,
-    "gate": "No authenticated Base App, Base.dev, Talent, Guild or Basename/base.org owner surface was present in the existing Chrome session; remaining target-specific writes require a precise owner-visible surface and are not retried through public pages."
+    "gate": "Explicit BASE GitHub/Render publication authorization is present; current GitHub auth readback and exact Render owner surface remain pending. Other platform-specific writes remain fail-closed without their own owner-visible surfaces."
+  },
+  "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT",
+  "owner_authorization": {
+    "scope": "BASE GitHub repository main and exact BASE Render service only",
+    "received": true,
+    "circle_isolation_required": true,
+    "wallet_or_onchain_authority": false
   }
 }

@@ -1,0 +1,175 @@
+{
+  "schema_version": "base-erp-h215-operator-workbench-readback-v1",
+  "readback_id": "h215-operator-workbench-readback-20260815-v6",
+  "observed_at_cst": "2026-08-15T13:11:42.300+08:00",
+  "packet": {
+    "packet_id": "base-erp-h215-operator-workbench-architecture-20260814",
+    "status": "accepted_for_02_Build_bounded_pending_revalidation_non_executable",
+    "manifest_sha256": "59073c52258fb69e5870dda8bcd9f3eedd915a3be4e394150a81bcf402eb4ba5",
+    "artifact_sha256": "6329746bc9dbce401f5259a385f89a86d787b0d1d702398fb6d5513337e8584a",
+    "handoff_sha256": "8a61bf9f53fa8509d2888ad9c5af89703c1f8092178c4e0fe3f7361bf141a3f6",
+    "exchange_sha256": "45c86fc7ce41428e73452c6a27a65f30dde4b67d1aae417e1268a9dcd88a8d12",
+    "revalidated": true
+  },
+  "h213_dependency": {
+    "path": "src/base-recurring-settlement-contract.mjs",
+    "sha256": "1899acb8147844865d34085b396a0b2f282acbddb7f14823fdaa74b665d4d2ef",
+    "pinned": true,
+    "consume_only": true
+  },
+  "isolation": {
+    "base_exact_targets_checked": true,
+    "circle_isolation_matrix_sha256": "c538e47c4b7951f341b36e351858bf3e1c28dd772d7d3f9c3588f1f0093f19de",
+    "circle_touched": false,
+    "target_collision": false
+  },
+  "owner": {
+    "native_thread_id": "01a00379-8524-7713-a0e2-0fbe8594574e",
+    "predecessor_thread_id": "019ffe4b-fded-7b31-a23c-d1bc8c0cd967",
+    "session": "02_Build",
+    "v2": true,
+    "model": "gpt-5.6-luna",
+    "reasoning": "max"
+  },
+  "runtime": {
+    "source": "projects/2026-06_Base_Guild_Onchain_Score/runtime/current_run.json",
+    "run_id": "02_Build-20260815-122052",
+    "status": "running",
+    "date_cst": "2026-08-15",
+    "targets": {
+      "external_trace_units": 30,
+      "public_update_units": 10
+    },
+    "counters": {
+      "external_trace_units": 0,
+      "public_update_units": 0
+    },
+    "eligible_remaining": 1,
+    "autonomous_remaining": 1,
+    "defer_until_next_date": false,
+    "cursor": "Deficit-first dispatch: trace_gap=30; public_gap=10. Trace gap remains: prepare exactly one legitimate corresponding-wallet onchain state-change, open one exact final wallet review, and count it only after a unique successful receipt. Publication gap remains: one material unit needs truthful receipts on every mandatory platform (github, render, base_app, base_dashboard, base_dev, talent, guild, basename_base_org); partial bundles count zero. Execute eligible candidate BASE-PUBLICATION-V6-20260815-01 now; do not rediscover earlier routes.",
+    "runtime_sha256": "2855365be3aec45889abc7d3570d5d6c34f1dc2a1636dd5e9e4e4b1d3a320b2c",
+    "authority_runtime_sha256": "2855365be3aec45889abc7d3570d5d6c34f1dc2a1636dd5e9e4e4b1d3a320b2c",
+    "authority_writer_idle": true,
+    "authority_revalidated": true,
+    "authority_note": "Fresh writer-idle authority rebind base-erp-runtime-rebind-20260815-v6-publication verified before v6 publication preparation."
+  },
+  "implementation": {
+    "contract_version": "base-erp-h215-operator-workbench-v1",
+    "exact_write_set": [
+      "src/base-erp-workbench.mjs",
+      "src/server.mjs",
+      "src/operator-workbench-page.mjs",
+      "test/server.test.mjs",
+      "test/operator-workbench-page.test.mjs",
+      "test/operator-workbench-browser.test.mjs",
+      "package.json",
+      "package-lock.json",
+      "runtime/h215_operator_workbench_readback_2026-08-14.json",
+      "runtime/release_candidate_2026-08-10.json"
+    ],
+    "source_hashes": {
+      "src/base-erp-workbench.mjs": "64218d75d77d39067a974f76b81b23e46785509e0806dbfa2f61610feb876f71",
+      "src/server.mjs": "49bdb9af7b8890c92cdebf6000324a82d201c1308c1d420d5a171c204eb2a96b",
+      "src/operator-workbench-page.mjs": "7b523274c7b64825172d6866457434154dbc518560e9b5fc4d5764a68655cec8",
+      "test/server.test.mjs": "54846e3815ea0826fd2dd4c75cf7da2980527809859917faa6f7e07a952cde8c",
+      "test/operator-workbench-page.test.mjs": "9b22f37943b1c359c154cc75d2138b65597a5ebc50767f30fe4fe9341982f7ba",
+      "test/operator-workbench-browser.test.mjs": "0b06ce7c45fbfa9d9a00e04a92767e0675f03e888eeef43dd0d3a968ee7094db",
+      "package.json": "eeb44ec3a92bdb410eeb0a1becdce73ce489938e0cdd8d334e0e97f9ea6682b8",
+      "package-lock.json": "3ee329115a151100a013181c77019890b02ad45ec695558fa6f8f045abc2cdcc"
+    },
+    "shell_queue_canvas_inspector": true,
+    "queue_rows": 7,
+    "origins": [
+      "erp_initiated",
+      "chain_observed"
+    ],
+    "visible_states": [
+      "loading",
+      "empty",
+      "not_evaluated",
+      "matched",
+      "stale",
+      "mismatch",
+      "validation_required",
+      "confirmation_required",
+      "reorg_pending",
+      "recovery_ready"
+    ],
+    "truth_layers": [
+      "chain",
+      "receipt",
+      "finality",
+      "erp_posting",
+      "business_close"
+    ],
+    "route_parity": "/workbench and /workbench/ byte-equivalent; profile_id only accepted query",
+    "network_gate": "Base Sepolia descriptor-only; Base Mainnet owner gate required and disabled",
+    "safety": {
+      "external_actions": 0,
+      "wallet_request": null,
+      "signed": false,
+      "broadcast": false,
+      "erp_write_allowed": false,
+      "public_write_authorized": false
+    }
+  },
+  "browser_acceptance": {
+    "playwright": "1.59.1",
+    "vectors": [
+      "1440x900",
+      "1280x800",
+      "1024x768",
+      "1440x900 @ 200% scale"
+    ],
+    "assertions": [
+      "route parity and HEAD length",
+      "named landmarks",
+      "dual origins",
+      "aria-live",
+      "ten-state vocabulary",
+      "keyboard Tab/focus-visible/Escape",
+      "drawer hover/close",
+      "44px targets",
+      "no horizontal overflow",
+      "no console/page errors"
+    ],
+    "browser_suite": "4/4 pass",
+    "page_unit_suite": "3/3 pass",
+    "available_product_suite_excluding_runtime_authority_import_blocker": "227/227 pass",
+    "protected_blocker": null,
+    "full_npm_test": "227/227 pass"
+  },
+  "external_gates": {
+    "base_mcp_live_tools": 15,
+    "base_mcp_help": "passed",
+    "base_mcp_get_wallets": "passed",
+    "base_docs_live_tools": 3,
+    "base_docs_probe": "passed",
+    "github_credential_gate": "owner_authorization_received; root GitHub device login in progress; one gh auth status recheck pending",
+    "render_credential_gate": "owner_authorization_received; exact BASE Render owner surface check pending",
+    "wallet_request_attempted": false,
+    "public_write_attempted": false,
+    "receipts": 0,
+    "publication_platforms_with_native_current_receipt": []
+  },
+  "deepseek_child": {
+    "task": "/root/deepseek_h215_browser_test",
+    "native_id": "019fffe8-4c07-7e01-9eac-b4c37fb2923b",
+    "v2": true,
+    "model": "deepseek-v4-flash",
+    "reasoning": "high",
+    "scope": "test/operator-workbench-browser.test.mjs plus Playwright transcript only",
+    "outcome": "partially_adopted",
+    "failure": "transport",
+    "retry": false,
+    "parent_work_saved": true
+  },
+  "release_join": {
+    "release_id": "base-erp-public-product-20260815-v6",
+    "release_fingerprint": "<current>",
+    "bom_fingerprint": "<current>"
+  },
+  "artifact_excluded_from_own_bom": true,
+  "status": "local_h215_acceptance_pass_publication_owner_gate_pending"
+}

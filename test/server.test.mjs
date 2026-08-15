@@ -2,8 +2,103 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { createAppServer } from "../src/server.mjs";
+import { buildOperatorWorkbench, buildRecurringSettlementProjection } from "../src/base-erp-workbench.mjs";
+import { renderOperatorWorkbenchPage } from "../src/operator-workbench-page.mjs";
 
 const TEST_COMMIT = "a".repeat(40);
+
+const TEST_RELEASE = Object.freeze({
+  release_id: "base-erp-public-product-20260814-v5",
+  release_fingerprint: "5962684e0f5df38691ecdaa0b75ba023dcf1a64bf85cc15e512d8e307704ea4f",
+  bom_fingerprint: "2b617a7ae4e2ef976e97310ab533f8f067c758dd0feaf3013709a06d01a6d612",
+  material_outcome: "Base-native operator workbench with seven scenario queues, causal evidence timeline, deterministic simulation and cumulative refund ceiling guard",
+});
+
+const RECURRING_PERMISSION_HASH = "a".repeat(64);
+const RECURRING_PAYER = "0x1111111111111111111111111111111111111111";
+const RECURRING_SPENDER = "0x2222222222222222222222222222222222222222";
+const RECURRING_TOKEN = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+const RECURRING_SALT = "0x" + "00".repeat(32);
+
+const RECURRING_SUBSCRIPTION_RECORD = Object.freeze({
+  case: Object.freeze({
+    case_id: "base-erp-h214-recurring-001",
+    permission_hash_digest: RECURRING_PERMISSION_HASH,
+    permission_ref: "internal-server-record-001",
+    payer: RECURRING_PAYER,
+    spender: RECURRING_SPENDER,
+    token: RECURRING_TOKEN,
+    chain_id: 84532,
+    testnet: true,
+    allowance: "500.00",
+    period_seconds: 86400,
+    start: 1750000000,
+    end: 1752688000,
+    recurring_charge: "25.00",
+    status_adapter: "subscription",
+    recipient_policy: Object.freeze({ mode: "none" }),
+    current_period_start: 1750000000,
+    next_period_start: 1750086400,
+  }),
+  subscription_readback: Object.freeze({
+    isSubscribed: true,
+    remainingChargeInPeriod: "450.00",
+    currentPeriodStart: 1750000000,
+    nextPeriodStart: 1750086400,
+  }),
+  observed: Object.freeze({ amount: "25.00" }),
+});
+
+const RECURRING_SPEND_PERMISSION_RECORD = Object.freeze({
+  case: Object.freeze({
+    case_id: "base-erp-h214-recurring-002",
+    permission_hash_digest: "b".repeat(64),
+    permission_ref: "internal-server-record-002",
+    payer: RECURRING_PAYER,
+    spender: RECURRING_SPENDER,
+    token: RECURRING_TOKEN,
+    chain_id: 84532,
+    testnet: true,
+    allowance: "500.00",
+    period_seconds: 86400,
+    start: 1750000000,
+    end: 1752688000,
+    recurring_charge: "20.00",
+    status_adapter: "spend_permission",
+    recipient_policy: Object.freeze({ mode: "none" }),
+    permission_tuple: Object.freeze({
+      account: RECURRING_PAYER,
+      spender: RECURRING_SPENDER,
+      token: RECURRING_TOKEN,
+      allowance: "500.00",
+      period: 86400,
+      start: 1750000000,
+      end: 1752688000,
+      salt: RECURRING_SALT,
+      extraData: "0x",
+    }),
+    current_period_start: 1750000000,
+    next_period_start: 1750086400,
+  }),
+  permission_readback: Object.freeze({
+    permission: Object.freeze({
+      account: RECURRING_PAYER,
+      spender: RECURRING_SPENDER,
+      token: RECURRING_TOKEN,
+      allowance: "500.00",
+      period: 86400,
+      start: 1750000000,
+      end: 1752688000,
+      salt: RECURRING_SALT,
+      extraData: "0x",
+    }),
+    isActive: true,
+    remainingSpend: "480.00",
+    currentPeriodStart: 1750000000,
+    nextPeriodStart: 1750086400,
+  }),
+  observed: Object.freeze({ amount: "20.00" }),
+});
 
 async function withServer(run, { env = { ...process.env, GIT_COMMIT_SHA: TEST_COMMIT }, runtimeReader = null } = {}) {
   const server = createAppServer({ env, runtimeReader });
@@ -68,7 +163,7 @@ test("public evidence endpoint exposes the typed fail-closed product boundary", 
     assert.equal(body.schema_version, "base-erp-public-evidence-v1");
     assert.equal(body.public_write_authorized, false);
     assert.equal(body.external_actions, 0);
-    assert.equal(body.release.release_id, "base-erp-public-product-20260814-v4");
+    assert.equal(body.release.release_id, "base-erp-public-product-20260815-v6");
     assert.equal(body.account_connect_preflight.network, "base_mainnet");
     assert.equal(body.account_connect_preflight.chain_id, 8453);
     assert.equal(body.account_connect_preflight.owner_confirmation, "NOT_GRANTED");
@@ -78,18 +173,12 @@ test("public evidence endpoint exposes the typed fail-closed product boundary", 
     assert.equal(body.execution_layers.executable.available, false);
     assert.equal(body.settlement_workflow.boundaries.chain_success_implies_erp_posting, false);
     assert.deepEqual(body.publication.required_platforms, ["github", "render", "base_app", "base_dashboard", "base_dev", "talent", "guild", "basename_base_org"]);
-    assert.equal(body.publication.strict_receipt_count, 1);
-    assert.deepEqual(body.publication.strict_receipt_platforms, ["github"]);
+    assert.equal(body.publication.strict_receipt_count, 0);
+    assert.deepEqual(body.publication.strict_receipt_platforms, []);
     assert.equal(body.publication.publication_unit_count, 0);
     for (const platform of body.publication.required_platforms) {
-      if (platform === "github") {
-        assert.equal(body.publication.surfaces[platform].countable, true, platform);
-        assert.equal(body.publication.surfaces[platform].receipt.release_id, "base-erp-public-product-20260814-v4");
-        assert.equal(body.publication.surfaces[platform].receipt.current, true);
-      } else {
-        assert.equal(body.publication.surfaces[platform].countable, false, platform);
-        assert.equal(body.publication.surfaces[platform].receipt, null, platform);
-      }
+      assert.equal(body.publication.surfaces[platform].countable, false, platform);
+      assert.equal(body.publication.surfaces[platform].receipt, null, platform);
     }
     assert.equal(body.safety.retry.unresolved_request_replay, "forbidden");
     assert.equal(body.safety.deduplication.duplicate_consequence, "noop");
@@ -107,7 +196,7 @@ test("visitor evidence page links release identity and all eight publication sur
     assert.match(body, /Account\/connect preflight/);
     assert.match(body, /Settlement workflow/);
     assert.match(body, /Eight-platform publication evidence/);
-    assert.match(body, /strict receipts 1\/8/);
+    assert.match(body, /strict receipts 0\/8/);
     for (const platform of ["github", "render", "base_app", "base_dashboard", "base_dev", "talent", "guild", "basename_base_org"]) {
       assert.match(body, new RegExp(platform));
     }
@@ -246,6 +335,106 @@ test("operator workbench rejects unknown case profiles without falling through",
   });
 });
 
+test("H215 operator surface preserves the seven-row queue, dual origins and independent truth lanes", () => {
+  const workbench = buildOperatorWorkbench({ release: TEST_RELEASE, selected_profile_id: "customer_invoice_receipt" });
+  assert.equal(workbench.contract_version, "base-erp-h215-operator-workbench-v1");
+  assert.deepEqual(workbench.operator_surface.shell.landmarks, ["global-control-shell", "case-queue", "decision-canvas", "evidence-inspector"]);
+  assert.equal(workbench.operator_surface.queue.count, 7);
+  assert.deepEqual(workbench.operator_surface.entry_points.map((entry) => entry.id), ["erp_initiated", "chain_observed"]);
+  assert.equal(workbench.operator_surface.selected_origin, null);
+  assert.equal(workbench.operator_surface.decision_canvas.state, "validation_required");
+  assert.deepEqual(Object.keys(workbench.operator_surface.evidence_inspector.facts), ["chain", "receipt", "finality", "erp_posting", "business_close"]);
+  assert.equal(workbench.operator_surface.evidence_inspector.facts.chain.state, "not_evaluated");
+  assert.equal(workbench.operator_surface.evidence_inspector.facts.erp_posting.claimed, false);
+  assert.equal(workbench.operator_surface.evidence_inspector.facts.business_close.claimed, false);
+  assert.equal(workbench.operator_surface.network_gate.rehearsal.chain_id, 84532);
+  assert.equal(workbench.operator_surface.network_gate.rehearsal.descriptor_only, true);
+  assert.equal(workbench.operator_surface.network_gate.mainnet.chain_id, 8453);
+  assert.equal(workbench.operator_surface.network_gate.mainnet.enabled, false);
+  assert.equal(workbench.operator_surface.safety.external_actions, 0);
+  assert.equal(workbench.operator_surface.safety.execution_authority, "none_until_02_Build_revalidates");
+});
+
+test("H215 workbench rejects every client binding except one profile_id without echo", async () => {
+  await withServer(async (baseUrl) => {
+    for (const query of ["origin=chain_observed", "entry=erp_initiated", "state=matched", "network=8453", "identity=wallet", "release=base-erp-public-product-20260814-v6", "calls=hint", "calldata=0xdeadbeef"]) {
+      const [jsonResponse, htmlResponse] = await Promise.all([
+        fetch(`${baseUrl}/workbench.json?${query}`),
+        fetch(`${baseUrl}/workbench/?${query}`),
+      ]);
+      assert.equal(jsonResponse.status, 400, query);
+      assert.equal(htmlResponse.status, 400, query);
+      assert.deepEqual(await jsonResponse.json(), { error: "workbench_input_invalid", reason: "client_binding_not_accepted" });
+      assert.deepEqual(await htmlResponse.json(), { error: "workbench_input_invalid", reason: "client_binding_not_accepted" });
+      assert.doesNotMatch(JSON.stringify(await fetch(`${baseUrl}/workbench.json?${query}`).then((response) => response.json())), new RegExp(query.split("=")[1]));
+    }
+    const profile = await fetch(`${baseUrl}/workbench.json?profile_id=customer_invoice_receipt`);
+    assert.equal(profile.status, 200);
+    assert.equal((await profile.json()).contract_version, "base-erp-h215-operator-workbench-v1");
+  });
+});
+
+test("H214 recurring settlement visitor route is deterministic and workbench-owned", async () => {
+  await withServer(async (baseUrl) => {
+    const [firstResponse, secondResponse, headResponse, workbenchResponse] = await Promise.all([
+      fetch(`${baseUrl}/recurring-settlement.json`),
+      fetch(`${baseUrl}/recurring-settlement.json`),
+      fetch(`${baseUrl}/recurring-settlement.json`, { method: "HEAD" }),
+      fetch(`${baseUrl}/workbench.json?profile_id=payment_refund_incoming`),
+    ]);
+    assert.equal(firstResponse.status, 200);
+    assert.equal(secondResponse.status, 200);
+    assert.equal(headResponse.status, 200);
+    assert.equal(await headResponse.text(), "");
+    const first = await firstResponse.json();
+    const second = await secondResponse.json();
+    const workbench = await workbenchResponse.json();
+    assert.deepEqual(first, second);
+    assert.equal(first.schema_version, "base-erp-h214-recurring-settlement-public-v1");
+    assert.equal(first.mode, "visitor_read_only");
+    assert.equal(first.selector, "server_owned_default");
+    assert.equal(first.status.state, "status_readback_pending");
+    assert.equal(first.status.observed, false);
+    assert.equal(first.plan.network.chain_id, 84532);
+    assert.equal(first.route_previews.charge.cdp.preview_only, true);
+    assert.equal(first.route_previews.charge.cdp.calls_status_route, false);
+    assert.equal(first.route_previews.charge.manual.descriptor_only, true);
+    assert.equal(first.route_previews.charge.manual.calls_status_route, true);
+    assert.equal(first.route_previews.charge.cdp.tx_hash, null);
+    assert.equal(first.route_previews.charge.manual.calls_id, null);
+    assert.equal(first.gates.receipt.transaction_hash, null);
+    assert.equal(first.gates.finality.required, "l1_batch_final");
+    assert.equal(first.gates.erp.posting, false);
+    assert.equal(first.gates.erp.business_close, false);
+    assert.equal(first.safety.external_actions, 0);
+    assert.equal(first.safety.public_write_authorized, false);
+    assert.equal(workbench.queue.length, 7);
+    assert.deepEqual(workbench.recurring_settlement, first);
+  });
+});
+
+test("H214 recurring visitor routes reject client binding hints without echo and preserve method/path gates", async () => {
+  await withServer(async (baseUrl) => {
+    const [dedicated, generic, head, method, missing] = await Promise.all([
+      fetch(`${baseUrl}/recurring-settlement.json?permission_id=0xdeadbeef`),
+      fetch(`${baseUrl}/workbench.json?permission_hash=${"a".repeat(64)}`),
+      fetch(`${baseUrl}/recurring-settlement.json?tx_hash=0xdeadbeef`, { method: "HEAD" }),
+      fetch(`${baseUrl}/recurring-settlement.json`, { method: "POST" }),
+      fetch(`${baseUrl}/recurring-settlement-missing.json`),
+    ]);
+    assert.equal(dedicated.status, 400);
+    assert.deepEqual(await dedicated.json(), { error: "client_binding_not_accepted" });
+    assert.equal(generic.status, 400);
+    assert.deepEqual(await generic.json(), { error: "workbench_input_invalid", reason: "client_binding_not_accepted" });
+    assert.equal(head.status, 400);
+    assert.equal(await head.text(), "");
+    assert.equal(method.status, 405);
+    assert.deepEqual(await method.json(), { error: "method_not_allowed", allowed: ["GET", "HEAD"] });
+    assert.equal(missing.status, 404);
+    assert.deepEqual(await missing.json(), { error: "not_found", path: "/recurring-settlement-missing.json" });
+  });
+});
+
 test("refund preview endpoint exposes cumulative ceiling math without an executable consequence", async () => {
   await withServer(async (baseUrl) => {
     const response = await fetch(`${baseUrl}/refund-preview.json?principal=500.00&refunded_to_date=125.00&amount=75.00`);
@@ -333,4 +522,183 @@ test("standard web-app metadata and existing Base App assets are served without 
     assert.equal(headResponse.status, 200);
     assert.equal(await headResponse.text(), "");
   });
+});
+
+test("recurring settlement visitor projection is deterministic and status-readback-pending", () => {
+  const first = buildRecurringSettlementProjection({ release: TEST_RELEASE });
+  const second = buildRecurringSettlementProjection({ release: TEST_RELEASE });
+  assert.deepEqual(first, second);
+  assert.equal(first.schema_version, "base-erp-h214-recurring-settlement-public-v1");
+  assert.equal(first.mode, "visitor_read_only");
+  assert.equal(first.selector, "server_owned_default");
+  assert.equal(first.status.state, "status_readback_pending");
+  assert.equal(first.status.adapter, "subscription");
+  assert.equal(first.plan.status_adapter, "subscription");
+  assert.equal(first.plan.network.chain_id, 84532);
+  assert.equal(first.plan.network.testnet, true);
+  assert.equal(first.plan.recurring_charge.value, null);
+  assert.equal(first.plan.remaining_allowance.value, null);
+  assert.equal(first.plan.period.no_rollover, true);
+  assert.equal(first.plan.period.state, "not_observed");
+  assert.equal(first.status.observed, false);
+  assert.equal(first.status.subscription.remaining_charge_in_period, null);
+  assert.equal(first.route_previews.charge.cdp.execution_route, "cdp_tx_hash");
+  assert.equal(first.route_previews.charge.cdp.preview_only, true);
+  assert.equal(first.route_previews.charge.cdp.descriptor_only, false);
+  assert.equal(first.route_previews.charge.cdp.calls_status_route, false);
+  assert.equal(first.route_previews.charge.cdp.tx_hash, null);
+  assert.equal(first.route_previews.charge.cdp.calls_id, null);
+  assert.equal(first.route_previews.charge.cdp.wallet_request, null);
+  assert.equal(first.route_previews.charge.manual.execution_route, "manual_wallet_sendCalls");
+  assert.equal(first.route_previews.charge.manual.preview_only, false);
+  assert.equal(first.route_previews.charge.manual.descriptor_only, true);
+  assert.equal(first.route_previews.charge.manual.atomic_required, true);
+  assert.equal(first.route_previews.charge.manual.calls_status_route, true);
+  assert.equal(first.route_previews.charge.manual.calls_id, null);
+  assert.equal(first.route_previews.charge.manual.tx_hash, null);
+  assert.equal(first.route_previews.charge.manual.wallet_request, null);
+  assert.equal(first.gates.receipt.state, "not_observed");
+  assert.equal(first.gates.receipt.transaction_hash, null);
+  assert.equal(first.gates.finality.required, "l1_batch_final");
+  assert.equal(first.gates.erp.posting, false);
+  assert.equal(first.gates.erp.business_close, false);
+  assert.equal(first.safety.external_actions, 0);
+  assert.equal(first.safety.wallet_request, null);
+  assert.equal(first.safety.broadcast, false);
+  const raw = JSON.stringify(first);
+  assert.ok(!raw.includes(RECURRING_PAYER.toLowerCase()));
+  assert.ok(!raw.includes(RECURRING_SPENDER.toLowerCase()));
+  assert.ok(!raw.includes(RECURRING_TOKEN));
+  assert.ok(!raw.includes(RECURRING_PERMISSION_HASH));
+});
+
+test("recurring settlement composes H213 for a server-owned subscription record", () => {
+  const projection = buildRecurringSettlementProjection({ release: TEST_RELEASE, server_record: RECURRING_SUBSCRIPTION_RECORD });
+  assert.equal(projection.status.state, "active");
+  assert.equal(projection.status.observed, true);
+  assert.equal(projection.status.subscription.remaining_charge_in_period, "450");
+  assert.equal(projection.status.subscription.current_period_start, 1750000000);
+  assert.equal(projection.status.subscription.next_period_start, 1750086400);
+  assert.equal(projection.plan.status_adapter, "subscription");
+  assert.equal(projection.plan.network.chain_id, 84532);
+  assert.equal(projection.plan.recurring_charge.value, "25");
+  assert.equal(projection.plan.remaining_allowance.value, "450");
+  assert.equal(projection.plan.period.no_rollover, true);
+  assert.equal(projection.plan.period.current_period_start, 1750000000);
+  assert.equal(projection.plan.period.next_period_start, 1750086400);
+  assert.equal(projection.gates.erp.posting, false);
+  assert.equal(projection.gates.erp.business_close, false);
+  assert.equal(projection.safety.public_write_authorized, false);
+  const raw = JSON.stringify(projection);
+  assert.ok(!raw.includes(RECURRING_PAYER.toLowerCase()));
+  assert.ok(!raw.includes(RECURRING_SPENDER.toLowerCase()));
+  assert.ok(!raw.includes(RECURRING_TOKEN));
+  assert.ok(!raw.includes(RECURRING_PERMISSION_HASH));
+});
+
+test("recurring settlement composes H213 for a server-owned spend permission record", () => {
+  const projection = buildRecurringSettlementProjection({ release: TEST_RELEASE, server_record: RECURRING_SPEND_PERMISSION_RECORD });
+  assert.equal(projection.status.state, "active");
+  assert.equal(projection.status.observed, true);
+  assert.equal(projection.status.spend_permission.remaining_spend, "480");
+  assert.equal(projection.status.adapter, "spend_permission");
+  assert.equal(projection.plan.network.chain_id, 84532);
+  assert.equal(projection.plan.recurring_charge.value, "20");
+  assert.equal(projection.plan.remaining_allowance.value, "480");
+  const raw = JSON.stringify(projection);
+  assert.ok(!raw.includes(RECURRING_SALT));
+  assert.ok(!raw.includes(RECURRING_PAYER.toLowerCase()));
+  assert.ok(!raw.includes(RECURRING_TOKEN));
+});
+
+test("recurring settlement composes H213 deterministically for repeated record calls", () => {
+  const first = buildRecurringSettlementProjection({ release: TEST_RELEASE, server_record: RECURRING_SUBSCRIPTION_RECORD });
+  const second = buildRecurringSettlementProjection({ release: TEST_RELEASE, server_record: RECURRING_SUBSCRIPTION_RECORD });
+  assert.deepEqual(first, second);
+  const pendingFirst = buildRecurringSettlementProjection({ release: TEST_RELEASE, server_record: { ...RECURRING_SUBSCRIPTION_RECORD, subscription_readback: {} } });
+  const pendingSecond = buildRecurringSettlementProjection({ release: TEST_RELEASE, server_record: { ...RECURRING_SUBSCRIPTION_RECORD, subscription_readback: {} } });
+  assert.deepEqual(pendingFirst, pendingSecond);
+});
+
+test("recurring settlement record with a pending readback stays pending with bound metadata only", () => {
+  const projection = buildRecurringSettlementProjection({ release: TEST_RELEASE, server_record: { ...RECURRING_SUBSCRIPTION_RECORD, subscription_readback: {} } });
+  assert.equal(projection.status.state, "status_readback_pending");
+  assert.equal(projection.status.observed, false);
+  assert.equal(projection.status.adapter, "subscription");
+  assert.equal(projection.plan.status_adapter, "subscription");
+  assert.equal(projection.plan.recurring_charge.value, "25");
+  assert.equal(projection.plan.remaining_allowance.value, null);
+  assert.equal(projection.plan.period.current_period_start, null);
+});
+
+test("invalid recurring settlement records map to recovery_ready with stable reasons and no raw echo", () => {
+  const cases = [
+    { record: {}, reason: "server_record_case_required" },
+    { record: "client-hint", reason: "server_record_invalid" },
+    { record: { case: { case_id: "base-erp-h214-recurring-bad", permission_ref: "internal-bad", payer: RECURRING_PAYER, spender: RECURRING_SPENDER, token: RECURRING_TOKEN, chain_id: 84532, testnet: true, allowance: "500.00", period_seconds: 86400, start: 1750000000, end: 1752688000, recurring_charge: "25.00", status_adapter: "subscription" } }, reason: "subscribe_rejected_no_permission" },
+    { record: { ...RECURRING_SUBSCRIPTION_RECORD, client_hints: { id: "injected" } }, reason: "browser_client_hints_rejected" },
+    { record: { case: { ...RECURRING_SUBSCRIPTION_RECORD.case, client_hints: { id: "injected" } }, subscription_readback: RECURRING_SUBSCRIPTION_RECORD.subscription_readback, observed: RECURRING_SUBSCRIPTION_RECORD.observed }, reason: "browser_client_hints_rejected" },
+  ];
+  for (const { record, reason } of cases) {
+    const projection = buildRecurringSettlementProjection({ release: TEST_RELEASE, server_record: record });
+    assert.equal(projection.status.state, "recovery_ready", reason);
+    assert.equal(projection.status.reason, reason);
+    assert.equal(projection.status.observed, false);
+    assert.equal(projection.status.subscription, null);
+    assert.equal(projection.status.spend_permission, null);
+    const raw = JSON.stringify(projection);
+    assert.ok(!raw.includes(RECURRING_PAYER.toLowerCase()));
+    assert.ok(!raw.includes(RECURRING_SPENDER.toLowerCase()));
+    assert.ok(!raw.includes(RECURRING_TOKEN));
+    assert.ok(!raw.includes(RECURRING_PERMISSION_HASH));
+  }
+});
+
+test("operator workbench adds the recurring settlement projection without changing the seven-row queue", () => {
+  const visitor = buildOperatorWorkbench({ release: TEST_RELEASE, selected_profile_id: "payment_refund_incoming" });
+  assert.equal(visitor.queue.length, 7);
+  assert.equal(visitor.queue.filter((row) => row.selected).length, 1);
+  assert.equal(visitor.selected_case.profile_id, "payment_refund_incoming");
+  assert.deepEqual(visitor.landmarks, ["global-control-shell", "case-queue", "decision-canvas", "evidence-inspector"]);
+  assert.equal(visitor.recurring_settlement.schema_version, "base-erp-h214-recurring-settlement-public-v1");
+  assert.equal(visitor.recurring_settlement.status.state, "status_readback_pending");
+  const observed = buildOperatorWorkbench({ release: TEST_RELEASE, server_record: RECURRING_SUBSCRIPTION_RECORD });
+  assert.equal(observed.queue.length, 7);
+  assert.equal(observed.queue.filter((row) => row.selected).length, 1);
+  assert.equal(observed.recurring_settlement.status.state, "active");
+  assert.equal(observed.recurring_settlement.plan.recurring_charge.value, "25");
+});
+
+test("operator workbench HTML renders the recurring settlement surface with actions disabled", () => {
+  const html = renderOperatorWorkbenchPage(buildOperatorWorkbench({ release: TEST_RELEASE }));
+  assert.match(html, /Recurring settlement/);
+  assert.match(html, /status_readback_pending/);
+  assert.match(html, /subscription/);
+  assert.match(html, /spend_permission/);
+  assert.match(html, /No rollover/);
+  assert.match(html, /cdp_tx_hash/);
+  assert.match(html, /preview only/);
+  assert.match(html, /wallet_sendCalls/);
+  assert.match(html, /descriptor only/);
+  assert.match(html, /atomic required/);
+  assert.match(html, /l1_batch_final/);
+  assert.match(html, /non-posting/);
+  assert.match(html, /business close false/);
+  assert.match(html, /<button disabled>Recurring actions disabled<\/button>/);
+  assert.ok(!html.includes(RECURRING_PAYER.toLowerCase()));
+  assert.ok(!html.includes(RECURRING_SPENDER.toLowerCase()));
+  assert.ok(!html.includes(RECURRING_TOKEN));
+  assert.ok(!html.includes(RECURRING_PERMISSION_HASH));
+});
+
+test("operator workbench HTML renders observed recurring readback values without raw identity", () => {
+  const html = renderOperatorWorkbenchPage(buildOperatorWorkbench({ release: TEST_RELEASE, server_record: RECURRING_SUBSCRIPTION_RECORD }));
+  assert.match(html, /Recurring settlement/);
+  assert.ok(html.includes("25 per period"));
+  assert.ok(html.includes(">450<"));
+  assert.match(html, />subscription · chain 84532/);
+  assert.ok(!html.includes(RECURRING_PAYER.toLowerCase()));
+  assert.ok(!html.includes(RECURRING_SPENDER.toLowerCase()));
+  assert.ok(!html.includes(RECURRING_TOKEN));
+  assert.ok(!html.includes(RECURRING_PERMISSION_HASH));
 });

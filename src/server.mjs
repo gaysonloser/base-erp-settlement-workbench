@@ -8,6 +8,7 @@ import { digest } from "./base-neutral-receipt-controls.mjs";
 import {
   buildEventAdmissionPreview,
   buildOperatorWorkbench,
+  buildRecurringSettlementProjection,
   buildReadOnlySimulation,
   buildStandardWebAppMetadata,
   buildVisitorCaseCatalog,
@@ -22,6 +23,8 @@ const COMMIT_PATTERN = /^[0-9a-f]{7,40}$/i;
 const FULL_COMMIT_PATTERN = /^[0-9a-f]{40}$/i;
 const DIGEST_PATTERN = /^[0-9a-f]{64}$/i;
 const DEFAULT_COMMIT_PLACEHOLDER = "PENDING_OWNER_PUBLIC_COMMIT";
+const H214_READBACK_PATH = "runtime/h214_recurring_settlement_readback_2026-08-14.json";
+const H215_READBACK_PATH = "runtime/h215_operator_workbench_readback_2026-08-14.json";
 const PUBLIC_PLATFORM_ORDER = Object.freeze([
   "github",
   "render",
@@ -31,6 +34,12 @@ const PUBLIC_PLATFORM_ORDER = Object.freeze([
   "talent",
   "guild",
   "basename_base_org",
+]);
+const RECURRING_BINDING_QUERY_KEYS = new Set([
+  "permission_id", "permission_hash", "payer", "spender", "account", "address",
+  "token", "recipient", "amount", "network", "adapter", "status", "release",
+  "release_id", "release_fingerprint", "bom_fingerprint", "calls_id", "callsid",
+  "tx_hash", "txhash", "calldata", "wallet_request",
 ]);
 const PUBLIC_ASSETS = Object.freeze({
   "/assets/base-app/base-erp-workbench-screenshot-1284x2778.jpg": Object.freeze({
@@ -73,7 +82,29 @@ function resolveCommit({ candidate, env }) {
 
 function sha256File(filePath) {
   try {
-    return createHash("sha256").update(readFileSync(resolve(PROJECT_ROOT, filePath))).digest("hex");
+    const raw = readFileSync(resolve(PROJECT_ROOT, filePath));
+    // The H214 readback carries the final release/BOM fingerprints. Its BOM
+    // entry is therefore sealed over a placeholder projection so the release
+    // identity can join the readback without an impossible self-hash cycle.
+    if (filePath === H214_READBACK_PATH || filePath === H215_READBACK_PATH) {
+      const readback = JSON.parse(raw.toString("utf8"));
+      if (readback.release_join && typeof readback.release_join === "object") {
+        readback.release_join = {
+          ...readback.release_join,
+          release_fingerprint: "<current>",
+          bom_fingerprint: "<current>",
+        };
+      }
+      if (readback.release_bom && typeof readback.release_bom === "object") {
+        readback.release_bom = {
+          ...readback.release_bom,
+          release_fingerprint: "<current>",
+          bom_fingerprint: "<current>",
+        };
+      }
+      return digest(readback);
+    }
+    return createHash("sha256").update(raw).digest("hex");
   } catch {
     return null;
   }
@@ -452,6 +483,14 @@ function writeAsset(response, pathname, { head = false } = {}) {
   return true;
 }
 
+function hasRecurringBindingQuery(parsedUrl) {
+  return [...parsedUrl.searchParams.keys()].some((key) => RECURRING_BINDING_QUERY_KEYS.has(key.toLowerCase()));
+}
+
+function hasUnsupportedWorkbenchQuery(parsedUrl) {
+  return [...parsedUrl.searchParams.keys()].some((key) => key !== "profile_id");
+}
+
 export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = process.env, runtimeReader = null } = {}) {
   return createServer((request, response) => {
     const head = request.method === "HEAD";
@@ -467,6 +506,11 @@ export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = proc
       return;
     }
     const pathname = parsedUrl.pathname;
+    if (pathname === "/favicon.ico") {
+      response.writeHead(204, { "cache-control": "public, max-age=300" });
+      response.end();
+      return;
+    }
     if (writeAsset(response, pathname, { head })) return;
     let release;
     try {
@@ -492,7 +536,19 @@ export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = proc
       writeResponse(response, 200, buildVisitorCaseCatalog({ release }), "application/json; charset=utf-8", { head });
       return;
     }
+    if (pathname === "/recurring-settlement.json") {
+      if (parsedUrl.searchParams.size > 0) {
+        writeResponse(response, 400, { error: "client_binding_not_accepted" }, "application/json; charset=utf-8", { head });
+        return;
+      }
+      writeResponse(response, 200, buildRecurringSettlementProjection({ release }), "application/json; charset=utf-8", { head });
+      return;
+    }
     if (pathname === "/workbench.json") {
+      if (hasUnsupportedWorkbenchQuery(parsedUrl)) {
+        writeResponse(response, 400, { error: "workbench_input_invalid", reason: "client_binding_not_accepted" }, "application/json; charset=utf-8", { head });
+        return;
+      }
       try {
         writeResponse(response, 200, buildOperatorWorkbench({ release, selected_profile_id: parsedUrl.searchParams.get("profile_id") ?? undefined }), "application/json; charset=utf-8", { head });
       } catch (error) {
@@ -564,6 +620,10 @@ export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = proc
       return;
     }
     if (pathname === "/workbench" || pathname === "/workbench/") {
+      if (hasUnsupportedWorkbenchQuery(parsedUrl)) {
+        writeResponse(response, 400, { error: "workbench_input_invalid", reason: "client_binding_not_accepted" }, "application/json; charset=utf-8", { head });
+        return;
+      }
       try {
         writeResponse(response, 200, renderOperatorWorkbenchPage(buildOperatorWorkbench({ release, selected_profile_id: parsedUrl.searchParams.get("profile_id") ?? undefined })), "text/html; charset=utf-8", { head });
       } catch (error) {
