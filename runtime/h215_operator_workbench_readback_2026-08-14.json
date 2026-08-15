@@ -136,9 +136,9 @@
     ],
     "browser_suite": "4/4 pass",
     "page_unit_suite": "3/3 pass",
-    "available_product_suite_excluding_runtime_authority_import_blocker": "227/227 pass",
+    "available_product_suite_excluding_runtime_authority_import_blocker": "153/153 pass in clean git-export (local exchange and upstream material excluded)",
     "protected_blocker": null,
-    "full_npm_test": "227/227 pass"
+    "full_npm_test": "153/153 pass in clean git-export (local exchange and upstream material excluded)"
   },
   "external_gates": {
     "base_mcp_live_tools": 15,

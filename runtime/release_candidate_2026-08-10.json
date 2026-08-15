@@ -8,8 +8,8 @@
   "primary_base_account": "0xBa36D092dB2999bb1FaBbaf281AC956A97189C25",
   "network": "Base Sepolia descriptor-only; Base Mainnet owner gate required; no chain action",
   "release_fingerprint_algorithm": "sha256(canonical_current_release_fields)",
-  "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
-  "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
+  "release_fingerprint": "cb062fb7e1f81b0d0741fdbdbfb6a13616d1e3be273febdee443a1b7e07f897b",
+  "bom_fingerprint": "140ae63e054c60724d868e4d26221de8b2c5f854e4e74abf00fccd40dc3dacea",
   "immutable_release_bom": [
     {
       "path": "assets/base-app/base-erp-workbench-screenshot-1284x2778.jpg",
@@ -49,7 +49,7 @@
     },
     {
       "path": "runtime/h215_operator_workbench_readback_2026-08-14.json",
-      "digest": "21b1ffa69d41349c91ddf47f8cd77a38c4b6ced03418871486366ce61210dda8"
+      "digest": "d4296a97e029a6ef227f57458f7a845ae0a514f3684c290fd641ec130bf8bdfd"
     },
     {
       "path": "src/base-erp-scenario-router.mjs",
@@ -58,6 +58,10 @@
     {
       "path": "src/base-erp-workbench.mjs",
       "digest": "64218d75d77d39067a974f76b81b23e46785509e0806dbfa2f61610feb876f71"
+    },
+    {
+      "path": "src/base-recurring-settlement-contract.mjs",
+      "digest": "1899acb8147844865d34085b396a0b2f282acbddb7f14823fdaa74b665d4d2ef"
     },
     {
       "path": "src/base-refund-ceiling-guard.mjs",
@@ -70,6 +74,14 @@
     {
       "path": "src/server.mjs",
       "digest": "49bdb9af7b8890c92cdebf6000324a82d201c1308c1d420d5a171c204eb2a96b"
+    },
+    {
+      "path": "test/base-erp-scenario-router.test.mjs",
+      "digest": "0132409977aedcb8f43ac5761e6802d72701e44f7ca9a2f7a320d3d9a304fccb"
+    },
+    {
+      "path": "test/base-recurring-settlement-contract.test.mjs",
+      "digest": "bfe8b729577ee487cae4030080874f0b6643fce45527a79054b755dcfea94e49"
     },
     {
       "path": "test/base-refund-ceiling-guard.test.mjs",
@@ -108,8 +120,8 @@
     "execution_authority": "02_Build_publication_lane_owner_authorized",
     "source_packet_review": "pass_h215_hashes_revalidated",
     "product_increment": "operator_workbench_h215_public_surface_v6",
-    "local_parent_review": "pass_full_suite_227_of_227_with_fail_closed_external_gate",
-    "browser_acceptance": "4/4_browser_plus_3/3_page_unit_plus_227/227_full_npm"
+    "local_parent_review": "pass_clean_git_export_153_of_153_with_fail_closed_external_gate; local_exchange_and_upstream_material_excluded",
+    "browser_acceptance": "4/4_browser_plus_3/3_page_unit_plus_153/153_clean_git_export"
   },
   "git_commit": "PENDING_OWNER_PUBLIC_COMMIT",
   "render_url": "https://base-erp-settlement-workbench.onrender.com",
@@ -310,7 +322,7 @@
     "GitHub v6 release receipt is current and joined to commit 1689ca9e66042919939654f65a7c2eaa3417ac15, release_id, release_fingerprint and bom_fingerprint; exact Render service remains on v4 pending its owner credential/surface, and no complete eight-surface receipt exists.",
     "The public payload is product-only; two local fixture-bearing paths are excluded from the v6 BOM and publication staging without deleting local files.",
     "BASE/CIRCLE isolation was checked against the matrix; no CIRCLE repository, service, app, domain, release or receipt was touched.",
-    "Full local npm test passes 227/227, including the runtime-authority import path and Playwright/browser acceptance; external publication remains fail-closed until exact owner gates are verified.",
+    "Clean git-export npm test passes 153/153 with local exchange and upstream material excluded; Playwright/browser acceptance is 4/4 and page unit is 3/3. External publication remains fail-closed until exact owner gates are verified.",
     "Runtime counters and queue/cursor are authoritative only through runctl; local release evidence cannot increment the 30/10 ledger."
   ],
   "latest_build_readback": {
@@ -322,8 +334,8 @@
     ],
     "release_join": {
       "release_id": "base-erp-public-product-20260815-v6",
-      "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
-      "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364"
+      "release_fingerprint": "cb062fb7e1f81b0d0741fdbdbfb6a13616d1e3be273febdee443a1b7e07f897b",
+      "bom_fingerprint": "140ae63e054c60724d868e4d26221de8b2c5f854e4e74abf00fccd40dc3dacea"
     },
     "h215": {
       "packet_id": "base-erp-h215-operator-workbench-architecture-20260814",
@@ -339,7 +351,7 @@
     "h213_pinned_sha256": "1899acb8147844865d34085b396a0b2f282acbddb7f14823fdaa74b665d4d2ef",
     "github": {
       "strict_status": "current_v6_release_receipt_observed",
-      "commit_sha": "1689ca9e66042919939654f65a7c2eaa3417ac15",
+      "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT",
       "release_url": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v6"
     },
     "render": {
@@ -369,7 +381,7 @@
       "cursor": "Deficit-first dispatch: trace_gap=30; public_gap=10. Trace gap remains: prepare exactly one legitimate corresponding-wallet onchain state-change, open one exact final wallet review, and count it only after a unique successful receipt. Publication gap remains: one material unit needs truthful receipts on every mandatory platform (github, render, base_app, base_dashboard, base_dev, talent, guild, basename_base_org); partial bundles count zero. Execute eligible candidate BASE-PUBLICATION-V6-20260815-01 now; do not rediscover earlier routes.",
       "runtime_authority_revalidated": true
     },
-    "full_product_tests": "227/227 pass; Playwright/browser 4/4 and page unit 3/3; runtime-authority import blocker repaired by contract rebind"
+    "full_product_tests": "153/153 pass in clean git-export; Playwright/browser 4/4 and page unit 3/3; local exchange/upstream material excluded and runtime fixture supplied outside public payload"
   },
   "artifact_excluded_from_own_bom": true,
   "post_publication_readback": {
@@ -390,7 +402,7 @@
     "public_write_authorized": false,
     "owner_authorization": "explicit_BASE_GitHub_Render_publication_authorization_received"
   },
-  "immutable_bom_sha256": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
+  "immutable_bom_sha256": "140ae63e054c60724d868e4d26221de8b2c5f854e4e74abf00fccd40dc3dacea",
   "h215_packet": {
     "packet_id": "base-erp-h215-operator-workbench-architecture-20260814",
     "manifest_sha256": "59073c52258fb69e5870dda8bcd9f3eedd915a3be4e394150a81bcf402eb4ba5",
@@ -401,8 +413,8 @@
     "status": "accepted_local_non_executable_h215",
     "release_join": {
       "release_id": "base-erp-public-product-20260815-v6",
-      "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
-      "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364"
+      "release_fingerprint": "cb062fb7e1f81b0d0741fdbdbfb6a13616d1e3be273febdee443a1b7e07f897b",
+      "bom_fingerprint": "140ae63e054c60724d868e4d26221de8b2c5f854e4e74abf00fccd40dc3dacea"
     }
   },
   "deepseek_child": {

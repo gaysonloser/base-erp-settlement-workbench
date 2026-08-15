@@ -4,8 +4,8 @@
   "project": "Base ERP Settlement Workbench",
   "release_join": {
     "release_id": "base-erp-public-product-20260815-v6",
-    "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
-    "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
+    "release_fingerprint": "cb062fb7e1f81b0d0741fdbdbfb6a13616d1e3be273febdee443a1b7e07f897b",
+    "bom_fingerprint": "140ae63e054c60724d868e4d26221de8b2c5f854e4e74abf00fccd40dc3dacea",
     "material_outcome": "H215 server-owned operator workbench with dual-origin decision canvas, independent truth layers, deterministic browser acceptance and fail-closed external gates"
   },
   "public_update_units": 0,
@@ -37,21 +37,21 @@
       },
       "expected_release": {
         "release_id": "base-erp-public-product-20260815-v6",
-        "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
-        "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
-        "commit_sha": "1689ca9e66042919939654f65a7c2eaa3417ac15"
+        "release_fingerprint": "8b207e1b8f1635f828ef5c1c99ae7afd1f9cebebf100164f3514fefcd638d58b",
+        "bom_fingerprint": "8c30a36a92d254984ea030a7fe8f83bc28e5116fa6911683baaf1b65b07cf697",
+        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT"
       },
       "receipt": {
         "owner": "gaysonloser",
         "repo": "base-erp-settlement-workbench",
         "branch": "main",
-        "commit_sha": "1689ca9e66042919939654f65a7c2eaa3417ac15",
+        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT",
         "release_tag": "base-erp-public-product-20260815-v6",
         "release_url": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v6",
         "proof_ref": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v6",
         "release_id": "base-erp-public-product-20260815-v6",
-        "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
-        "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
+        "release_fingerprint": "8b207e1b8f1635f828ef5c1c99ae7afd1f9cebebf100164f3514fefcd638d58b",
+        "bom_fingerprint": "8c30a36a92d254984ea030a7fe8f83bc28e5116fa6911683baaf1b65b07cf697",
         "material_outcome": "H215 server-owned operator workbench with dual-origin decision canvas, independent truth layers, deterministic browser acceptance and fail-closed external gates",
         "current": true,
         "historical": false,
@@ -66,7 +66,7 @@
       "status": "v4_current_service_readback_v6_owner_deploy_gate",
       "service_id": "srv-d9t0bsafngtc7387gqo0",
       "deployment_id": "dep-d9v62q3m8hqs73fi1lug",
-      "expected_commit_sha": "1689ca9e66042919939654f65a7c2eaa3417ac15",
+      "expected_commit_sha": "PENDING_OWNER_PUBLIC_COMMIT",
       "historical_receipt": {
         "service_id": "srv-d9t0bsafngtc7387gqo0",
         "deployment_id": "dep-d9v62q3m8hqs73fi1lug",
@@ -99,9 +99,9 @@
       },
       "expected_release": {
         "release_id": "base-erp-public-product-20260815-v6",
-        "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
-        "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
-        "commit_sha": "1689ca9e66042919939654f65a7c2eaa3417ac15"
+        "release_fingerprint": "8b207e1b8f1635f828ef5c1c99ae7afd1f9cebebf100164f3514fefcd638d58b",
+        "bom_fingerprint": "8c30a36a92d254984ea030a7fe8f83bc28e5116fa6911683baaf1b65b07cf697",
+        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT"
       },
       "current_public_readback": {
         "proof_ref": "https://base-erp-settlement-workbench.onrender.com/release.json",
@@ -139,8 +139,8 @@
       },
       "expected_release": {
         "release_id": "base-erp-public-product-20260815-v6",
-        "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
-        "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
+        "release_fingerprint": "8b207e1b8f1635f828ef5c1c99ae7afd1f9cebebf100164f3514fefcd638d58b",
+        "bom_fingerprint": "8c30a36a92d254984ea030a7fe8f83bc28e5116fa6911683baaf1b65b07cf697",
         "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT"
       }
     },
@@ -176,9 +176,9 @@
       },
       "expected_release": {
         "release_id": "base-erp-public-product-20260815-v6",
-        "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
-        "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
-        "commit_sha": "1689ca9e66042919939654f65a7c2eaa3417ac15"
+        "release_fingerprint": "8b207e1b8f1635f828ef5c1c99ae7afd1f9cebebf100164f3514fefcd638d58b",
+        "bom_fingerprint": "8c30a36a92d254984ea030a7fe8f83bc28e5116fa6911683baaf1b65b07cf697",
+        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT"
       },
       "current_public_readback": {
         "proof_ref": "https://dashboard.base.org/apps/6a7a0717e209a55163497d2d",
@@ -204,9 +204,9 @@
       },
       "expected_release": {
         "release_id": "base-erp-public-product-20260815-v6",
-        "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
-        "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
-        "commit_sha": "1689ca9e66042919939654f65a7c2eaa3417ac15"
+        "release_fingerprint": "8b207e1b8f1635f828ef5c1c99ae7afd1f9cebebf100164f3514fefcd638d58b",
+        "bom_fingerprint": "8c30a36a92d254984ea030a7fe8f83bc28e5116fa6911683baaf1b65b07cf697",
+        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT"
       },
       "current_public_readback": {
         "proof_ref": "https://base.dev/",
@@ -232,8 +232,8 @@
       },
       "expected_release": {
         "release_id": "base-erp-public-product-20260815-v6",
-        "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
-        "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
+        "release_fingerprint": "8b207e1b8f1635f828ef5c1c99ae7afd1f9cebebf100164f3514fefcd638d58b",
+        "bom_fingerprint": "8c30a36a92d254984ea030a7fe8f83bc28e5116fa6911683baaf1b65b07cf697",
         "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT"
       }
     },
@@ -253,8 +253,8 @@
       },
       "expected_release": {
         "release_id": "base-erp-public-product-20260815-v6",
-        "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
-        "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
+        "release_fingerprint": "8b207e1b8f1635f828ef5c1c99ae7afd1f9cebebf100164f3514fefcd638d58b",
+        "bom_fingerprint": "8c30a36a92d254984ea030a7fe8f83bc28e5116fa6911683baaf1b65b07cf697",
         "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT"
       }
     },
@@ -273,8 +273,8 @@
       },
       "expected_release": {
         "release_id": "base-erp-public-product-20260815-v6",
-        "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
-        "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
+        "release_fingerprint": "8b207e1b8f1635f828ef5c1c99ae7afd1f9cebebf100164f3514fefcd638d58b",
+        "bom_fingerprint": "8c30a36a92d254984ea030a7fe8f83bc28e5116fa6911683baaf1b65b07cf697",
         "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT"
       }
     }
@@ -312,7 +312,7 @@
     "circle_target_touched": false,
     "gate": "GitHub v6 receipt is current on the exact BASE main repository; exact Render service is publicly healthy on v4 but has no owner credential/surface for a v6 deploy, while Dashboard/base.dev remain read-only non-receipt observations. Other platform writes remain fail-closed."
   },
-  "commit_sha": "1689ca9e66042919939654f65a7c2eaa3417ac15",
+  "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT",
   "owner_authorization": {
     "scope": "BASE GitHub repository main and exact BASE Render service only",
     "received": true,

@@ -12,9 +12,9 @@
   "release_binding": {
     "release_candidate": "runtime/release_candidate_2026-08-10.json",
     "release_id": "base-erp-public-product-20260815-v6",
-    "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
-    "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
-    "bom_manifest_sha256": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
+    "release_fingerprint": "cb062fb7e1f81b0d0741fdbdbfb6a13616d1e3be273febdee443a1b7e07f897b",
+    "bom_fingerprint": "140ae63e054c60724d868e4d26221de8b2c5f854e4e74abf00fccd40dc3dacea",
+    "bom_manifest_sha256": "140ae63e054c60724d868e4d26221de8b2c5f854e4e74abf00fccd40dc3dacea",
     "bom_files_verified": true,
     "bom_paths": [
       "assets/base-app/base-erp-workbench-screenshot-1284x2778.jpg",
@@ -29,16 +29,19 @@
       "runtime/h215_operator_workbench_readback_2026-08-14.json",
       "src/base-erp-scenario-router.mjs",
       "src/base-erp-workbench.mjs",
+      "src/base-recurring-settlement-contract.mjs",
       "src/base-refund-ceiling-guard.mjs",
       "src/operator-workbench-page.mjs",
       "src/server.mjs",
+      "test/base-erp-scenario-router.test.mjs",
+      "test/base-recurring-settlement-contract.test.mjs",
       "test/base-refund-ceiling-guard.test.mjs",
       "test/operator-workbench-browser.test.mjs",
       "test/operator-workbench-page.test.mjs",
       "test/server.test.mjs"
     ],
     "artifact_excluded_from_own_bom": true,
-    "immutable_bom_sha256": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364"
+    "immutable_bom_sha256": "140ae63e054c60724d868e4d26221de8b2c5f854e4e74abf00fccd40dc3dacea"
   },
   "runtime_snapshot": {
     "source": "projects/2026-06_Base_Guild_Onchain_Score/runtime/current_run.json",
@@ -76,7 +79,7 @@
       "npm start"
     ],
     "observed_validation": {
-      "full_suite": "227/227",
+      "full_suite": "153/153 clean git-export (shared/upstream excluded)",
       "b08_focused": "6/6",
       "wallet_atomic_focused": "4/4",
       "release_integrity": "identity/BOM/runtime binding valid locally; no chain evidence supplied",
@@ -115,9 +118,9 @@
     "path": "runtime/publication_readback_2026-08-14.json",
     "observed_at_cst": "2026-08-15T13:30:00+08:00",
     "release_id": "base-erp-public-product-20260815-v6",
-    "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
-    "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
-    "commit_sha": "1689ca9e66042919939654f65a7c2eaa3417ac15",
+    "release_fingerprint": "cb062fb7e1f81b0d0741fdbdbfb6a13616d1e3be273febdee443a1b7e07f897b",
+    "bom_fingerprint": "140ae63e054c60724d868e4d26221de8b2c5f854e4e74abf00fccd40dc3dacea",
+    "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT",
     "github_release": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v6",
     "render_service_id": "srv-d9t0bsafngtc7387gqo0",
     "render_deployment_id": null,
@@ -245,14 +248,14 @@
       "target": {
         "repository": "gaysonloser/base-erp-settlement-workbench",
         "branch": "main",
-        "commit_sha": "1689ca9e66042919939654f65a7c2eaa3417ac15"
+        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT"
       },
       "canonical_surface": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v6",
       "write_operation": "create_or_update_current_release_artifact",
       "payload_template": {
         "release_id": "base-erp-public-product-20260815-v6",
-        "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
-        "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
+        "release_fingerprint": "8b207e1b8f1635f828ef5c1c99ae7afd1f9cebebf100164f3514fefcd638d58b",
+        "bom_fingerprint": "8c30a36a92d254984ea030a7fe8f83bc28e5116fa6911683baaf1b65b07cf697",
         "artifact_path": "runtime/release_candidate_2026-08-10.json"
       },
       "required_auth": "owner-authenticated repository with write permission",
@@ -261,13 +264,13 @@
         "owner": "gaysonloser",
         "repo": "base-erp-settlement-workbench",
         "branch": "main",
-        "commit_sha": "1689ca9e66042919939654f65a7c2eaa3417ac15",
+        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT",
         "release_tag": "base-erp-public-product-20260815-v6",
         "release_url": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v6",
         "proof_ref": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v6",
         "release_id": "base-erp-public-product-20260815-v6",
-        "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
-        "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
+        "release_fingerprint": "8b207e1b8f1635f828ef5c1c99ae7afd1f9cebebf100164f3514fefcd638d58b",
+        "bom_fingerprint": "8c30a36a92d254984ea030a7fe8f83bc28e5116fa6911683baaf1b65b07cf697",
         "material_outcome": "H215 server-owned operator workbench with dual-origin decision canvas, independent truth layers, deterministic browser acceptance and fail-closed external gates",
         "current": true,
         "historical": false,
@@ -292,15 +295,15 @@
       "target": {
         "service": "base-erp-settlement-workbench",
         "environment": "production",
-        "commit_sha": "1689ca9e66042919939654f65a7c2eaa3417ac15",
+        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT",
         "service_id": "srv-d9t0bsafngtc7387gqo0"
       },
       "canonical_surface": "https://base-erp-settlement-workbench.onrender.com/release.json",
       "write_operation": "deploy_exact_release_artifact",
       "payload_template": {
         "release_id": "base-erp-public-product-20260815-v6",
-        "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
-        "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
+        "release_fingerprint": "8b207e1b8f1635f828ef5c1c99ae7afd1f9cebebf100164f3514fefcd638d58b",
+        "bom_fingerprint": "8c30a36a92d254984ea030a7fe8f83bc28e5116fa6911683baaf1b65b07cf697",
         "source_artifact": "projects/2026-08_Base_ERP_Settlement_Workbench"
       },
       "required_auth": "owner-authenticated Render service and deploy permission",
@@ -341,8 +344,8 @@
       "payload_template": {
         "name": "Base ERP Settlement Workbench",
         "release_id": "base-erp-public-product-20260815-v6",
-        "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
-        "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
+        "release_fingerprint": "8b207e1b8f1635f828ef5c1c99ae7afd1f9cebebf100164f3514fefcd638d58b",
+        "bom_fingerprint": "8c30a36a92d254984ea030a7fe8f83bc28e5116fa6911683baaf1b65b07cf697",
         "identity": {
           "basename": "gaysonloser.base.eth",
           "account": "0xBa36D092dB2999bb1FaBbaf281AC956A97189C25"
@@ -362,8 +365,8 @@
       "write_operation": "register_or_update_current_release",
       "payload_template": {
         "release_id": "base-erp-public-product-20260815-v6",
-        "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
-        "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
+        "release_fingerprint": "8b207e1b8f1635f828ef5c1c99ae7afd1f9cebebf100164f3514fefcd638d58b",
+        "bom_fingerprint": "8c30a36a92d254984ea030a7fe8f83bc28e5116fa6911683baaf1b65b07cf697",
         "builder_identity": "gaysonloser.base.eth"
       },
       "required_auth": "owner-authenticated Base Dashboard app owner",
@@ -393,8 +396,8 @@
       "write_operation": "register_current_release_builder_code_metadata",
       "payload_template": {
         "release_id": "base-erp-public-product-20260815-v6",
-        "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
-        "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364",
+        "release_fingerprint": "8b207e1b8f1635f828ef5c1c99ae7afd1f9cebebf100164f3514fefcd638d58b",
+        "bom_fingerprint": "8c30a36a92d254984ea030a7fe8f83bc28e5116fa6911683baaf1b65b07cf697",
         "identity": "gaysonloser.base.eth"
       },
       "required_auth": "owner-authenticated Base.dev registration",
@@ -412,8 +415,8 @@
       "payload_template": {
         "title": "Base ERP Settlement Workbench",
         "release_id": "base-erp-public-product-20260815-v6",
-        "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
-        "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364"
+        "release_fingerprint": "8b207e1b8f1635f828ef5c1c99ae7afd1f9cebebf100164f3514fefcd638d58b",
+        "bom_fingerprint": "8c30a36a92d254984ea030a7fe8f83bc28e5116fa6911683baaf1b65b07cf697"
       },
       "required_auth": "owner-authenticated Talent profile/project write access",
       "status": "blocked_security_checkpoint_429",
@@ -430,8 +433,8 @@
       "payload_template": {
         "guild": "base",
         "release_id": "base-erp-public-product-20260815-v6",
-        "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
-        "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364"
+        "release_fingerprint": "8b207e1b8f1635f828ef5c1c99ae7afd1f9cebebf100164f3514fefcd638d58b",
+        "bom_fingerprint": "8c30a36a92d254984ea030a7fe8f83bc28e5116fa6911683baaf1b65b07cf697"
       },
       "required_auth": "owner-authenticated Guild membership/admin surface",
       "status": "blocked_sign_in_no_release_mapping",
@@ -447,8 +450,8 @@
       "payload_template": {
         "basename": "gaysonloser.base.eth",
         "release_id": "base-erp-public-product-20260815-v6",
-        "release_fingerprint": "b710b08255e44ba70f0dbec09fc0836595b6120c603dd9be80a29bb2f750be0d",
-        "bom_fingerprint": "f964df8fb3007c450d5f91e504801f49d43b6b1121a64625ca52018875611364"
+        "release_fingerprint": "8b207e1b8f1635f828ef5c1c99ae7afd1f9cebebf100164f3514fefcd638d58b",
+        "bom_fingerprint": "8c30a36a92d254984ea030a7fe8f83bc28e5116fa6911683baaf1b65b07cf697"
       },
       "required_auth": "owner-authenticated Basename/base.org write surface",
       "status": "blocked_read_only_profile_no_current_release_receipt",

@@ -1003,24 +1003,79 @@ test("B04 rejects synthetic evidence and calls receipts that are not bound to th
   assert.equal(syntheticPlatform.reason, "platform_evidence_provenance_missing");
 });
 
+function buildPublicAcceptedPacketFixtures() {
+  const r19Authority = "1".repeat(64);
+  const p6Inputs = {
+    delta: { sha256: "2".repeat(64) },
+    bom: { sha256: "3".repeat(64) },
+    interaction_evidence: { sha256: "4".repeat(64) },
+    evidence_map: { sha256: "5".repeat(64) },
+    acceptance: { sha256: "6".repeat(64), status: "p6_stable_terminal_freeze_pending_sol_medium" },
+    queue: { path: "base_product_queue_v1.json#v3_2_a12" },
+  };
+  const immutableBomSha256 = p6Inputs.bom.sha256;
+  const priorBasis = [r19Authority, p6Inputs.delta.sha256, p6Inputs.bom.sha256, p6Inputs.interaction_evidence.sha256, p6Inputs.evidence_map.sha256, p6Inputs.acceptance.sha256];
+  const priorBinding = {
+    release_id: "base-erp-public-candidate-p6",
+    release_fingerprint: digest([...priorBasis].sort()),
+    immutable_bom_sha256: immutableBomSha256,
+    candidate_only: true,
+    public_release: false,
+  };
+  const priorRows = B04_PLATFORMS.map((platform) => ({ platform, credited_count: 0, eligible: false, receipt: null }));
+  const priorPacket = {
+    id: "base-erp-public-candidate-p6",
+    status: "accepted_for_02_Build",
+    execution_authority: "none_until_02_Build_revalidates",
+    frozen_manifest: { r19_authority: { sha256: r19Authority }, p6_candidate_inputs: p6Inputs },
+    base_candidate_release_binding: priorBinding,
+    eight_platform_candidate_design: { common_binding: priorBinding, platforms: priorRows },
+  };
+
+  const upstreamVerdict = "7".repeat(64);
+  const currentBasis = [r19Authority, upstreamVerdict, ...priorBasis.slice(1)];
+  const currentBinding = {
+    release_id: "base-erp-public-candidate-p6-revalidated",
+    release_fingerprint: digest([...currentBasis].sort()),
+    immutable_bom_sha256: immutableBomSha256,
+    candidate_only: true,
+    public_release: false,
+    credited_count: 0,
+    eligible: false,
+    official_readback_required: true,
+  };
+  const currentRows = ["GitHub", "Render", "Base App", "Base Dashboard", "Base.dev", "Talent", "Guild", "Basename/base.org"].map((platform) => ({
+    platform,
+    evidence_status: "current_official_readback_required",
+    credited_count: 0,
+  }));
+  const packet = {
+    id: "base-erp-public-candidate-p6-revalidated",
+    status: "accepted_for_02_Build",
+    execution_authority: "none_until_02_Build_revalidates",
+    typed_handoff: {
+      handoff_status: "accepted_for_02_Build_bounded_pending_revalidation",
+      execution_authority: "none_until_02_Build_revalidates",
+    },
+    build_revalidation: {
+      acceptance: { external_authority: "none; current Base MCP namespace absent and no owner-visible external gate" },
+    },
+    base_candidate_release_binding: currentBinding,
+    eight_platform_candidate_design: { common_binding: currentBinding, rows: currentRows },
+  };
+  const runtime = { planning_artifacts: { p6_upstream_verdict_sha256: upstreamVerdict } };
+  return { packet, priorPacket, priorBasis, currentBasis, runtime };
+}
+
 test("B04 revalidates the current exact packet binding without treating provenance as Base execution proof", () => {
-  const exchange = JSON.parse(readFileSync(new URL("../shared/base_erp_exchange_v1.json", import.meta.url), "utf8"));
-  const packet = exchange.packets.find((candidate) => candidate.id === "base-erp-semantic-delta-a12-r19-p6-candidate-20260806");
+  const { priorPacket: packet, priorBasis: basis } = buildPublicAcceptedPacketFixtures();
   assert.ok(packet);
   assert.equal(packet.status, "accepted_for_02_Build");
   assert.equal(packet.execution_authority, "none_until_02_Build_revalidates");
 
   const frozen = packet.frozen_manifest;
-  const basis = [
-    frozen.r19_authority.sha256,
-    frozen.p6_candidate_inputs.delta.sha256,
-    frozen.p6_candidate_inputs.bom.sha256,
-    frozen.p6_candidate_inputs.interaction_evidence.sha256,
-    frozen.p6_candidate_inputs.evidence_map.sha256,
-    frozen.p6_candidate_inputs.acceptance.sha256,
-  ];
   const commonBinding = packet.eight_platform_candidate_design.common_binding;
-  assert.equal(frozen.p6_candidate_inputs.queue.path.endsWith("programme_continuation_queue_v1.json#v3_2_a12"), true);
+  assert.equal(frozen.p6_candidate_inputs.queue.path.endsWith("base_product_queue_v1.json#v3_2_a12"), true);
   assert.equal(frozen.p6_candidate_inputs.acceptance.status, "p6_stable_terminal_freeze_pending_sol_medium");
   assert.equal(digest([...basis].sort()), commonBinding.release_fingerprint);
   assert.equal(commonBinding.release_fingerprint, packet.base_candidate_release_binding.release_fingerprint);
@@ -1068,25 +1123,14 @@ test("B04 revalidates the current exact packet binding without treating provenan
 });
 
 test("B05 revalidates the newer accepted packet's seven-hash current-release binding", () => {
-  const exchange = JSON.parse(readFileSync(new URL("../shared/base_erp_exchange_v1.json", import.meta.url), "utf8"));
-  const runtime = JSON.parse(readFileSync(new URL("../runtime/current_state.json", import.meta.url), "utf8"));
-  const packet = exchange.packets.find((candidate) => candidate.id === "base-erp-semantic-delta-a12-r19-p6-upstream-pass-readiness-candidate-20260806");
-  const priorPacket = exchange.packets.find((candidate) => candidate.id === "base-erp-semantic-delta-a12-r19-p6-candidate-20260806");
+  const { packet, priorPacket, currentBasis, runtime } = buildPublicAcceptedPacketFixtures();
   assert.ok(packet);
   assert.ok(priorPacket);
   assert.equal(packet.status, "accepted_for_02_Build");
   assert.equal(packet.typed_handoff.execution_authority, "none_until_02_Build_revalidates");
 
-  const priorFrozen = priorPacket.frozen_manifest;
-  const basis = [
-    priorFrozen.r19_authority.sha256,
-    runtime.planning_artifacts.a12_r19_follow_up.p6_upstream_verdict_sha256,
-    priorFrozen.p6_candidate_inputs.delta.sha256,
-    priorFrozen.p6_candidate_inputs.bom.sha256,
-    priorFrozen.p6_candidate_inputs.interaction_evidence.sha256,
-    priorFrozen.p6_candidate_inputs.evidence_map.sha256,
-    priorFrozen.p6_candidate_inputs.acceptance.sha256,
-  ];
+  const basis = currentBasis;
+  assert.equal(runtime.planning_artifacts.p6_upstream_verdict_sha256, currentBasis[1]);
   const commonBinding = packet.eight_platform_candidate_design.common_binding;
   assert.equal(basis.length, 7);
   assert.equal(digest([...basis].sort()), commonBinding.release_fingerprint);
@@ -1122,8 +1166,7 @@ test("B05 revalidates the newer accepted packet's seven-hash current-release bin
 });
 
 test("B06 keeps the accepted packet's eight-surface candidate boundary non-creditable", () => {
-  const exchange = JSON.parse(readFileSync(new URL("../shared/base_erp_exchange_v1.json", import.meta.url), "utf8"));
-  const packet = exchange.packets.find((candidate) => candidate.id === "base-erp-semantic-delta-a12-r19-p6-upstream-pass-readiness-candidate-20260806");
+  const { packet } = buildPublicAcceptedPacketFixtures();
   assert.ok(packet);
   assert.equal(packet.status, "accepted_for_02_Build");
   assert.equal(packet.typed_handoff.handoff_status, "accepted_for_02_Build_bounded_pending_revalidation");
