@@ -123,7 +123,7 @@
     "local_parent_review": "pass_clean_git_export_153_of_153_with_fail_closed_external_gate; local_exchange_and_upstream_material_excluded",
     "browser_acceptance": "4/4_browser_plus_3/3_page_unit_plus_153/153_clean_git_export"
   },
-  "git_commit": "PENDING_OWNER_PUBLIC_COMMIT",
+  "git_commit": "e5bb4f36edf5570fd673b05ee012b46e5126db66",
   "render_url": "https://base-erp-settlement-workbench.onrender.com",
   "contract_addresses_or_not_applicable_reason": "not_applicable_no_contract_change",
   "transaction_receipts_or_not_yet_available": "no transaction hash, receipt or finality; chain_count_zero; H215 is non-executable projection only",
@@ -136,7 +136,7 @@
         "owner": "gaysonloser",
         "repo": "base-erp-settlement-workbench",
         "branch": "main",
-        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT",
+        "commit_sha": "e96c13717fcf16d80138852629d82b3b21edce56",
         "release_tag": "base-erp-public-product-20260814-v4",
         "release_url": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260814-v4",
         "proof_ref": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260814-v4",
@@ -351,7 +351,7 @@
     "h213_pinned_sha256": "1899acb8147844865d34085b396a0b2f282acbddb7f14823fdaa74b665d4d2ef",
     "github": {
       "strict_status": "current_v6_release_receipt_observed",
-      "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT",
+      "commit_sha": "e5bb4f36edf5570fd673b05ee012b46e5126db66",
       "release_url": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v6"
     },
     "render": {

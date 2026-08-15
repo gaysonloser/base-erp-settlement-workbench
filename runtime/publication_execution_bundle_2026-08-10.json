@@ -120,7 +120,7 @@
     "release_id": "base-erp-public-product-20260815-v6",
     "release_fingerprint": "cb062fb7e1f81b0d0741fdbdbfb6a13616d1e3be273febdee443a1b7e07f897b",
     "bom_fingerprint": "140ae63e054c60724d868e4d26221de8b2c5f854e4e74abf00fccd40dc3dacea",
-    "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT",
+    "commit_sha": "e5bb4f36edf5570fd673b05ee012b46e5126db66",
     "github_release": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v6",
     "render_service_id": "srv-d9t0bsafngtc7387gqo0",
     "render_deployment_id": null,
@@ -248,7 +248,7 @@
       "target": {
         "repository": "gaysonloser/base-erp-settlement-workbench",
         "branch": "main",
-        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT"
+        "commit_sha": "e5bb4f36edf5570fd673b05ee012b46e5126db66"
       },
       "canonical_surface": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v6",
       "write_operation": "create_or_update_current_release_artifact",
@@ -264,7 +264,7 @@
         "owner": "gaysonloser",
         "repo": "base-erp-settlement-workbench",
         "branch": "main",
-        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT",
+        "commit_sha": "e5bb4f36edf5570fd673b05ee012b46e5126db66",
         "release_tag": "base-erp-public-product-20260815-v6",
         "release_url": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v6",
         "proof_ref": "https://github.com/gaysonloser/base-erp-settlement-workbench/releases/tag/base-erp-public-product-20260815-v6",
@@ -295,7 +295,7 @@
       "target": {
         "service": "base-erp-settlement-workbench",
         "environment": "production",
-        "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT",
+        "commit_sha": "e5bb4f36edf5570fd673b05ee012b46e5126db66",
         "service_id": "srv-d9t0bsafngtc7387gqo0"
       },
       "canonical_surface": "https://base-erp-settlement-workbench.onrender.com/release.json",
