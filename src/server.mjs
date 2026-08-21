@@ -1286,6 +1286,34 @@ function hasRequestBody(request) {
   return request.headers["transfer-encoding"] !== undefined;
 }
 
+function buildWalletBridgeProjection({ release, actionPlan, env }) {
+  const binding = {
+    release_id: release.release_id,
+    release_fingerprint: release.release_fingerprint,
+    bom_fingerprint: release.bom_fingerprint,
+    commit_sha: release.git_commit,
+    source_catalog_fingerprint: release.source_catalog_fingerprint,
+    base_target: release.base_target,
+  };
+  // This is a visitor endpoint.  Even if a deployment has an owner-reviewed
+  // template in its environment, executable target/value/data is withheld
+  // until an authenticated owner-visible review route exists.  Do not parse
+  // or echo the template here: absence of these keys is part of the redaction
+  // contract and prevents a public page from becoming a send surface.
+  void env;
+  return {
+    schema_version: "base-account-wallet-bridge-public-v1",
+    bridge_available: false,
+    execution_ready: false,
+    reason: "owner_auth_required",
+    release: binding,
+    action_plan_id: actionPlan?.action_plan_id ?? null,
+    action_enabled: false,
+    owner_review_required: true,
+    accounting: { mainnet_transaction_credit: 0, publication_unit_credit: 0 },
+  };
+}
+
 export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = process.env, runtimeReader = null, platformGatesSourceReader = null } = {}) {
   let server;
   server = createServer((request, response) => {
@@ -1363,6 +1391,26 @@ export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = proc
         }), "application/json; charset=utf-8", { head });
       } catch (error) {
         writeResponse(response, 400, { error: "wallet_action_plan_input_invalid", reason: error instanceof Error ? error.message : "invalid wallet action plan input" }, "application/json; charset=utf-8", { head });
+      }
+      return;
+    }
+    if (pathname === "/wallet-action-bridge.json") {
+      if (hasUnsupportedWorkbenchQuery(parsedUrl) || hasRequestBody(request)) {
+        writeResponse(response, 400, { error: "wallet_bridge_input_invalid", reason: "client_binding_not_accepted" }, "application/json; charset=utf-8", { head });
+        return;
+      }
+      if (!releaseReady) {
+        writeResponse(response, 503, unavailable, "application/json; charset=utf-8", { head });
+        return;
+      }
+      try {
+        const actionPlan = buildWalletErpActionPlanProjection({
+          release,
+          selected_profile_id: parsedUrl.searchParams.get("profile_id") ?? undefined,
+        });
+        writeResponse(response, 200, buildWalletBridgeProjection({ release, actionPlan, env }), "application/json; charset=utf-8", { head });
+      } catch (error) {
+        writeResponse(response, 400, { error: "wallet_bridge_input_invalid", reason: error instanceof Error ? error.message : "invalid wallet bridge input" }, "application/json; charset=utf-8", { head });
       }
       return;
     }

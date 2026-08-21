@@ -245,45 +245,40 @@ async function assertCurrentV8SurfacesFailClosed(baseUrl) {
   }
 }
 
-test("production default release is the tracked v9 template and fails closed without an injected commit", () => {
+test("production default release keeps the immutable v9 template fail-closed while code bytes require a new candidate", () => {
   const unbound = readReleaseDocument({ env: {} });
   assert.equal(unbound.schema_version, "base-erp-v9-public-release-v1");
   assert.equal(unbound.release_id, "base-erp-public-product-20260816-v9");
   assert.equal(unbound.commit_placeholder, true);
   assert.equal(unbound.v9_release_ready, false);
-  assert.equal(unbound.v9_candidate_gate.reason, "commit_placeholder");
+  assert.equal(unbound.v9_candidate_gate.reason, "v9_bom_fingerprint_mismatch");
   assert.equal(readHealth({ release: unbound }).ready, false);
 
   const bound = readReleaseDocument({ env: { GIT_COMMIT_SHA: TEST_COMMIT } });
   assert.equal(bound.schema_version, "base-erp-v9-public-release-v1");
   assert.equal(bound.commit_placeholder, false);
   assert.equal(bound.git_commit, TEST_COMMIT);
-  assert.equal(bound.v9_release_ready, true);
-  assert.equal(bound.v9_candidate_gate.ok, true);
-  assert.equal(readHealth({ release: bound }).ready, true);
+  assert.equal(bound.v9_release_ready, false);
+  assert.equal(bound.v9_candidate_gate.reason, "v9_bom_fingerprint_mismatch");
+  assert.equal(readHealth({ release: bound }).ready, false);
 
   const drifted = readReleaseDocument({ env: { GIT_COMMIT_SHA: "f".repeat(64) } });
   assert.equal(drifted.commit_placeholder, true);
   assert.equal(drifted.v9_release_ready, false);
-  assert.equal(drifted.v9_candidate_gate.reason, "commit_placeholder");
+  assert.equal(drifted.v9_candidate_gate.reason, "v9_bom_fingerprint_mismatch");
   assert.equal(readHealth({ release: drifted }).ready, false);
 });
 
-test("npm start default listener serves the tracked v9 release when Render injects its commit", async () => {
+test("npm start default listener preserves the immutable v9 gate until a new candidate is selected", async () => {
   const { server, address } = await listenServer({ host: "127.0.0.1", port: 0, env: { GIT_COMMIT_SHA: TEST_COMMIT } });
   assert.equal(typeof address, "object");
   try {
     const releaseResponse = await fetch(`http://127.0.0.1:${address.port}/release.json`);
-    assert.equal(releaseResponse.status, 200);
-    const release = await releaseResponse.json();
-    assert.equal(release.schema_version, "base-erp-v9-public-release-v1");
-    assert.equal(release.release_id, "base-erp-public-product-20260816-v9");
-    assert.equal(release.git_commit, TEST_COMMIT);
-    assert.equal(release.commit_placeholder, false);
-    assert.equal(release.v9_release_ready, true);
+    assert.equal(releaseResponse.status, 503);
+    assert.deepEqual(await releaseResponse.json(), { error: "release_unavailable", reason: "current_v9_identity_unready" });
     const healthResponse = await fetch(`http://127.0.0.1:${address.port}/healthz`);
-    assert.equal(healthResponse.status, 200);
-    assert.equal((await healthResponse.json()).ready, true);
+    assert.equal(healthResponse.status, 503);
+    assert.equal((await healthResponse.json()).ready, false);
   } finally {
     await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
   }
@@ -648,6 +643,33 @@ test("wallet ERP action plan projection disables unsupported outbound non-refund
   assert.equal(plan.accounting.mainnet_transaction_credit, 0);
 });
 
+test("wallet bridge visitor endpoint is owner-gated and never exposes executable calldata", async () => {
+  await withServer(async (baseUrl) => {
+    const [response, head, query, method] = await Promise.all([
+      fetch(`${baseUrl}/wallet-action-bridge.json`),
+      fetch(`${baseUrl}/wallet-action-bridge.json`, { method: "HEAD" }),
+      fetch(`${baseUrl}/wallet-action-bridge.json?to=0x1111111111111111111111111111111111111111`),
+      fetch(`${baseUrl}/wallet-action-bridge.json`, { method: "POST" }),
+    ]);
+    assert.equal(response.status, 200);
+    assert.equal(head.status, 200);
+    assert.equal(await head.text(), "");
+    const body = await response.json();
+    assert.equal(body.schema_version, "base-account-wallet-bridge-public-v1");
+    assert.equal(body.bridge_available, false);
+    assert.equal(body.execution_ready, false);
+    assert.equal(body.reason, "owner_auth_required");
+    assert.equal(body.owner_review_required, true);
+    assert.equal(body.accounting.mainnet_transaction_credit, 0);
+    assert.equal(body.accounting.publication_unit_credit, 0);
+    for (const key of ["call_template", "to", "value", "data", "calls", "calls_id", "receipt"]) assert.equal(Object.prototype.hasOwnProperty.call(body, key), false, key);
+    assert.equal(query.status, 400);
+    assert.equal((await query.json()).reason, "client_binding_not_accepted");
+    assert.equal(method.status, 405);
+    assert.deepEqual(await method.json(), { error: "method_not_allowed", allowed: ["GET", "HEAD"] });
+  }, { env: { ...process.env, GIT_COMMIT_SHA: TEST_COMMIT, BASE_ERP_WALLET_BRIDGE_CALL_TEMPLATE_JSON: JSON.stringify({ to: "0x1111111111111111111111111111111111111111", value: "0x0", data: "0x" }) } });
+});
+
 test("operator workbench HTML is decision-first and preserves explicit stop conditions", async () => {
   await withServer(async (baseUrl) => {
     const response = await fetch(`${baseUrl}/workbench/?profile_id=customer_invoice_receipt`);
@@ -663,6 +685,8 @@ test("operator workbench HTML is decision-first and preserves explicit stop cond
     assert.match(body, /ERP consequence preview/);
     assert.match(body, /No wallet request, signature, broadcast, ERP write or platform write is exposed/);
     assert.match(body, /<button disabled>Review evidence<\/button>/);
+    assert.match(body, /data-wallet-bridge="connect"[^>]*disabled/);
+    assert.match(body, /Owner review unavailable/);
   });
 });
 

@@ -1,3 +1,5 @@
+import { renderWalletBridgeBrowserScript } from "./base-account-wallet-bridge.mjs";
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -72,7 +74,7 @@ function renderWalletActionPlan(plan) {
   const unavailable = plan.unavailable_reason
     ? `<p class="muted">Unavailable for this profile: ${escapeHtml(plan.unavailable_reason)}</p>`
     : `<dl><dt>Scenario</dt><dd>${escapeHtml(plan.scenario?.direction ?? "not exposed")}</dd><dt>ERP target</dt><dd>${escapeHtml(plan.erp?.target ?? "not exposed")}</dd><dt>Amount</dt><dd>${escapeHtml(String(plan.amount?.amount_minor ?? "not exposed"))} minor units · ${escapeHtml(plan.amount?.currency ?? "not exposed")}</dd></dl>`;
-  return `<section class="wallet-action-plan" id="wallet-action-plan" aria-labelledby="wallet-action-plan-heading"><h3 id="wallet-action-plan-heading">Wallet ERP action plan</h3><p class="muted">Deterministic descriptor only; no wallet request or execution payload is exposed.</p><dl><dt>Chain</dt><dd>${escapeHtml(wallet.chain ?? "eip155:8453")}</dd><dt>Method</dt><dd>${escapeHtml(wallet.wallet_method ?? "wallet_sendCalls")}</dd><dt>Account binding</dt><dd>${wallet.account_bound === true ? "bound without identity exposure" : "not bound"}</dd><dt>Authority</dt><dd>${escapeHtml(plan.execution_authority ?? "owner_review_required")}</dd><dt>Payload</dt><dd>${wallet.payload_present === true ? "present" : "absent"} · ${wallet.unsigned === true ? "unsigned" : "signed"}</dd></dl>${unavailable}<p class="muted">Credits: mainnet ${escapeHtml(String(accounting.mainnet_transaction_credit ?? 0))} · publication ${escapeHtml(String(accounting.publication_unit_credit ?? 0))} · ${escapeHtml(accounting.credit_state ?? "zero_until_all_required_evidence_passes")}</p><div class="action"><span class="muted">Owner-visible review required</span><button disabled aria-disabled="true">Action disabled</button></div></section>`;
+  return `<section class="wallet-action-plan" id="wallet-action-plan" aria-labelledby="wallet-action-plan-heading"><h3 id="wallet-action-plan-heading">Wallet ERP action plan</h3><p class="muted">Deterministic unsigned descriptor. The browser bridge is dormant until an authenticated owner review route and server-bound v9 call template are present.</p><dl><dt>Chain</dt><dd>${escapeHtml(wallet.chain ?? "eip155:8453")}</dd><dt>Method</dt><dd>${escapeHtml(wallet.wallet_method ?? "wallet_sendCalls")}</dd><dt>Account binding</dt><dd>${wallet.account_bound === true ? "bound without identity exposure" : "not bound"}</dd><dt>Authority</dt><dd>${escapeHtml(plan.execution_authority ?? "owner_review_required")}</dd><dt>Payload</dt><dd>${wallet.payload_present === true ? "present" : "absent"} · ${wallet.unsigned === true ? "unsigned" : "signed"}</dd></dl>${unavailable}<p class="muted">Credits: mainnet ${escapeHtml(String(accounting.mainnet_transaction_credit ?? 0))} · publication ${escapeHtml(String(accounting.publication_unit_credit ?? 0))} · ${escapeHtml(accounting.credit_state ?? "zero_until_all_required_evidence_passes")}</p><div class="action"><span class="muted" data-wallet-bridge-status>Owner-visible review required; no provider call on page load</span><span><button type="button" data-wallet-bridge="connect" data-wallet-bridge-plan="/wallet-action-bridge.json" disabled aria-disabled="true">Owner review unavailable</button> <button type="button" data-wallet-bridge="send" disabled aria-disabled="true">Send after review (Action disabled)</button> <button type="button" data-wallet-bridge="poll" disabled aria-disabled="true">Read status</button></span></div></section>`;
 }
 
 export function renderOperatorWorkbenchPage(workbench) {
@@ -140,7 +142,7 @@ ${truthHtml}${networkHtml}${walletActionPlanHtml}${platformGatesHtml}
   document.addEventListener("keydown", (event) => { if (event.key === "Escape" && compact()) setOpen(false); });
   window.addEventListener("resize", sync);
 })();
-</script></body></html>`;
+</script>${renderWalletBridgeBrowserScript()}</body></html>`;
   return html
     .replace('<button disabled aria-disabled="true">Review evidence</button>', '<button disabled>Review evidence</button>')
     .replace('.inspector.open,.inspector:hover{transform:translateX(0)}', '.inspector.open{transform:translateX(0)}')
