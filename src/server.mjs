@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { lstatSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
@@ -32,6 +32,8 @@ import {
 } from "./base-erp-workbench.mjs";
 import { renderOperatorWorkbenchPage } from "./operator-workbench-page.mjs";
 import { evaluateRefundProposal } from "./base-refund-ceiling-guard.mjs";
+import { buildReleaseBoundUnsignedCallPlan } from "./base-account-wallet-bridge.mjs";
+import { authRequestIdentity, createAuthService, redactedAuthError } from "./auth/auth-core.mjs";
 
 const PROJECT_ROOT = fileURLToPath(new URL("../", import.meta.url));
 // Production must never default to the historical v8 runtime receipt.  The
@@ -139,6 +141,10 @@ const PUBLIC_ASSETS = Object.freeze({
   "/assets/base-app/base-erp-workbench-thumbnail-source.png": Object.freeze({
     file: "assets/base-app/base-erp-workbench-thumbnail-source.png",
     type: "image/png",
+  }),
+  "/assets/base-auth-sdk.bundle.js": Object.freeze({
+    file: "public/assets/base-auth-sdk.bundle.js",
+    type: "text/javascript; charset=utf-8",
   }),
 });
 
@@ -674,7 +680,7 @@ export function readReleaseDocument({ releasePath = DEFAULT_RELEASE_PATH, env = 
   return Object.freeze(document);
 }
 
-export function readHealth({ release = readReleaseDocument(), runtimeReader = null, observedAt = new Date().toISOString() } = {}) {
+export function readHealth({ release = readReleaseDocument(), runtimeReader = null, observedAt = new Date().toISOString(), authReadiness = null } = {}) {
   let runtimeStatus = "not_required";
   let runtimeReason;
   if (typeof runtimeReader === "function") {
@@ -701,6 +707,15 @@ export function readHealth({ release = readReleaseDocument(), runtimeReader = nu
     commit_placeholder: release.commit_placeholder,
     observed_at: observedAt,
     public_write_authorized: false,
+    ...(authReadiness ? { auth: Object.freeze({
+      enabled: authReadiness.enabled === true,
+      ready: authReadiness.ready === true,
+      single_instance: authReadiness.single_instance === true,
+      nonce_store: authReadiness.nonce_store === "available" ? "available" : "unavailable",
+      verifier: authReadiness.verifier === "configured" ? "configured" : "unavailable",
+      owner_allowlist: authReadiness.owner_allowlist === "configured" ? "configured" : "unavailable",
+      ...(authReadiness.reason ? { reason: String(authReadiness.reason).slice(0, 64) } : {}),
+    }) } : {}),
     ...(runtimeReason ? { runtime_reason: runtimeReason } : {}),
   });
 }
@@ -1109,13 +1124,44 @@ export function renderEvidencePage(evidence) {
 </main></body></html>`;
 }
 
-function writeResponse(response, status, body, contentType, { head = false } = {}) {
-  const payload = typeof body === "string" ? body : JSON.stringify(body);
+function secureHtmlResponse(payload) {
+  const nonce = randomBytes(16).toString("base64");
+  const escapedNonce = nonce.replace(/["\\]/g, "");
+  // Every inline script is nonce-bound.  The self-hosted SDK is loaded from
+  // this origin only; the exact wallet RPC origin is allowed for status
+  // readback, while vendor telemetry hosts remain excluded.  Inline styles
+  // remain a compatibility allowance for the existing server-rendered
+  // workbench and are not a script execution allowance.
+  const html = payload.replace(/<script(?![^>]*\bnonce=)/gi, `<script nonce="${escapedNonce}"`);
+  const contentSecurityPolicy = [
+    "default-src 'self'",
+    "base-uri 'none'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "connect-src 'self' https://rpc.wallet.coinbase.com",
+    `script-src 'self' 'nonce-${escapedNonce}'`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data:",
+    "font-src 'self' data:",
+  ].join("; ");
+  return { html, contentSecurityPolicy };
+}
+
+function writeResponse(response, status, body, contentType, { head = false, headers = {} } = {}) {
+  let payload = typeof body === "string" ? body : JSON.stringify(body);
+  const htmlHeaders = {};
+  if (String(contentType).toLowerCase().startsWith("text/html")) {
+    const secured = secureHtmlResponse(payload);
+    payload = secured.html;
+    htmlHeaders["content-security-policy"] = secured.contentSecurityPolicy;
+  }
   response.writeHead(status, {
     "content-type": contentType,
     "content-length": Buffer.byteLength(payload),
     "cache-control": "no-store",
     "x-content-type-options": "nosniff",
+    ...htmlHeaders,
+    ...headers,
   });
   if (!head) response.end(payload);
   else response.end();
@@ -1314,14 +1360,158 @@ function buildWalletBridgeProjection({ release, actionPlan, env }) {
   };
 }
 
-export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = process.env, runtimeReader = null, platformGatesSourceReader = null } = {}) {
+function readRequestBody(request, { maxBytes = 16 * 1024 } = {}) {
+  return new Promise((resolvePromise, rejectPromise) => {
+    let size = 0;
+    const chunks = [];
+    request.on("data", (chunk) => {
+      size += chunk.byteLength;
+      if (size > maxBytes) {
+        rejectPromise(Object.assign(new Error("request_body_too_large"), { code: "request_body_too_large", status: 413 }));
+        request.destroy();
+        return;
+      }
+      chunks.push(Buffer.from(chunk));
+    });
+    request.on("end", () => resolvePromise(Buffer.concat(chunks).toString("utf8")));
+    request.on("error", rejectPromise);
+  });
+}
+
+function parseAuthBody(text) {
+  if (typeof text !== "string" || text.trim() === "") throw Object.assign(new Error("auth_body_invalid"), { code: "auth_body_invalid", status: 400 });
+  let body;
+  try { body = JSON.parse(text); } catch { throw Object.assign(new Error("auth_body_invalid"), { code: "auth_body_invalid", status: 400 }); }
+  if (!body || typeof body !== "object" || Array.isArray(body)) throw Object.assign(new Error("auth_body_invalid"), { code: "auth_body_invalid", status: 400 });
+  const allowed = new Set(["address", "message", "signature"]);
+  if (Object.keys(body).some((key) => !allowed.has(key))) throw Object.assign(new Error("auth_body_invalid"), { code: "auth_body_invalid", status: 400 });
+  return body;
+}
+
+function authHeaders(request) {
+  return {
+    host: typeof request.headers.host === "string" ? request.headers.host : "",
+    // Same-origin GET fetches may omit Origin. The browser adapter supplies a
+    // non-forwarded, app-controlled echo header in that case; forwarded
+    // headers remain deliberately ignored.
+    origin: request.headers.origin ?? request.headers["x-base-auth-origin"],
+    csrfToken: typeof request.headers["x-csrf-token"] === "string" ? request.headers["x-csrf-token"] : null,
+    cookie: typeof request.headers.cookie === "string" ? request.headers.cookie : null,
+  };
+}
+
+function authFailure(response, error, { head = false } = {}) {
+  const mapped = redactedAuthError(error);
+  writeResponse(response, mapped.status, mapped.body, "application/json; charset=utf-8", { head });
+}
+
+function ownerCallTemplateFromEnv(env) {
+  const raw = env?.BASE_AUTH_OWNER_CALL_TEMPLATE_JSON ?? env?.BASE_ERP_OWNER_CALL_TEMPLATE_JSON;
+  if (typeof raw !== "string" || raw.trim() === "") return null;
+  try {
+    const value = JSON.parse(raw);
+    return value && typeof value === "object" && !Array.isArray(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+async function handleAuthRoute({ request, response, pathname, head, parsedUrl, authService, releasePath, env, runtimeReader, authCallTemplate }) {
+  const method = request.method ?? "GET";
+  const context = authHeaders(request);
+  if (pathname === "/auth/nonce") {
+    if (method !== "GET" && method !== "HEAD") { writeResponse(response, 405, { error: "method_not_allowed", allowed: ["GET", "HEAD"] }, "application/json; charset=utf-8", { head }); return true; }
+    try {
+      const value = authService.issueNonce({ clientKey: authRequestIdentity(request), origin: context.origin, host: context.host });
+      writeResponse(response, 200, value, "application/json; charset=utf-8", { head });
+    } catch (error) { authFailure(response, error, { head }); }
+    return true;
+  }
+  if (pathname === "/auth/session") {
+    if (method !== "GET" && method !== "HEAD") { writeResponse(response, 405, { error: "method_not_allowed", allowed: ["GET", "HEAD"] }, "application/json; charset=utf-8", { head }); return true; }
+    try {
+      const readiness = authService.readiness();
+      if (!readiness.ready) throw Object.assign(new Error("auth_disabled"), { code: "auth_disabled", status: 503 });
+      const token = authService.sessionFromCookie(context.cookie);
+      let authenticated = false;
+      if (token) {
+        try {
+          authenticated = authService.requireSession({ token, clientKey: authRequestIdentity(request), origin: context.origin, host: context.host, requireCsrf: false, requireOrigin: false }).authenticated === true;
+        } catch (error) {
+          if (error?.code !== "auth_session_required") throw error;
+        }
+      }
+      writeResponse(response, 200, { authenticated, auth_enabled: true }, "application/json; charset=utf-8", { head });
+    } catch (error) { authFailure(response, error, { head }); }
+    return true;
+  }
+  if (pathname === "/auth/verify") {
+    if (method !== "POST") { writeResponse(response, 405, { error: "method_not_allowed", allowed: ["POST"] }, "application/json; charset=utf-8", { head }); return true; }
+    try {
+      const body = parseAuthBody(await readRequestBody(request));
+      const existingToken = authService.sessionFromCookie(context.cookie);
+      const result = await authService.verify({ ...body, existingToken, origin: context.origin, host: context.host, clientKey: authRequestIdentity(request), requestId: request.headers["x-request-id"] ?? null });
+      writeResponse(response, 200, { authenticated: true, csrf_token: result.csrf_token, session: result.session }, "application/json; charset=utf-8", { head, headers: { "set-cookie": result.set_cookie } });
+    } catch (error) { authFailure(response, error, { head }); }
+    return true;
+  }
+  if (pathname === "/auth/logout") {
+    if (method !== "POST") { writeResponse(response, 405, { error: "method_not_allowed", allowed: ["POST"] }, "application/json; charset=utf-8", { head }); return true; }
+    try {
+      if (hasRequestBody(request)) {
+        const body = await readRequestBody(request);
+        if (body.trim() !== "{}") throw Object.assign(new Error("auth_body_invalid"), { code: "auth_body_invalid", status: 400 });
+      }
+      const result = authService.logout({ token: authService.sessionFromCookie(context.cookie), csrfToken: context.csrfToken, clientKey: authRequestIdentity(request), origin: context.origin, host: context.host });
+      writeResponse(response, 200, { authenticated: false }, "application/json; charset=utf-8", { head, headers: { "set-cookie": result.clear_cookie } });
+    } catch (error) { authFailure(response, error, { head }); }
+    return true;
+  }
+  if (pathname === "/owner/wallet-action-bridge.json") {
+    if (method !== "GET" && method !== "HEAD") { writeResponse(response, 405, { error: "method_not_allowed", allowed: ["GET", "HEAD"] }, "application/json; charset=utf-8", { head }); return true; }
+    try {
+      if (parsedUrl.searchParams.size > 0 || hasRequestBody(request)) throw Object.assign(new Error("auth_owner_route_input_invalid"), { code: "auth_owner_route_input_invalid", status: 400 });
+      const token = authService.sessionFromCookie(context.cookie);
+      authService.buildOwnerSession({ token, csrfToken: context.csrfToken, clientKey: authRequestIdentity(request), origin: context.origin, host: context.host });
+      const release = readReleaseDocument({ releasePath, env });
+      if (!currentReleaseReady(release)) throw Object.assign(new Error("release_unavailable"), { code: "release_unavailable", status: 503 });
+      const actionPlan = buildWalletErpActionPlanProjection({ release });
+      const template = authCallTemplate ?? ownerCallTemplateFromEnv(env);
+      if (!template) throw Object.assign(new Error("owner_plan_unavailable"), { code: "owner_plan_unavailable", status: 503 });
+      // `readReleaseDocument` carries public readiness/evidence fields.  The
+      // wallet bridge accepts only its exact six-field release binding, so the
+      // owner route must project that binding explicitly instead of passing a
+      // broad document that could accidentally widen the send contract.
+      const releaseBinding = {
+        release_id: release.release_id,
+        release_fingerprint: release.release_fingerprint,
+        bom_fingerprint: release.bom_fingerprint,
+        commit_sha: release.git_commit,
+        source_catalog_fingerprint: release.source_catalog_fingerprint,
+        base_target: release.base_target,
+      };
+      const plan = buildReleaseBoundUnsignedCallPlan({ release: releaseBinding, action_plan: actionPlan, call_template: template });
+      writeResponse(response, 200, { schema_version: "base-account-wallet-bridge-owner-v1", owner_auth_required: false, plan }, "application/json; charset=utf-8", { head });
+    } catch (error) {
+      if (error?.code === "release_unavailable" || error?.code === "owner_plan_unavailable") writeResponse(response, 503, { error: error.code }, "application/json; charset=utf-8", { head });
+      else authFailure(response, error, { head });
+    }
+    return true;
+  }
+  return false;
+}
+
+export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = process.env, runtimeReader = null, platformGatesSourceReader = null, authService = null, authVerifier = null, authStore = null, authNow = null, authCallTemplate = null } = {}) {
+  const effectiveAuthService = authService ?? createAuthService({
+    env,
+    verifier: authVerifier,
+    store: authStore,
+    now: authNow ?? (() => Date.now()),
+    options: { singleInstance: env.BASE_AUTH_SINGLE_INSTANCE === "true" },
+  });
   let server;
   server = createServer((request, response) => {
     const head = request.method === "HEAD";
-    if (request.method !== "GET" && !head) {
-      writeResponse(response, 405, { error: "method_not_allowed", allowed: ["GET", "HEAD"] }, "application/json; charset=utf-8");
-      return;
-    }
     let parsedUrl;
     try {
       parsedUrl = new URL(request.url ?? "/", "http://localhost");
@@ -1330,6 +1520,16 @@ export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = proc
       return;
     }
     const pathname = parsedUrl.pathname;
+    if (["/auth/nonce", "/auth/verify", "/auth/session", "/auth/logout", "/owner/wallet-action-bridge.json"].includes(pathname)) {
+      void handleAuthRoute({ request, response, pathname, head, parsedUrl, authService: effectiveAuthService, releasePath, env, runtimeReader, authCallTemplate }).catch((error) => {
+        if (!response.headersSent) authFailure(response, error, { head });
+      });
+      return;
+    }
+    if (request.method !== "GET" && !head) {
+      writeResponse(response, 405, { error: "method_not_allowed", allowed: ["GET", "HEAD"] }, "application/json; charset=utf-8");
+      return;
+    }
     if (pathname === "/favicon.ico") {
       response.writeHead(204, { "cache-control": "public, max-age=300" });
       response.end();
@@ -1347,7 +1547,7 @@ export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = proc
     const releaseReady = currentReleaseReady(release);
     const unavailable = release.schema_version === V9_PUBLIC_SCHEMA_VERSION ? CURRENT_V9_UNAVAILABLE : CURRENT_V8_UNAVAILABLE;
     if (pathname === "/healthz") {
-      const health = readHealth({ release, runtimeReader });
+      const health = readHealth({ release, runtimeReader, authReadiness: effectiveAuthService.readiness() });
       writeResponse(response, health.ready ? 200 : 503, health, "application/json; charset=utf-8", { head });
       return;
     }
@@ -1595,8 +1795,8 @@ function parsePort(value) {
   return port;
 }
 
-export function listenServer({ host = process.env.HOST || "0.0.0.0", port = parsePort(process.env.PORT || "3000"), releasePath = DEFAULT_RELEASE_PATH, env = process.env, runtimeReader = null, platformGatesSourceReader = null } = {}) {
-  const server = createAppServer({ releasePath, env, runtimeReader, platformGatesSourceReader });
+export function listenServer({ host = process.env.HOST || "0.0.0.0", port = parsePort(process.env.PORT || "3000"), releasePath = DEFAULT_RELEASE_PATH, env = process.env, runtimeReader = null, platformGatesSourceReader = null, authService = null, authVerifier = null, authStore = null, authNow = null, authCallTemplate = null } = {}) {
+  const server = createAppServer({ releasePath, env, runtimeReader, platformGatesSourceReader, authService, authVerifier, authStore, authNow, authCallTemplate });
   return new Promise((resolvePromise, rejectPromise) => {
     const onError = (error) => {
       server.removeListener("listening", onListening);

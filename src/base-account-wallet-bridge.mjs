@@ -19,6 +19,7 @@ export const BASE_ACCOUNT_METHODS = Object.freeze({
 });
 export const BASE_ACCOUNT_SEND_CALLS_VERSION = "2.0.0";
 export const BASE_ACCOUNT_RELEASE_SCHEMA_VERSION = "base-erp-v9-release-identity-v1";
+export const BASE_ACCOUNT_V11_RELEASE_SCHEMA_VERSION = "base-erp-v11-release-identity-v1";
 export const BASE_ACCOUNT_PHASES = Object.freeze([
   "disconnected",
   "connected",
@@ -43,7 +44,7 @@ const QUANTITY = /^0x(?:0|[1-9a-f][0-9a-f]*)$/i;
 const BYTES = /^0x(?:[0-9a-f]{2})*$/i;
 const COMMIT_PLACEHOLDER = "PENDING_OWNER_PUBLIC_COMMIT";
 const BASE_TARGET_FIELDS = new Set(["github_repo", "render_service_id", "render_domain", "dashboard_app_id", "canonical_primary_url"]);
-const CIRCLE_MARKER = /(^|[^a-z])(circle|arc)([^a-z]|$)/i;
+const CIRCLE_MARKER = /(circle|arc)/i;
 
 function fail(code, details = {}) {
   const error = new Error(code);
@@ -111,14 +112,23 @@ function normalizeBaseTarget(value) {
 }
 
 export function canonicalBridgeReleaseFingerprintBasis({ release_id, bom_fingerprint, base_target, commit_sha, source_catalog_fingerprint } = {}) {
+  const schema_version = releaseIdentitySchema(release_id);
   return {
-    schema_version: BASE_ACCOUNT_RELEASE_SCHEMA_VERSION,
+    schema_version,
     release_id,
     bom_fingerprint,
     base_target,
     commit_sha,
     source_catalog_fingerprint,
   };
+}
+
+function releaseIdentitySchema(releaseId) {
+  if (typeof releaseId !== "string") fail("BRIDGE_RELEASE_SCHEMA_INVALID");
+  if (/^base-erp-public-product-\d{8}-v11$/i.test(releaseId)) return BASE_ACCOUNT_V11_RELEASE_SCHEMA_VERSION;
+  // v10 is a local successor of the v9 identity contract.
+  if (/^base-erp-public-product-\d{8}-v(?:9|10)$/i.test(releaseId)) return BASE_ACCOUNT_RELEASE_SCHEMA_VERSION;
+  fail("BRIDGE_RELEASE_SCHEMA_INVALID");
 }
 
 export function computeBridgeReleaseFingerprint(identity) {
@@ -345,9 +355,7 @@ export function validateWalletCapabilities(response) {
 }
 
 function normalizedStatus(value) {
-  const status = typeof value === "number" && Number.isInteger(value)
-    ? value
-    : typeof value === "string" && /^\d+$/.test(value.trim()) ? Number(value.trim()) : NaN;
+  const status = typeof value === "number" && Number.isInteger(value) ? value : NaN;
   if (![100, 200, 400, 500, 600].includes(status)) fail("BRIDGE_CALLS_STATUS_UNKNOWN");
   return status;
 }
@@ -385,7 +393,8 @@ export function mapWalletCallsStatus(response, { finality = null, expectedCallsI
     const status = normalizedStatus(source.status);
     if (typeof source.atomic !== "boolean") fail("BRIDGE_CALLS_ATOMIC_MISSING");
     if (status === 100) {
-      validateReceipts(source.receipts, { allowEmpty: true, allowMissing: true });
+      const receipts = validateReceipts(source.receipts, { allowEmpty: true, allowMissing: true });
+      if (receipts.length > 0) fail("BRIDGE_PENDING_RECEIPTS_PRESENT");
       return deepFreeze({ ok: true, phase: "pending", status, atomic: source.atomic, receipt_success: false, finality: null });
     }
     if (status === 600) {
@@ -621,7 +630,10 @@ export function renderWalletBridgeBrowserScript({ planUrl = "/wallet-action-brid
   const targetValid = (target) => target && typeof target === "object" && !Array.isArray(target)
     && exactKeys(target, ["github_repo", "render_service_id", "render_domain", "dashboard_app_id", "canonical_primary_url"])
     && Object.values(target).every((value) => typeof value === "string" && value.trim() !== "")
-    && !/(^|[^a-z])(circle|arc)([^a-z]|$)/i.test(JSON.stringify(target));
+    // Keep the embedded legacy page validator in lockstep with the canonical
+    // bridge validator: concatenated identities such as circlepayments are
+    // denylisted too.
+    && !/(circle|arc)/i.test(JSON.stringify(target));
   const bindingFromRelease = (release) => ({
     release_id: release?.release_id,
     release_fingerprint: release?.release_fingerprint,
@@ -634,7 +646,7 @@ export function renderWalletBridgeBrowserScript({ planUrl = "/wallet-action-brid
     if (!binding || typeof binding !== "object" || !exactKeys(binding, ["release_id", "release_fingerprint", "bom_fingerprint", "commit_sha", "source_catalog_fingerprint", "base_target"])) throw new Error("release_binding_invalid");
     if (typeof binding.release_id !== "string" || !digestPattern.test(binding.release_fingerprint ?? "") || !digestPattern.test(binding.bom_fingerprint ?? "") || !digestPattern.test(binding.source_catalog_fingerprint ?? "") || !targetValid(binding.base_target)) throw new Error("release_binding_invalid");
     if (binding.commit_sha !== COMMIT_PLACEHOLDER && !commitPattern.test(binding.commit_sha ?? "")) throw new Error("commit_binding_invalid");
-    const basis = { schema_version: "base-erp-v9-release-identity-v1", release_id: binding.release_id, bom_fingerprint: binding.bom_fingerprint.toLowerCase(), base_target: binding.base_target, commit_sha: binding.commit_sha, source_catalog_fingerprint: binding.source_catalog_fingerprint.toLowerCase() };
+    const basis = { schema_version: releaseIdentitySchema(binding.release_id), release_id: binding.release_id, bom_fingerprint: binding.bom_fingerprint.toLowerCase(), base_target: binding.base_target, commit_sha: binding.commit_sha, source_catalog_fingerprint: binding.source_catalog_fingerprint.toLowerCase() };
     if ((await sha256Hex(canonical(basis))) !== binding.release_fingerprint.toLowerCase()) throw new Error("release_fingerprint_mismatch");
   };
   const validateCallTemplate = async (template) => {
@@ -682,7 +694,8 @@ export function renderWalletBridgeBrowserScript({ planUrl = "/wallet-action-brid
   };
   const validateStatus = (result) => {
     if (!result || typeof result !== "object" || Object.keys(result).some((key) => !["version", "chainId", "id", "status", "atomic", "receipts"].includes(key)) || result.version !== VERSION || result.chainId !== CHAIN_ID || typeof result.id !== "string" || result.id.trim() === "" || typeof result.atomic !== "boolean") throw new Error("status_envelope_invalid");
-    const statusCode = Number(result.status); const receipts = result.receipts;
+    const statusCode = result.status; const receipts = result.receipts;
+    if (!Number.isInteger(statusCode)) throw new Error("status_unknown");
     if (![100, 200, 400, 500, 600].includes(statusCode)) throw new Error("status_unknown");
     if (statusCode === 100) { if (receipts !== undefined && (!Array.isArray(receipts) || receipts.length !== 0)) throw new Error("pending_receipts_invalid"); return statusCode; }
     if (statusCode === 400 || statusCode === 500) { if (receipts !== undefined && (!Array.isArray(receipts) || receipts.length !== 0)) throw new Error("failed_receipts_invalid"); return statusCode; }

@@ -990,6 +990,21 @@ test("standard web-app metadata and existing Base App assets are served without 
   });
 });
 
+test("HTML responses use self-only connect CSP and nonce-bind inline scripts", async () => {
+  await withServer(async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/workbench/`);
+    assert.equal(response.status, 200);
+    const policy = response.headers.get("content-security-policy");
+    assert.match(policy, /connect-src 'self' https:\/\/rpc\.wallet\.coinbase\.com/);
+    assert.match(policy, /script-src 'self' 'nonce-[A-Za-z0-9+/=]+'/);
+    assert.doesNotMatch(policy, /\*|cca-lite|amplitude/i);
+    assert.doesNotMatch(policy, /script-src[^;]*unsafe-inline/i);
+    const html = await response.text();
+    assert.match(html, /<script nonce="[A-Za-z0-9+/=]+">/);
+    assert.equal((html.match(/<script nonce="([A-Za-z0-9+/=]+)">/g) ?? []).length > 0, true);
+  });
+});
+
 test("recurring settlement visitor projection is deterministic and status-readback-pending", () => {
   const first = buildRecurringSettlementProjection({ release: TEST_RELEASE });
   const second = buildRecurringSettlementProjection({ release: TEST_RELEASE });

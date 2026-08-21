@@ -97,6 +97,10 @@ test("release-bound plans fail closed on BASE/CIRCLE target collision and action
   circleRelease.release_fingerprint = computeBridgeReleaseFingerprint(circleRelease);
   assert.throws(() => buildReleaseBoundUnsignedCallPlan({ release: circleRelease, call_template: callTemplate }), /BRIDGE_BASE_TARGET_CIRCLE_COLLISION/);
   assert.throws(() => buildReleaseBoundUnsignedCallPlan({ release, action_plan: { ...actionPlan, release: { ...actionPlan.release, bom_fingerprint: "d".repeat(64) } }, call_template: callTemplate }), /BRIDGE_RELEASE_FINGERPRINT_MISMATCH/);
+  const concatenatedCircle = { ...release, base_target: { ...baseTarget, github_repo: "circlepayments/base-erp-settlement-workbench" } };
+  concatenatedCircle.release_fingerprint = computeBridgeReleaseFingerprint(concatenatedCircle);
+  assert.throws(() => buildReleaseBoundUnsignedCallPlan({ release: concatenatedCircle, call_template: callTemplate }), /BRIDGE_BASE_TARGET_CIRCLE_COLLISION/);
+  assert.throws(() => computeBridgeReleaseFingerprint({ ...release, release_id: "base-erp-public-product-20260816-v12" }), /BRIDGE_RELEASE_SCHEMA_INVALID/);
 });
 
 test("builds only the canonical wallet_sendCalls v2 request and rejects client drift", () => {
@@ -147,6 +151,9 @@ test("status mapping checks atomic, receipts and finality independently", () => 
     { ...statusBase, status: 999, receipts: [{ transactionHash: txHash, status: "0x1" }] },
     { ...statusBase, status: 200, chainId: "0x8453", receipts: [{ transactionHash: txHash, status: "0x1" }] },
     { ...statusBase, status: 200, version: "1.0", receipts: [{ transactionHash: txHash, status: "0x1" }] },
+    { ...statusBase, status: "200", receipts: [{ transactionHash: txHash, status: "0x1" }] },
+    { ...statusBase, status: 200, injected: true, receipts: [{ transactionHash: txHash, status: "0x1" }] },
+    { ...statusBase, status: 100, receipts: [{ transactionHash: txHash, status: "0x1" }] },
   ]) assert.equal(mapWalletCallsStatus(invalid).ok, false);
 });
 

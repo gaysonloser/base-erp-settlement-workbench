@@ -6,12 +6,21 @@
   "description": "Receipt-first Base Smart Wallet and ERP settlement workbench.",
   "scripts": {
     "start": "node src/server.mjs",
+    "build:auth": "node scripts/build-auth-bundle.mjs",
     "test": "node --test test/*.test.mjs"
   },
   "engines": {
     "node": ">=22"
   },
   "devDependencies": {
+    "@base-org/account": "2.5.10",
+    "esbuild": "0.28.2",
     "playwright": "1.59.1"
+  },
+  "dependencies": {
+    "viem": "2.55.19"
+  },
+  "overrides": {
+    "axios": "1.18.0"
   }
 }
