@@ -5,8 +5,15 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { createAppServer, readHealth, readReleaseDocument } from "../src/server.mjs";
-import { buildOperatorWorkbench, buildPlatformGatesProjection, buildRecurringSettlementProjection } from "../src/base-erp-workbench.mjs";
+import { V9_SOURCE_CATALOG_FINGERPRINT, buildV9IntegritySealInput, computeV9ReleaseFingerprint, createAppServer, listenServer, readHealth, readReleaseDocument } from "../src/server.mjs";
+import {
+  REQUIRED_PLATFORM_IDS,
+  REQUIRED_ROUTE_PATHS,
+  digest as h220Digest,
+  evaluateReleaseEvidenceSeal,
+  verifyReleaseEvidenceSeal,
+} from "../src/base-release-evidence-integrity-seal.mjs";
+import { buildOperatorWorkbench, buildPlatformGatesProjection, buildRecurringSettlementProjection, buildWalletErpActionPlanProjection } from "../src/base-erp-workbench.mjs";
 import { renderOperatorWorkbenchPage } from "../src/operator-workbench-page.mjs";
 
 const TEST_COMMIT = "a".repeat(40);
@@ -37,6 +44,80 @@ async function withTempCandidate(candidate, run) {
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
+}
+
+/**
+ * The frozen runtime candidate pins the pre-H220 digests of src/server.mjs and
+ * test/server.test.mjs inside its immutable BOM. Tests that need a current-v8
+ * ready release recompute those two entries plus the BOM/release fingerprints
+ * so the production candidate file stays frozen and untouched.
+ */
+function recomputeCurrentCandidate() {
+  const candidate = JSON.parse(readFileSync("runtime/release_candidate_2026-08-10.json", "utf8"));
+  // The v8 candidate is frozen on disk, but this helper intentionally creates
+  // a disposable current-v8 projection for server tests. Recompute every
+  // pinned file so accepted H220/v9 implementation edits (including the
+  // workbench and route modules) do not make the temporary candidate stale.
+  candidate.immutable_release_bom = candidate.immutable_release_bom.map((entry) => ({
+    ...entry,
+    digest: sha256(readFileSync(entry.path.slice("projects/2026-08_Base_ERP_Settlement_Workbench/".length))),
+  }));
+  candidate.bom_fingerprint = sha256(canonicalH219({
+    schema_version: "base-erp-v8-bom-v1",
+    files: candidate.immutable_release_bom.map((entry) => ({ path: entry.path, sha256: entry.digest })),
+  }));
+  candidate.immutable_bom_sha256 = candidate.bom_fingerprint;
+  candidate.release_fingerprint = sha256(canonicalH219({
+    schema_version: "base-erp-v8-release-identity-v1",
+    release_id: candidate.release_id,
+    bom_fingerprint: candidate.bom_fingerprint,
+    base_target: candidate.base_target,
+  }));
+  return candidate;
+}
+
+function recomputeV9Candidate({ commit = TEST_COMMIT } = {}) {
+  const candidate = JSON.parse(readFileSync("runtime/release_candidate_v9_local_2026-08-16.json", "utf8"));
+  const additionalV9Files = [
+    "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-wallet-erp-action-plan.mjs",
+    "projects/2026-08_Base_ERP_Settlement_Workbench/test/base-wallet-erp-action-plan.test.mjs",
+  ];
+  const existingPaths = new Set(candidate.immutable_release_bom.map((entry) => entry.path));
+  candidate.immutable_release_bom = [
+    ...candidate.immutable_release_bom,
+    ...additionalV9Files.filter((path) => !existingPaths.has(path)).map((path) => ({ path })),
+  ]
+    .map((entry) => ({
+      path: entry.path,
+      digest: sha256(readFileSync(entry.path.slice("projects/2026-08_Base_ERP_Settlement_Workbench/".length))),
+    }))
+    .sort((left, right) => Buffer.from(left.path, "utf8").compare(Buffer.from(right.path, "utf8")));
+  candidate.bom_fingerprint = h220Digest(candidate.immutable_release_bom);
+  candidate.immutable_bom_sha256 = candidate.bom_fingerprint;
+  candidate.source_digest_catalog = {
+    "README.md": sha256(readFileSync("README.md")),
+    "src/base-release-evidence-integrity-seal.mjs": sha256(readFileSync("src/base-release-evidence-integrity-seal.mjs")),
+    "test/base-release-evidence-integrity-seal.test.mjs": sha256(readFileSync("test/base-release-evidence-integrity-seal.test.mjs")),
+  };
+  candidate.source_catalog_fingerprint = h220Digest(candidate.source_digest_catalog);
+  candidate.commit_sha = commit;
+  candidate.commit_placeholder = false;
+  candidate.commit_gate = {
+    state: "bound_owner_public_commit_for_test",
+    required: "one owner-confirmed lowercase full 40-hex commit for this exact v9 BOM",
+    placeholder: "PENDING_OWNER_PUBLIC_COMMIT",
+    failure_code: null,
+  };
+  candidate.release_fingerprint = computeV9ReleaseFingerprint({
+    release_id: candidate.release_id,
+    bom_fingerprint: candidate.bom_fingerprint,
+    base_target: candidate.base_target,
+    commit_sha: candidate.commit_sha,
+    source_catalog_fingerprint: candidate.source_catalog_fingerprint,
+  });
+  const { self_hash: ignoredSelfHash, ...withoutSelfHash } = candidate;
+  candidate.self_hash = h220Digest(withoutSelfHash);
+  return candidate;
 }
 
 const TEST_RELEASE = Object.freeze({
@@ -133,6 +214,9 @@ const RECURRING_SPEND_PERMISSION_RECORD = Object.freeze({
 });
 
 async function withServer(run, { env = { ...process.env, GIT_COMMIT_SHA: TEST_COMMIT }, runtimeReader = null, platformGatesSourceReader = null, releasePath = undefined } = {}) {
+  if (releasePath === undefined) {
+    return withTempCandidate(recomputeCurrentCandidate(), (tempPath) => withServer(run, { env, runtimeReader, platformGatesSourceReader, releasePath: tempPath }));
+  }
   const server = createAppServer({ env, runtimeReader, platformGatesSourceReader, releasePath });
   await new Promise((resolve, reject) => {
     server.once("error", reject);
@@ -160,6 +244,50 @@ async function assertCurrentV8SurfacesFailClosed(baseUrl) {
     }
   }
 }
+
+test("production default release is the tracked v9 template and fails closed without an injected commit", () => {
+  const unbound = readReleaseDocument({ env: {} });
+  assert.equal(unbound.schema_version, "base-erp-v9-public-release-v1");
+  assert.equal(unbound.release_id, "base-erp-public-product-20260816-v9");
+  assert.equal(unbound.commit_placeholder, true);
+  assert.equal(unbound.v9_release_ready, false);
+  assert.equal(unbound.v9_candidate_gate.reason, "commit_placeholder");
+  assert.equal(readHealth({ release: unbound }).ready, false);
+
+  const bound = readReleaseDocument({ env: { GIT_COMMIT_SHA: TEST_COMMIT } });
+  assert.equal(bound.schema_version, "base-erp-v9-public-release-v1");
+  assert.equal(bound.commit_placeholder, false);
+  assert.equal(bound.git_commit, TEST_COMMIT);
+  assert.equal(bound.v9_release_ready, true);
+  assert.equal(bound.v9_candidate_gate.ok, true);
+  assert.equal(readHealth({ release: bound }).ready, true);
+
+  const drifted = readReleaseDocument({ env: { GIT_COMMIT_SHA: "f".repeat(64) } });
+  assert.equal(drifted.commit_placeholder, true);
+  assert.equal(drifted.v9_release_ready, false);
+  assert.equal(drifted.v9_candidate_gate.reason, "commit_placeholder");
+  assert.equal(readHealth({ release: drifted }).ready, false);
+});
+
+test("npm start default listener serves the tracked v9 release when Render injects its commit", async () => {
+  const { server, address } = await listenServer({ host: "127.0.0.1", port: 0, env: { GIT_COMMIT_SHA: TEST_COMMIT } });
+  assert.equal(typeof address, "object");
+  try {
+    const releaseResponse = await fetch(`http://127.0.0.1:${address.port}/release.json`);
+    assert.equal(releaseResponse.status, 200);
+    const release = await releaseResponse.json();
+    assert.equal(release.schema_version, "base-erp-v9-public-release-v1");
+    assert.equal(release.release_id, "base-erp-public-product-20260816-v9");
+    assert.equal(release.git_commit, TEST_COMMIT);
+    assert.equal(release.commit_placeholder, false);
+    assert.equal(release.v9_release_ready, true);
+    const healthResponse = await fetch(`http://127.0.0.1:${address.port}/healthz`);
+    assert.equal(healthResponse.status, 200);
+    assert.equal((await healthResponse.json()).ready, true);
+  } finally {
+    await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+  }
+});
 
 test("H219 local health remains fail-closed until a deployment-injected commit is present", async () => {
   await withServer(async (baseUrl) => {
@@ -476,6 +604,48 @@ test("operator workbench exposes four persistent decision landmarks and seven se
     assert.equal(body.safety.erp_write_allowed, false);
     assert.equal(body.safety.broadcast, false);
   });
+});
+
+test("wallet ERP action plan is public, release-bound and permanently non-executable", async () => {
+  await withServer(async (baseUrl) => {
+    const [planResponse, workbenchResponse, pageResponse] = await Promise.all([
+      fetch(`${baseUrl}/wallet-action-plan.json?profile_id=customer_invoice_receipt`),
+      fetch(`${baseUrl}/workbench.json?profile_id=customer_invoice_receipt`),
+      fetch(`${baseUrl}/workbench/?profile_id=customer_invoice_receipt`),
+    ]);
+    assert.equal(planResponse.status, 200);
+    assert.equal(workbenchResponse.status, 200);
+    assert.equal(pageResponse.status, 200);
+    const plan = await planResponse.json();
+    const workbench = await workbenchResponse.json();
+    const page = await pageResponse.text();
+    assert.equal(plan.schema_version, "base-wallet-erp-action-plan-v1");
+    assert.equal(plan.release.release_id, workbench.release.release_id);
+    assert.equal(plan.release.release_fingerprint, workbench.release.release_fingerprint);
+    assert.equal(plan.release.bom_fingerprint, workbench.release.bom_fingerprint);
+    assert.equal(plan.wallet.chain, "eip155:8453");
+    assert.equal(plan.wallet.wallet_method, "wallet_sendCalls");
+    assert.equal(plan.wallet.account_bound, true);
+    assert.equal(plan.wallet.payload_present, false);
+    assert.equal(plan.wallet.unsigned, true);
+    assert.equal(plan.execution_authority, "owner_review_required");
+    assert.equal(plan.action_enabled, false);
+    assert.equal(plan.accounting.mainnet_transaction_credit, 0);
+    assert.equal(plan.accounting.publication_unit_credit, 0);
+    assert.deepEqual(workbench.wallet_action_plan, plan);
+    assert.match(page, /Wallet ERP action plan/);
+    assert.match(page, /Owner-visible review required/);
+    assert.match(page, /Action disabled/);
+    assert.doesNotMatch(JSON.stringify(plan), /0x[a-f0-9]{40}|calldata|callsid|tx_hash|signed_payload|balance|portfolio/i);
+  });
+});
+
+test("wallet ERP action plan projection disables unsupported outbound non-refund profiles", () => {
+  const plan = buildWalletErpActionPlanProjection({ release: TEST_RELEASE, selected_profile_id: "supplier_advance" });
+  assert.equal(plan.action_enabled, false);
+  assert.equal(plan.unavailable_reason, "profile_direction_not_supported");
+  assert.equal(plan.wallet.payload_present, false);
+  assert.equal(plan.accounting.mainnet_transaction_credit, 0);
 });
 
 test("operator workbench HTML is decision-first and preserves explicit stop conditions", async () => {
@@ -973,4 +1143,349 @@ test("operator workbench HTML renders observed recurring readback values without
   assert.ok(!html.includes(RECURRING_SPENDER.toLowerCase()));
   assert.ok(!html.includes(RECURRING_TOKEN));
   assert.ok(!html.includes(RECURRING_PERMISSION_HASH));
+});
+
+const V9_OBSERVED_AT = "2026-08-16T18:05:00.000Z";
+
+function v9TestReleaseIdentity(release) {
+  return {
+    release_id: release.release_id,
+    release_fingerprint: release.release_fingerprint,
+    bom_fingerprint: release.bom_fingerprint,
+    commit_sha: release.git_commit,
+    source_catalog_fingerprint: V9_SOURCE_CATALOG_FINGERPRINT,
+  };
+}
+
+function v9TestRuntimeBinding(releaseIdentity, observedAt = V9_OBSERVED_AT) {
+  return {
+    runtime_sha256: "d".repeat(64),
+    run_id: "02_Build-20260816-181000",
+    cursor: { active_item_id: "" },
+    writer_idle: true,
+    observed_at: observedAt,
+    release_id: releaseIdentity.release_id,
+    release_fingerprint: releaseIdentity.release_fingerprint,
+    bom_fingerprint: releaseIdentity.bom_fingerprint,
+    commit_sha: releaseIdentity.commit_sha,
+    source_catalog_fingerprint: releaseIdentity.source_catalog_fingerprint,
+  };
+}
+
+async function startV9Server({ releasePath, runtimeReader = () => ({ runtime_sha256: "d".repeat(64), run_id: "02_Build-20260816-181000", cursor: { active_item_id: "" }, writer_idle: true, writer_idle_authority: { writer_idle: true } }) } = {}) {
+  const server = createAppServer({ releasePath, env: { ...process.env, GIT_COMMIT_SHA: TEST_COMMIT }, runtimeReader });
+  await new Promise((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", resolve);
+  });
+  const address = server.address();
+  assert.equal(typeof address, "object");
+  return { server, baseUrl: `http://127.0.0.1:${address.port}` };
+}
+
+async function actualV9RouteReadbacks(baseUrl, releaseIdentity, observedAt = V9_OBSERVED_AT) {
+  const readbacks = [];
+  for (const path of REQUIRED_ROUTE_PATHS) {
+    const response = await fetch(`${baseUrl}${path}`);
+    const payload = await response.text();
+    readbacks.push({
+      path,
+      method: "GET",
+      http_status: response.status,
+      claim_state: response.status === 200 ? "current" : "unready",
+      response_sha256: sha256(payload),
+      release_identity: releaseIdentity,
+      observed_at: observedAt,
+      generated_by: ["code_test_contract", "src/server.mjs", "test/server.test.mjs"],
+    });
+  }
+  return readbacks;
+}
+
+async function withV9Baseline(run) {
+  return withTempCandidate(recomputeV9Candidate(), async (releasePath) => {
+    const { server, baseUrl } = await startV9Server({ releasePath });
+    try {
+      const release = readReleaseDocument({ releasePath, env: { GIT_COMMIT_SHA: TEST_COMMIT } });
+      const candidate = JSON.parse(readFileSync(releasePath, "utf8"));
+      const releaseIdentity = v9TestReleaseIdentity(release);
+      const input = buildV9IntegritySealInput({
+        release,
+        candidate,
+        routeReadbacks: await actualV9RouteReadbacks(baseUrl, releaseIdentity),
+        runtimeBinding: v9TestRuntimeBinding(releaseIdentity),
+        observedAt: V9_OBSERVED_AT,
+      });
+      return await run({ release, input, releaseIdentity, candidate, releasePath, baseUrl });
+    } finally {
+      await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+    }
+  });
+}
+
+test("v9 integrity seal input binds the actual v9 candidate and stays zero-credit deterministic", async () => {
+  await withV9Baseline(({ release, input, releaseIdentity, candidate }) => {
+    const first = evaluateReleaseEvidenceSeal(input);
+    const second = evaluateReleaseEvidenceSeal(buildV9IntegritySealInput({
+      release,
+      candidate,
+      routeReadbacks: Object.values(input.route_readbacks),
+      runtimeBinding: v9TestRuntimeBinding(releaseIdentity),
+      observedAt: V9_OBSERVED_AT,
+    }));
+    assert.equal(first.ok, true);
+    assert.equal(first.state, "integrity_seal_candidate_ready");
+    assert.equal(first.seal_digest, second.seal_digest);
+    assert.deepEqual(first.release_identity, {
+      release_id: release.release_id,
+      release_fingerprint: release.release_fingerprint,
+      bom_fingerprint: release.bom_fingerprint,
+      commit_sha: TEST_COMMIT,
+      source_catalog_fingerprint: V9_SOURCE_CATALOG_FINGERPRINT,
+    });
+    assert.equal(Object.keys(first.source_digests).length, 3);
+    assert.equal(Object.keys(first.route_readbacks).length, 10);
+    assert.equal(first.claim_bindings.length, 10);
+    assert.deepEqual(Object.keys(first.platform_evidence), [...REQUIRED_PLATFORM_IDS]);
+    for (const route of Object.values(first.route_readbacks)) {
+      assert.equal(route.http_status, 200);
+      assert.equal(route.claim_state, "current");
+      assert.ok(route.generated_by.includes("code_test_contract"));
+    }
+    for (const claim of first.claim_bindings) {
+      assert.equal(claim.source_sha256, first.source_digests[claim.source_path]);
+      assert.equal(claim.route_response_sha256, first.route_readbacks[claim.route_path].response_sha256);
+      assert.equal(claim.generated_by, "code_test_contract");
+    }
+    const baseApp = first.platform_evidence.base_app;
+    assert.equal(baseApp.evidence_class, "attribution_metadata");
+    assert.equal(baseApp.attribution_observed, true);
+    assert.equal(baseApp.is_receipt, false);
+    const rehearsal = first.platform_evidence.base_sepolia_rehearsal;
+    assert.equal(rehearsal.evidence_class, "chain_receipt");
+    assert.equal(rehearsal.is_receipt, false);
+    for (const row of Object.values(first.platform_evidence)) {
+      assert.equal(row.is_receipt, false);
+      assert.equal(row.credit, 0);
+      assert.equal(row.current, false);
+      assert.equal(row.historical, false);
+      assert.equal(row.synthetic, false);
+    }
+    assert.equal(first.runtime_binding.writer_idle, true);
+    assert.deepEqual(first.runtime_binding.cursor, { active_item_id: "" });
+    assert.equal(first.credit, 0);
+    assert.equal(first.publication_unit_credit, 0);
+    assert.equal(first.mainnet_30_credit, 0);
+    assert.equal(first.build_credit_eligible, false);
+    assert.equal(first.execution_authority, "none_until_02_Build_revalidates");
+    assert.equal(first.external_actions, 0);
+    assert.equal(verifyReleaseEvidenceSeal(first).ok, true);
+  });
+});
+
+test("v9 integration fails closed for stale/forged catalog, drift, rehearsal, collision and credit", async () => {
+  await withV9Baseline(({ input, releaseIdentity }) => {
+    const expect = (mutated, reason) => {
+      const result = evaluateReleaseEvidenceSeal(mutated);
+      assert.equal(result.ok, false, reason);
+      assert.equal(result.reason, reason);
+      assert.equal(result.fail_closed, true);
+      assert.equal(result.credit, 0);
+      assert.equal(result.external_actions, 0);
+    };
+
+    const staleRoutes = structuredClone(input);
+    staleRoutes.route_readbacks[0].observed_at = "2026-08-16T17:00:00.000Z";
+    expect(staleRoutes, "evidence_stale");
+
+    const staleClaims = structuredClone(input);
+    staleClaims.claim_bindings[0].observed_at = "2026-08-16T17:00:00.000Z";
+    expect(staleClaims, "claim_stale");
+
+    const forgedCatalog = structuredClone(input);
+    forgedCatalog.source_digests = { ...input.source_digests, "README.md": "0".repeat(64) };
+    expect(forgedCatalog, "source_catalog_fingerprint_mismatch");
+
+    const commitDrift = structuredClone(input);
+    commitDrift.route_readbacks[0].release_identity = { ...releaseIdentity, commit_sha: "d".repeat(40) };
+    expect(commitDrift, "route_release_binding_mismatch");
+
+    const runtimeWriterBusy = structuredClone(input);
+    runtimeWriterBusy.runtime_binding.writer_idle = false;
+    expect(runtimeWriterBusy, "runtime_writer_not_idle");
+
+    const runtimeHashInvalid = structuredClone(input);
+    runtimeHashInvalid.runtime_binding.runtime_sha256 = "not-a-sha256-digest";
+    expect(runtimeHashInvalid, "runtime_hash_invalid");
+
+    const runtimeCommitDrift = structuredClone(input);
+    runtimeCommitDrift.runtime_binding.commit_sha = "d".repeat(40);
+    expect(runtimeCommitDrift, "runtime_release_binding_mismatch");
+
+    const syntheticRow = structuredClone(input);
+    syntheticRow.platform_evidence[0].synthetic = true;
+    expect(syntheticRow, "platform_historical_or_synthetic");
+
+    const stalePlatform = structuredClone(input);
+    stalePlatform.platform_evidence[0].observed_at = "2026-08-16T17:00:00.000Z";
+    expect(stalePlatform, "platform_evidence_stale");
+
+    const newRehearsal = structuredClone(input);
+    newRehearsal.platform_evidence.find((row) => row.platform === "base_sepolia_rehearsal").new_rehearsal = true;
+    expect(newRehearsal, "new_rehearsal_forbidden");
+
+    const relabelAttribution = structuredClone(input);
+    relabelAttribution.platform_evidence.find((row) => row.platform === "base_app").is_receipt = true;
+    expect(relabelAttribution, "attribution_claimed_as_receipt");
+
+    const circleCollision = structuredClone(input);
+    circleCollision.platform_evidence[0].target = "gaysonloser/arc-payment-receipt";
+    expect(circleCollision, "circle_target_collision");
+
+    const seal = evaluateReleaseEvidenceSeal(input);
+    for (const tampered of [
+      { ...seal, credit: 99 },
+      { ...seal, publication_unit_credit: 1 },
+      { ...seal, external_actions: 1 },
+      { ...seal, build_credit_eligible: true },
+    ]) {
+      const verified = verifyReleaseEvidenceSeal(tampered);
+      assert.equal(verified.ok, false);
+      assert.equal(verified.reason, "integrity_seal_security_boundary_mismatch");
+      assert.ok(verified.failure_codes.includes("V9-F55"));
+    }
+  });
+});
+
+test("v9 integrity seal route seals actual v9-ready public routes with zero credit", async () => {
+  const runtimeReader = () => ({
+    runtime_sha256: "d".repeat(64),
+    run_id: "02_Build-20260816-181000",
+    cursor: { active_item_id: "" },
+    writer_idle: true,
+    writer_idle_authority: { writer_idle: true },
+  });
+  await withTempCandidate(recomputeV9Candidate(), async (releasePath) => withServer(async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/integrity-seal.json`);
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.ok, true);
+    assert.equal(body.state, "integrity_seal_candidate_ready");
+    assert.equal(body.seal_verified, true);
+    assert.equal(body.credit, 0);
+    assert.equal(body.publication_unit_credit, 0);
+    assert.equal(body.mainnet_30_credit, 0);
+    assert.equal(body.build_credit_eligible, false);
+    assert.equal(body.execution_authority, "none_until_02_Build_revalidates");
+    assert.equal(body.external_actions, 0);
+    assert.deepEqual(body.failure_codes, []);
+    assert.equal(body.release_identity.release_id, "base-erp-public-product-20260816-v9");
+    assert.equal(body.release_identity.commit_sha, TEST_COMMIT);
+    assert.equal(body.release_identity.source_catalog_fingerprint, V9_SOURCE_CATALOG_FINGERPRINT);
+    assert.equal(Object.keys(body.route_readbacks).length, 10);
+    for (const path of REQUIRED_ROUTE_PATHS) {
+      const route = body.route_readbacks[path];
+      assert.equal(route.http_status, 200, path);
+      assert.equal(route.claim_state, "current", path);
+      assert.match(route.response_sha256, /^[0-9a-f]{64}$/);
+      assert.ok(route.generated_by.includes("code_test_contract"));
+      assert.deepEqual(route.release_identity, body.release_identity);
+    }
+    assert.equal(body.claim_bindings.length, 10);
+    for (const claim of body.claim_bindings) {
+      assert.equal(claim.source_sha256, body.source_digests[claim.source_path]);
+      assert.equal(claim.route_response_sha256, body.route_readbacks[claim.route_path].response_sha256);
+      assert.equal(claim.generated_by, "code_test_contract");
+    }
+    assert.deepEqual(Object.keys(body.platform_evidence), [...REQUIRED_PLATFORM_IDS]);
+    for (const row of Object.values(body.platform_evidence)) {
+      assert.equal(row.is_receipt, false);
+      assert.equal(row.credit, 0);
+      assert.equal(row.current, false);
+      assert.equal(row.historical, false);
+      assert.equal(row.synthetic, false);
+    }
+    assert.equal(body.platform_evidence.base_app.evidence_class, "attribution_metadata");
+    assert.equal(body.platform_evidence.base_app.attribution_observed, true);
+    assert.equal(body.platform_evidence.base_sepolia_rehearsal.evidence_class, "chain_receipt");
+    assert.equal(body.runtime_binding.writer_idle, true);
+    assert.deepEqual(body.runtime_binding.cursor, { active_item_id: "" });
+    assert.equal(body.runtime_binding.run_id, "02_Build-20260816-181000");
+    assert.equal(verifyReleaseEvidenceSeal(body).ok, true);
+  }, { runtimeReader, releasePath }));
+});
+
+test("v9 candidate gate rejects catalog drift, fake owner receipts and BASE/CIRCLE collisions", async () => {
+  await withV9Baseline(({ release, input, candidate }) => {
+    const expectRejected = (mutated, code) => {
+      assert.throws(
+        () => buildV9IntegritySealInput({
+          release,
+          candidate: mutated,
+          routeReadbacks: input.route_readbacks,
+          runtimeBinding: input.runtime_binding,
+          observedAt: V9_OBSERVED_AT,
+        }),
+        (error) => error?.v9_gate === true && error.failure_code === code,
+      );
+    };
+    const catalog = structuredClone(candidate);
+    catalog.source_digest_catalog["README.md"] = "0".repeat(64);
+    expectRejected(catalog, "V9-F56");
+    const fakeOwnerReceipt = structuredClone(candidate);
+    fakeOwnerReceipt.eight_surface_evidence_map = {
+      ...(fakeOwnerReceipt.eight_surface_evidence_map ?? {}),
+      github: {
+        ...(fakeOwnerReceipt.eight_surface_evidence_map?.github ?? {}),
+      is_receipt: true,
+      receipt_ref: "fake-owner-receipt",
+      provenance: { owner_native: false, source: "self_reported", observed_at: V9_OBSERVED_AT },
+      },
+    };
+    expectRejected(fakeOwnerReceipt, "V9-F57");
+    const arbitraryFingerprint = structuredClone(candidate);
+    arbitraryFingerprint.release_fingerprint = "f".repeat(64);
+    expectRejected(arbitraryFingerprint, "V9-F99");
+    const arbitraryCommit = structuredClone(candidate);
+    arbitraryCommit.commit_sha = "f".repeat(64);
+    arbitraryCommit.commit_placeholder = false;
+    expectRejected(arbitraryCommit, "V9-F99");
+    const collision = structuredClone(candidate);
+    collision.base_target.github_repo = "gaysonloser/arc-payment-receipt";
+    expectRejected(collision, "V9-F01");
+    const staleSelfHash = structuredClone(candidate);
+    staleSelfHash.self_hash = "0".repeat(64);
+    expectRejected(staleSelfHash, "V9-F99");
+    const staleBomCount = structuredClone(candidate);
+    staleBomCount.bom_file_count -= 1;
+    expectRejected(staleBomCount, "V9-F99");
+  });
+});
+
+test("v9 integrity seal route rejects client binding and fails closed on runtime/commit drift", async () => {
+  await withTempCandidate(recomputeV9Candidate(), async (releasePath) => withServer(async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/integrity-seal.json?release_id=secret-value`);
+    assert.equal(response.status, 400);
+    assert.deepEqual(await response.json(), { error: "client_binding_not_accepted" });
+  }, { releasePath }));
+  await withTempCandidate(recomputeV9Candidate(), async (releasePath) => withServer(async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/integrity-seal.json`);
+    assert.equal(response.status, 503);
+    const body = await response.json();
+    assert.equal(body.ok, false);
+    assert.equal(body.fail_closed, true);
+    assert.ok(body.failure_codes.includes("V9-F31"));
+  }, { releasePath }));
+  await withTempCandidate(recomputeV9Candidate(), async (releasePath) => withServer(async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/integrity-seal.json`);
+    assert.equal(response.status, 503);
+    const body = await response.json();
+    assert.ok(body.failure_codes.includes("V9-F37"));
+  }, { runtimeReader: () => ({ runtime_sha256: "d".repeat(64), run_id: "drift", cursor: { active_item_id: "" }, writer_idle: false }), releasePath }));
+  await withTempCandidate(JSON.parse(readFileSync("runtime/release_candidate_v9_local_2026-08-16.json", "utf8")), async (releasePath) => withServer(async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/integrity-seal.json`);
+    assert.equal(response.status, 503);
+    const body = await response.json();
+    assert.ok(body.failure_codes.includes("V9-F99"));
+  }, { env: { ...process.env }, releasePath }));
 });

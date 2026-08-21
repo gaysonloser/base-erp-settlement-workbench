@@ -6,9 +6,25 @@ import { resolve } from "node:path";
 
 import { digest } from "./base-neutral-receipt-controls.mjs";
 import {
+  BASE_SEPOLIA_CHAIN_ID,
+  REQUIRED_PLATFORM_IDS,
+  REQUIRED_ROUTE_PATHS,
+  CIRCLE_DENYLIST,
+  digest as h220Digest,
+  evaluateReleaseEvidenceSeal,
+  verifyReleaseEvidenceSeal,
+} from "./base-release-evidence-integrity-seal.mjs";
+import {
+  BASE_SEPOLIA_DESCRIPTOR,
+  EXECUTION_AUTHORITY,
+  H217_PACKET_ID,
+  H217_PLATFORM_ROW_IDS,
+} from "./base-native-platform-execution-gates.mjs";
+import {
   buildEventAdmissionPreview,
   buildPlatformGatesProjection,
   buildOperatorWorkbench,
+  buildWalletErpActionPlanProjection,
   buildRecurringSettlementProjection,
   buildReadOnlySimulation,
   buildStandardWebAppMetadata,
@@ -18,11 +34,20 @@ import { renderOperatorWorkbenchPage } from "./operator-workbench-page.mjs";
 import { evaluateRefundProposal } from "./base-refund-ceiling-guard.mjs";
 
 const PROJECT_ROOT = fileURLToPath(new URL("../", import.meta.url));
-const DEFAULT_RELEASE_PATH = resolve(PROJECT_ROOT, "runtime/release_candidate_2026-08-10.json");
+// Production must never default to the historical v8 runtime receipt.  The
+// tracked v9 template is intentionally commit-unbound until Render injects
+// the exact full commit through its deployment environment.
+const DEFAULT_RELEASE_PATH = resolve(PROJECT_ROOT, "src/release_candidate_v9_template.json");
 const PRIMARY_BASE_ACCOUNT = "0xba36d092db2999bb1fabbaf281ac956a97189c25";
 const FULL_COMMIT_PATTERN = /^[0-9a-f]{40}$/;
 const DIGEST_PATTERN = /^[0-9a-f]{64}$/;
 const DEFAULT_COMMIT_PLACEHOLDER = "PENDING_OWNER_PUBLIC_COMMIT";
+const V9_DEPLOYMENT_TEMPLATE = Object.freeze({
+  mode: "render_env_commit",
+  required_env: Object.freeze(["RENDER_GIT_COMMIT", "RENDER_GIT_COMMIT_SHA", "GIT_COMMIT_SHA", "SOURCE_VERSION"]),
+  placeholder: DEFAULT_COMMIT_PLACEHOLDER,
+  release_fingerprint_basis: "sha256(base-erp-v9-canonical-release-identity-v1)",
+});
 const H219_RELEASE_ID = "base-erp-public-product-20260815-v8";
 const H219_BOM_SCHEMA_VERSION = "base-erp-v8-bom-v1";
 const H219_RELEASE_SCHEMA_VERSION = "base-erp-v8-release-identity-v1";
@@ -52,6 +77,20 @@ const H219_BOM_PATH_ALLOWLIST = Object.freeze([
   "projects/2026-08_Base_ERP_Settlement_Workbench/test/operator-workbench-page.test.mjs",
   "projects/2026-08_Base_ERP_Settlement_Workbench/test/server.test.mjs",
 ]);
+const V9_RELEASE_ID = "base-erp-public-product-20260816-v9";
+const V9_RELEASE_SCHEMA_VERSION = "base-erp-v9-release-identity-v1";
+const V9_PUBLIC_SCHEMA_VERSION = "base-erp-v9-public-release-v1";
+const V9_BOM_SCHEMA_VERSION = "base-erp-v9-bom-v1";
+const V9_CANDIDATE_SCHEMA_VERSION = "base-erp-v9-release-candidate-v1";
+const V9_RELEASE_FINGERPRINT_ALGORITHM = "sha256(base-erp-v9-canonical-release-identity-v1)";
+const V9_BOM_PATH_ALLOWLIST = Object.freeze([
+  ...H219_BOM_PATH_ALLOWLIST,
+  "projects/2026-08_Base_ERP_Settlement_Workbench/README.md",
+  "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-release-evidence-integrity-seal.mjs",
+  "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-wallet-erp-action-plan.mjs",
+  "projects/2026-08_Base_ERP_Settlement_Workbench/test/base-release-evidence-integrity-seal.test.mjs",
+  "projects/2026-08_Base_ERP_Settlement_Workbench/test/base-wallet-erp-action-plan.test.mjs",
+].sort((left, right) => Buffer.from(left, "utf8").compare(Buffer.from(right, "utf8"))));
 const H214_READBACK_PATH = "runtime/h214_recurring_settlement_readback_2026-08-14.json";
 const H215_READBACK_PATH = "runtime/h215_operator_workbench_readback_2026-08-14.json";
 const H217_MODULE_PATH = "src/base-native-platform-execution-gates.mjs";
@@ -60,6 +99,14 @@ const CIRCLE_MATRIX_PATH = "config/base_circle_platform_isolation_matrix_v1.json
 const H217_MODULE_SHA256 = "96f9839cbebb6bff775a5b0cc84a7ae7d71b0168847f2a1eb08c0b59d6f80b42";
 const H217_READBACK_SHA256 = "f7aea1ec1ea6d3377334f8f1d32938054f4bd4b809f622673fb056868be2c8b1";
 const CIRCLE_MATRIX_SHA256 = "c538e47c4b7951f341b36e351858bf3e1c28dd772d7d3f9c3588f1f0093f19de";
+const V9_MAX_AGE_SECONDS = 900;
+const V9_SOURCE_DIGEST_CATALOG = Object.freeze({
+  "README.md": "c259da3c0eae7395cb7321c5a55eb265cf41637c5bf40aa70042e0abf6efd7de",
+  "src/base-release-evidence-integrity-seal.mjs": "f1bb4d9db1c182004d759a793b76ff04d4bec370dcd6d02c8721c2e813729652",
+  "test/base-release-evidence-integrity-seal.test.mjs": "c7b09e60bba1d7644775bcfefbe6c92a31c4ab6853335bcde3611554d0015076",
+});
+export const V9_SOURCE_CATALOG_FINGERPRINT = h220Digest(V9_SOURCE_DIGEST_CATALOG);
+const V9_GENERATED_BY = Object.freeze(["code_test_contract", "src/server.mjs", "test/server.test.mjs"]);
 const PUBLIC_PLATFORM_ORDER = Object.freeze([
   "github",
   "render",
@@ -188,6 +235,153 @@ function canonicalDigest(value) {
   return createHash("sha256").update(canonicalizeH219(value), "utf8").digest("hex");
 }
 
+export function canonicalV9ReleaseFingerprintBasis({ release_id, bom_fingerprint, base_target, commit_sha, source_catalog_fingerprint }) {
+  return {
+    schema_version: V9_RELEASE_SCHEMA_VERSION,
+    release_id,
+    bom_fingerprint,
+    base_target,
+    commit_sha,
+    source_catalog_fingerprint,
+  };
+}
+
+export function computeV9ReleaseFingerprint(identity) {
+  return h220Digest(canonicalV9ReleaseFingerprintBasis(identity));
+}
+
+function v9Failure(reason, failureCode, details = {}) {
+  return {
+    schema_version: "base-erp-v9-release-evidence-integrity-seal-v1",
+    ok: false,
+    fail_closed: true,
+    state: "integrity_gate",
+    reason,
+    failure_codes: [failureCode],
+    native_receipt: null,
+    release_receipt: false,
+    rehearsal_receipt: null,
+    attribution_observed: false,
+    credit: 0,
+    publication_unit_credit: 0,
+    mainnet_30_credit: 0,
+    build_credit_eligible: false,
+    execution_authority: "none_until_02_Build_revalidates",
+    external_actions: 0,
+    ...details,
+  };
+}
+
+function v9GateError(reason, failureCode, details = {}) {
+  const error = new Error(reason);
+  error.v9_gate = true;
+  error.failure_code = failureCode;
+  error.details = details;
+  return error;
+}
+
+function exactObject(value, expected) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const keys = Object.keys(expected);
+  const actual = Object.keys(value);
+  return actual.length === keys.length && keys.every((key) => value[key] === expected[key]);
+}
+
+function v9CircleIsolationValid(candidate) {
+  const isolation = candidate?.circle_isolation;
+  if (!exactObject(isolation, { checked: true, collision: false, target_reuse: false, external_actions: 0 })) return false;
+  const serialized = JSON.stringify({
+    base_target: candidate.base_target,
+    eight_surface_evidence_map: candidate.eight_surface_evidence_map,
+  });
+  if (CIRCLE_DENYLIST.some((entry) => serialized.includes(entry))) return false;
+  return !/(^|[^a-z])(circle|arc)([^a-z]|$)/i.test(serialized);
+}
+
+function sameJson(left, right) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function v9OwnerNativeReceiptsValid(candidate) {
+  const source = candidate?.eight_surface_evidence_map;
+  if (!source || typeof source !== "object" || Array.isArray(source)) return true;
+  for (const [platform, row] of Object.entries(source)) {
+    if (!row || typeof row !== "object" || row.is_receipt !== true) continue;
+    const provenance = row.provenance;
+    if (!provenance || typeof provenance !== "object" || provenance.owner_native !== true) return { platform, reason: "owner_native_provenance_missing" };
+    if (typeof provenance.source !== "string" || provenance.source.trim() === "") return { platform, reason: "owner_native_source_missing" };
+    if (typeof provenance.observed_at !== "string" || !Number.isFinite(Date.parse(provenance.observed_at))) return { platform, reason: "owner_native_observed_at_invalid" };
+    if (provenance.release_identity && typeof provenance.release_identity === "object") {
+      const identity = provenance.release_identity;
+      if (identity.release_id !== candidate.release_id || identity.release_fingerprint !== candidate.release_fingerprint || identity.bom_fingerprint !== candidate.bom_fingerprint) {
+        return { platform, reason: "owner_native_release_binding_mismatch" };
+      }
+    }
+  }
+  return true;
+}
+
+function v9DeploymentTemplateValid(candidate) {
+  if (candidate?.deployment_template === undefined) return true;
+  return sameJson(candidate.deployment_template, V9_DEPLOYMENT_TEMPLATE);
+}
+
+export function validateV9Candidate({ candidate, release, bomVerification = null, sourceDigestCatalog = null } = {}) {
+  const sourceDigests = sourceDigestCatalog ?? readV9SourceDigestCatalog();
+  const fail = (reason, code, details = {}) => ({ ok: false, reason, failure_codes: [code], ...details });
+  if (!candidate || candidate.schema_version !== V9_CANDIDATE_SCHEMA_VERSION) return fail("v9_candidate_schema_invalid", "V9-F99");
+  if (candidate.release_id !== V9_RELEASE_ID || release?.release_id !== V9_RELEASE_ID) return fail("v9_release_id_mismatch", "V9-F99");
+  if (candidate.release_fingerprint_algorithm !== V9_RELEASE_FINGERPRINT_ALGORITHM) return fail("release_fingerprint_algorithm_invalid", "V9-F99");
+  if (!v9DeploymentTemplateValid(candidate)) return fail("deployment_template_invalid", "V9-F99");
+  if (!Array.isArray(candidate.immutable_release_bom) || candidate.immutable_release_bom.length !== V9_BOM_PATH_ALLOWLIST.length) return fail("v9_bom_file_count_invalid", "V9-F99");
+  if (candidate.bom_file_count !== candidate.immutable_release_bom.length) return fail("v9_bom_file_count_invalid", "V9-F99");
+  const entries = candidate.immutable_release_bom.map((entry) => ({
+    path: typeof entry?.path === "string" ? entry.path.normalize("NFC") : null,
+    digest: typeof entry?.digest === "string" ? entry.digest.toLowerCase() : null,
+  }));
+  const expectedEntries = [...entries].sort((left, right) => Buffer.from(left.path ?? "", "utf8").compare(Buffer.from(right.path ?? "", "utf8")));
+  if (!sameJson(entries, expectedEntries) || !sameJson(entries.map((entry) => entry.path), V9_BOM_PATH_ALLOWLIST)) return fail("v9_bom_not_canonical", "V9-F99");
+  if (!bomVerification?.bom_verified || candidate.bom_fingerprint !== bomVerification?.expected_bom_fingerprint) return fail("v9_bom_fingerprint_mismatch", "V9-F99");
+  if (candidate.immutable_bom_sha256 !== candidate.bom_fingerprint) return fail("v9_immutable_bom_binding_mismatch", "V9-F99");
+  const candidateCommit = String(candidate.commit_sha ?? "");
+  const releaseCommit = String(release?.git_commit ?? "");
+  const templateBinding = candidate.deployment_template !== undefined;
+  if (!FULL_COMMIT_PATTERN.test(releaseCommit)) return fail("commit_placeholder", "V9-F99");
+  if (templateBinding) {
+    if (candidateCommit !== DEFAULT_COMMIT_PLACEHOLDER || candidate.commit_placeholder !== true) return fail("deployment_template_commit_invalid", "V9-F99");
+    const templateFingerprint = computeV9ReleaseFingerprint({
+      release_id: candidate.release_id,
+      bom_fingerprint: candidate.bom_fingerprint,
+      base_target: candidate.base_target,
+      commit_sha: DEFAULT_COMMIT_PLACEHOLDER,
+      source_catalog_fingerprint: candidate.source_catalog_fingerprint,
+    });
+    if (candidate.release_fingerprint !== templateFingerprint) return fail("template_release_fingerprint_mismatch", "V9-F99");
+  } else {
+    if (!FULL_COMMIT_PATTERN.test(candidateCommit) || candidate.commit_placeholder !== false) return fail("commit_placeholder", "V9-F99");
+    if (!release || releaseCommit !== candidateCommit) return fail("commit_binding_mismatch", "V9-F99");
+  }
+  if (!sameJson(candidate.source_digest_catalog, V9_SOURCE_DIGEST_CATALOG) || !sameJson(sourceDigests, V9_SOURCE_DIGEST_CATALOG)) return fail("source_digest_catalog_mismatch", "V9-F56");
+  if (candidate.source_catalog_fingerprint !== V9_SOURCE_CATALOG_FINGERPRINT || h220Digest(sourceDigests) !== V9_SOURCE_CATALOG_FINGERPRINT) return fail("source_catalog_fingerprint_mismatch", "V9-F56");
+  // Isolation is an independent denylist gate and must not be masked by a
+  // separately tampered release fingerprint.
+  if (!v9CircleIsolationValid(candidate)) return fail("circle_target_collision", "V9-F01");
+  const expectedReleaseFingerprint = computeV9ReleaseFingerprint({
+    release_id: candidate.release_id,
+    bom_fingerprint: candidate.bom_fingerprint,
+    base_target: candidate.base_target,
+    commit_sha: releaseCommit,
+    source_catalog_fingerprint: candidate.source_catalog_fingerprint,
+  });
+  if ((!templateBinding && candidate.release_fingerprint !== expectedReleaseFingerprint) || release.release_fingerprint !== expectedReleaseFingerprint) return fail("release_fingerprint_mismatch", "V9-F99", { expected_release_fingerprint: expectedReleaseFingerprint });
+  const receiptCheck = v9OwnerNativeReceiptsValid(candidate);
+  if (receiptCheck !== true) return fail("owner_native_receipt_provenance_invalid", "V9-F57", receiptCheck);
+  const candidateSelfHash = typeof candidate.self_hash === "string" ? candidate.self_hash.toLowerCase() : "";
+  const { self_hash: _ignoredSelfHash, ...candidateWithoutSelfHash } = candidate;
+  if (!DIGEST_PATTERN.test(candidateSelfHash) || h220Digest(candidateWithoutSelfHash) !== candidateSelfHash) return fail("v9_candidate_self_hash_mismatch", "V9-F99");
+  return { ok: true, expected_release_fingerprint: expectedReleaseFingerprint, source_digests: sourceDigests, candidate_gate: { circle_isolation: structuredClone(candidate.circle_isolation), owner_native_receipts: true, external_actions: 0 } };
+}
+
 function h219BaseTargetEqual(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const expectedKeys = Object.keys(H219_BASE_TARGET);
@@ -216,9 +410,39 @@ function currentV8ReleaseReady(release) {
     && release.commit_placeholder === false;
 }
 
+function currentV9ReleaseReady(release) {
+  return release?.schema_version === V9_PUBLIC_SCHEMA_VERSION
+    && release.release_schema_version === V9_RELEASE_SCHEMA_VERSION
+    && release.release_id === V9_RELEASE_ID
+    && release.v9_release_ready === true
+    && release.release_identity_valid === true
+    && release.bom_verified === true
+    && release.bom_fingerprint_valid === true
+    && release.bom_files_verified === true
+    && release.bom_source_bytes_safe === true
+    && typeof release.bom_fingerprint === "string"
+    && DIGEST_PATTERN.test(release.bom_fingerprint)
+    && release.immutable_bom_sha256 === release.bom_fingerprint
+    && typeof release.release_fingerprint === "string"
+    && DIGEST_PATTERN.test(release.release_fingerprint)
+    && typeof release.git_commit === "string"
+    && FULL_COMMIT_PATTERN.test(release.git_commit)
+    && release.commit_placeholder === false
+    && release.source_catalog_fingerprint === V9_SOURCE_CATALOG_FINGERPRINT;
+}
+
+function currentReleaseReady(release) {
+  if (release?.schema_version === V9_PUBLIC_SCHEMA_VERSION) return currentV9ReleaseReady(release);
+  return currentV8ReleaseReady(release);
+}
+
 const CURRENT_V8_UNAVAILABLE = Object.freeze({
   error: "release_unavailable",
   reason: "current_v8_identity_unready",
+});
+const CURRENT_V9_UNAVAILABLE = Object.freeze({
+  error: "release_unavailable",
+  reason: "current_v9_identity_unready",
 });
 
 function resolveProjectPath(filePath) {
@@ -293,11 +517,17 @@ function verifyBom(candidate) {
     .filter((entry) => entry.path !== null && entry.digest !== null)
     .sort((left, right) => Buffer.from(left.path, "utf8").compare(Buffer.from(right.path, "utf8")));
   const normalizedPaths = normalizedBom.map((entry) => entry.path);
+  const isV9 = candidate.schema_version === V9_CANDIDATE_SCHEMA_VERSION;
+  const v9CanonicalOrderValid = !isV9 || (entries.length === normalizedBom.length && entries.every((entry, index) => entry.path === normalizedBom[index]?.path));
+  const v9AllowlistValid = !isV9 || (normalizedPaths.length === V9_BOM_PATH_ALLOWLIST.length && normalizedPaths.every((path, index) => path === V9_BOM_PATH_ALLOWLIST[index]));
   const caseFoldPaths = normalizedPaths.map((path) => path.toLocaleLowerCase("en-US"));
   const structureValid = normalizedBom.length === entries.length
     && normalizedBom.length > 0
     && h219AllowlistValid
+    && v9AllowlistValid
+    && v9CanonicalOrderValid
     && (candidate.schema_version === "base-erp-v8-release-candidate-v1" ? normalizedBom.length === 17 : true)
+    && (isV9 ? normalizedBom.length === V9_BOM_PATH_ALLOWLIST.length : true)
     && normalizedBom.every((entry) => DIGEST_PATTERN.test(entry.digest))
     && new Set(normalizedPaths).size === normalizedPaths.length
     && new Set(caseFoldPaths).size === caseFoldPaths.length
@@ -317,7 +547,7 @@ function verifyBom(candidate) {
     && DIGEST_PATTERN.test(candidate.bom_fingerprint)
     && candidate.bom_fingerprint === expectedBomFingerprint;
   const filesVerified = structureValid && normalizedBom.every((entry) => sha256File(entry.path) === entry.digest);
-  const sourceBytesSafe = candidate.schema_version !== "base-erp-v8-release-candidate-v1"
+  const sourceBytesSafe = !["base-erp-v8-release-candidate-v1", V9_CANDIDATE_SCHEMA_VERSION].includes(candidate.schema_version)
     || normalizedBom.every((entry) => {
       try {
         const bytes = readFileSync(resolveProjectPath(entry.path));
@@ -332,7 +562,10 @@ function verifyBom(candidate) {
     bom_fingerprint_valid: Boolean(fingerprintValid),
     bom_files_verified: Boolean(filesVerified),
     bom_source_bytes_safe: Boolean(sourceBytesSafe),
-    bom_schema_version: candidate.schema_version === "base-erp-v8-release-candidate-v1" ? H219_BOM_SCHEMA_VERSION : null,
+    bom_schema_version: candidate.schema_version === "base-erp-v8-release-candidate-v1"
+      ? H219_BOM_SCHEMA_VERSION
+      : isV9 ? V9_BOM_SCHEMA_VERSION : null,
+    expected_bom_fingerprint: expectedBomFingerprint,
   };
 }
 
@@ -345,6 +578,16 @@ export function readReleaseDocument({ releasePath = DEFAULT_RELEASE_PATH, env = 
   const candidate = readJsonFile(releasePath);
   const commit = resolveCommit({ candidate, env });
   const bomVerification = verifyBom(candidate);
+  const effectiveReleaseFingerprint = candidate.schema_version === V9_CANDIDATE_SCHEMA_VERSION
+    && FULL_COMMIT_PATTERN.test(commit.value)
+    ? computeV9ReleaseFingerprint({
+      release_id: candidate.release_id,
+      bom_fingerprint: candidate.bom_fingerprint,
+      base_target: candidate.base_target,
+      commit_sha: commit.value,
+      source_catalog_fingerprint: candidate.source_catalog_fingerprint,
+    })
+    : candidate.release_fingerprint;
   const bom = Array.isArray(candidate.immutable_release_bom)
     ? candidate.immutable_release_bom.map((entry) => ({ path: entry.path, digest: entry.digest }))
     : [];
@@ -360,21 +603,39 @@ export function readReleaseDocument({ releasePath = DEFAULT_RELEASE_PATH, env = 
       bom_fingerprint: candidate.bom_fingerprint,
       base_target: candidate.base_target,
     }
-    : null;
+    : candidate.schema_version === V9_CANDIDATE_SCHEMA_VERSION
+      ? {
+        schema_version: V9_RELEASE_SCHEMA_VERSION,
+        release_id: candidate.release_id,
+        bom_fingerprint: candidate.bom_fingerprint,
+        base_target: candidate.base_target,
+        commit_sha: commit.value,
+        source_catalog_fingerprint: candidate.source_catalog_fingerprint,
+      }
+      : null;
   const releaseIdentityFingerprintValid = releaseIdentity
-    ? releaseIdentity.release_id === H219_RELEASE_ID
-      && h219BaseTargetEqual(releaseIdentity.base_target)
-      && typeof releaseIdentity.bom_fingerprint === "string"
-      && DIGEST_PATTERN.test(releaseIdentity.bom_fingerprint)
-      && typeof candidate.release_fingerprint === "string"
-      && DIGEST_PATTERN.test(candidate.release_fingerprint)
-      && canonicalDigest(releaseIdentity) === candidate.release_fingerprint
+    ? candidate.schema_version === "base-erp-v8-release-candidate-v1"
+      ? releaseIdentity.release_id === H219_RELEASE_ID
+        && h219BaseTargetEqual(releaseIdentity.base_target)
+        && typeof releaseIdentity.bom_fingerprint === "string"
+        && DIGEST_PATTERN.test(releaseIdentity.bom_fingerprint)
+        && typeof candidate.release_fingerprint === "string"
+        && DIGEST_PATTERN.test(candidate.release_fingerprint)
+        && canonicalDigest(releaseIdentity) === candidate.release_fingerprint
+      : candidate.schema_version === V9_CANDIDATE_SCHEMA_VERSION
+        && releaseIdentity.release_id === V9_RELEASE_ID
+        && h219BaseTargetEqual(releaseIdentity.base_target)
+        && FULL_COMMIT_PATTERN.test(String(releaseIdentity.commit_sha ?? ""))
+        && releaseIdentity.source_catalog_fingerprint === candidate.source_catalog_fingerprint
+        && computeV9ReleaseFingerprint(releaseIdentity) === effectiveReleaseFingerprint
     : true;
-  return Object.freeze({
-    schema_version: candidate.schema_version === "base-erp-v8-release-candidate-v1" ? "base-erp-v8-public-release-v1" : "base-erp-public-release-v1",
+  const document = {
+    schema_version: candidate.schema_version === "base-erp-v8-release-candidate-v1"
+      ? "base-erp-v8-public-release-v1"
+      : candidate.schema_version === V9_CANDIDATE_SCHEMA_VERSION ? V9_PUBLIC_SCHEMA_VERSION : "base-erp-public-release-v1",
     project_name: asNonEmptyString(candidate.project_name, "Base ERP Settlement Workbench"),
     release_id: asNonEmptyString(candidate.release_id, "unbound-release"),
-    release_fingerprint: asNonEmptyString(candidate.release_fingerprint, ""),
+    release_fingerprint: asNonEmptyString(effectiveReleaseFingerprint, ""),
     bom_fingerprint: asNonEmptyString(candidate.bom_fingerprint, ""),
     immutable_bom_sha256: candidate.immutable_bom_sha256 ?? candidate.bom_fingerprint ?? null,
     immutable_release_bom: bom,
@@ -394,12 +655,23 @@ export function readReleaseDocument({ releasePath = DEFAULT_RELEASE_PATH, env = 
       && DIGEST_PATTERN.test(typeof candidate.release_fingerprint === "string" ? candidate.release_fingerprint : "")
       && DIGEST_PATTERN.test(typeof candidate.bom_fingerprint === "string" ? candidate.bom_fingerprint : "")
       && releaseIdentityFingerprintValid,
-    ...(releaseIdentity ? { base_target: Object.freeze({ ...(releaseIdentity.base_target ?? {}) }), release_schema_version: H219_RELEASE_SCHEMA_VERSION } : {}),
+    ...(releaseIdentity ? {
+      base_target: Object.freeze({ ...(releaseIdentity.base_target ?? {}) }),
+      release_schema_version: releaseIdentity.schema_version,
+      ...(candidate.schema_version === V9_CANDIDATE_SCHEMA_VERSION ? { source_catalog_fingerprint: candidate.source_catalog_fingerprint } : {}),
+    } : {}),
     public_write_authorized: false,
     publication_status: "local_candidate_non_public_receipt",
     evidence_level: asNonEmptyString(candidate.evidence_level, "L1_local_tests"),
     limitations,
-  });
+  };
+  if (candidate.schema_version === V9_CANDIDATE_SCHEMA_VERSION) {
+    const gate = validateV9Candidate({ candidate, release: document, bomVerification, sourceDigestCatalog: readV9SourceDigestCatalog() });
+    document.v9_release_ready = gate.ok === true;
+    document.v9_candidate_gate = gate;
+    document.release_identity_valid = document.release_identity_valid && gate.ok === true;
+  }
+  return Object.freeze(document);
 }
 
 export function readHealth({ release = readReleaseDocument(), runtimeReader = null, observedAt = new Date().toISOString() } = {}) {
@@ -416,7 +688,7 @@ export function readHealth({ release = readReleaseDocument(), runtimeReader = nu
       runtimeReason = error instanceof Error ? error.message : "runtime binding unreadable";
     }
   }
-  const ready = currentV8ReleaseReady(release);
+  const ready = currentReleaseReady(release);
   return Object.freeze({
     ready,
     status: ready ? "ok" : "degraded",
@@ -472,6 +744,169 @@ function platformEvidence(candidate, release) {
       countable: receiptBound,
     }];
   }));
+}
+
+function v9ReleaseIdentity(release) {
+  return {
+    release_id: release.release_id,
+    release_fingerprint: release.release_fingerprint,
+    bom_fingerprint: release.bom_fingerprint,
+    commit_sha: release.git_commit,
+    source_catalog_fingerprint: release.source_catalog_fingerprint ?? V9_SOURCE_CATALOG_FINGERPRINT,
+  };
+}
+
+function readV9SourceDigestCatalog() {
+  const catalog = {};
+  for (const path of Object.keys(V9_SOURCE_DIGEST_CATALOG)) {
+    try {
+      catalog[path] = createHash("sha256").update(readFileSync(resolve(PROJECT_ROOT, path))).digest("hex");
+    } catch {
+      return {};
+    }
+  }
+  return catalog;
+}
+
+function v9PlatformEvidence(candidate, releaseIdentity, observedAt) {
+  const source = candidate?.eight_surface_evidence_map ?? {};
+  const statusFor = (platform) => {
+    if (platform === "base_sepolia_rehearsal") return "not_observed";
+    const status = source[platform]?.status;
+    if (typeof status === "string" && status.includes("owner_gate")) return "owner_gate_pending";
+    if (typeof status === "string" && status.includes("absent")) return "absent";
+    if (typeof status === "string" && status.includes("historical")) return "historical";
+    if (typeof status === "string" && status.includes("synthetic")) return "synthetic";
+    return "not_observed";
+  };
+  return REQUIRED_PLATFORM_IDS.map((platform) => {
+    const sourceRow = source[platform] && typeof source[platform] === "object" ? source[platform] : {};
+    const sourceRelease = sourceRow.release_identity && typeof sourceRow.release_identity === "object"
+      ? sourceRow.release_identity
+      : releaseIdentity;
+    const row = {
+      platform,
+      evidence_class: sourceRow.evidence_class ?? (platform === "base_app"
+        ? "attribution_metadata"
+        : platform === "base_sepolia_rehearsal"
+          ? "chain_receipt"
+          : "native_platform_receipt"),
+      state: typeof sourceRow.state === "string" ? sourceRow.state : statusFor(platform),
+      current: typeof sourceRow.current === "boolean" ? sourceRow.current : false,
+      historical: typeof sourceRow.historical === "boolean" ? sourceRow.historical : false,
+      synthetic: typeof sourceRow.synthetic === "boolean" ? sourceRow.synthetic : false,
+      observed_at: typeof sourceRow.observed_at === "string" ? sourceRow.observed_at : observedAt,
+      release_identity: sourceRelease,
+      is_receipt: sourceRow.is_receipt === true,
+      receipt_ref: sourceRow.receipt_ref ?? null,
+      attribution_observed: typeof sourceRow.attribution_observed === "boolean"
+        ? sourceRow.attribution_observed
+        : platform === "base_app",
+      status: sourceRow.status ?? null,
+      ...(sourceRow.provenance && typeof sourceRow.provenance === "object" ? { provenance: structuredClone(sourceRow.provenance) } : {}),
+    };
+    for (const key of ["target", "repo", "service", "domain", "url", "project", "manifest"]) {
+      if (sourceRow[key] !== undefined) row[key] = sourceRow[key];
+    }
+    if (platform === "base_sepolia_rehearsal") {
+      row.chain_id = sourceRow.chain_id ?? BASE_SEPOLIA_CHAIN_ID;
+      row.receipt_status = sourceRow.receipt_status ?? null;
+      row.finality_stage = sourceRow.finality_stage ?? null;
+      row.transaction_hash = sourceRow.transaction_hash ?? null;
+      row.new_rehearsal = sourceRow.new_rehearsal === true;
+    }
+    return row;
+  });
+}
+
+function v9RuntimeBinding(runtime, releaseIdentity, observedAt) {
+  if (!runtime || typeof runtime !== "object") return null;
+  return {
+    runtime_sha256: runtime.runtime_sha256,
+    run_id: runtime.run_id,
+    cursor: runtime.cursor ?? { active_item_id: "" },
+    writer_idle: runtime.writer_idle,
+    observed_at: typeof runtime.observed_at === "string" && runtime.observed_at !== ""
+      ? runtime.observed_at
+      : observedAt,
+    release_id: runtime.release_id ?? releaseIdentity.release_id,
+    release_fingerprint: runtime.release_fingerprint ?? releaseIdentity.release_fingerprint,
+    bom_fingerprint: runtime.bom_fingerprint ?? releaseIdentity.bom_fingerprint,
+    commit_sha: runtime.commit_sha ?? releaseIdentity.commit_sha,
+    source_catalog_fingerprint: runtime.source_catalog_fingerprint ?? releaseIdentity.source_catalog_fingerprint,
+  };
+}
+
+function v9ClaimBindings(routeReadbacks, sourceDigests, releaseIdentity, observedAt) {
+  const sourcePaths = Object.keys(sourceDigests);
+  return routeReadbacks.map((route, index) => {
+    const sourcePath = sourcePaths[index % sourcePaths.length];
+    return {
+      claim_id: `base-erp-v9-claim-${index + 1}`,
+      source_path: sourcePath,
+      source_sha256: sourceDigests[sourcePath],
+      route_path: route.path,
+      route_response_sha256: route.response_sha256,
+      release_identity: releaseIdentity,
+      observed_at: observedAt,
+      generated_by: "code_test_contract",
+    };
+  });
+}
+
+/**
+ * Deterministic v9 seal input for the current release. The source digest
+ * catalog is hashed from the accepted source files at request time and must
+ * equal the owner-frozen source_catalog_fingerprint; any drift fails closed.
+ */
+export function buildV9IntegritySealInput({ release, candidate, sourceDigestCatalog = null, routeReadbacks, runtimeBinding, observedAt, maxAgeSeconds = V9_MAX_AGE_SECONDS }) {
+  const releaseIdentity = v9ReleaseIdentity(release);
+  const sourceDigests = sourceDigestCatalog ?? readV9SourceDigestCatalog();
+  const candidateGate = validateV9Candidate({
+    candidate,
+    release,
+    bomVerification: {
+      bom_verified: release?.bom_verified,
+      expected_bom_fingerprint: release?.expected_bom_fingerprint,
+    },
+    sourceDigestCatalog: sourceDigests,
+  });
+  if (!candidateGate.ok) throw v9GateError(candidateGate.reason, candidateGate.failure_codes[0], candidateGate);
+  return {
+    release_identity: releaseIdentity,
+    source_digests: sourceDigests,
+    evaluation_time: observedAt,
+    max_age_seconds: maxAgeSeconds,
+    route_readbacks: routeReadbacks,
+    claim_bindings: v9ClaimBindings(routeReadbacks, sourceDigests, releaseIdentity, observedAt),
+    platform_evidence: v9PlatformEvidence(candidate, releaseIdentity, observedAt),
+    runtime_binding: runtimeBinding,
+    candidate_gate: candidateGate.candidate_gate,
+  };
+}
+
+async function fetchV9RouteReadbacks(loopbackBaseUrl, { observedAt, releaseIdentity }) {
+  const readbacks = [];
+  for (const path of REQUIRED_ROUTE_PATHS) {
+    let response;
+    try {
+      response = await fetch(`${loopbackBaseUrl}${path}`, { method: "GET" });
+    } catch (error) {
+      throw new Error(`route_readback_unavailable:${path}:${error instanceof Error ? error.message : "fetch failed"}`);
+    }
+    const payload = await response.text();
+    readbacks.push({
+      path,
+      method: "GET",
+      http_status: response.status,
+      claim_state: response.status === 200 ? "current" : "unready",
+      response_sha256: createHash("sha256").update(payload, "utf8").digest("hex"),
+      release_identity: releaseIdentity,
+      observed_at: observedAt,
+      generated_by: V9_GENERATED_BY,
+    });
+  }
+  return readbacks;
 }
 
 /**
@@ -641,7 +1076,7 @@ export function renderHomePage(release) {
       <ul>${limitations}</ul>
       <h2>Visitor mode</h2>
       <p>Explore the seven document-aware settlement profiles and run a deterministic, non-broadcast simulation. It never requests a wallet, signs, sends or posts to ERP.</p>
-      <p><a href="/workbench/">Open operator workbench</a> · <a href="/cases.json">Case catalog</a> · <a href="/simulate.json?profile_id=customer_invoice_receipt">Run a read-only simulation</a> · <a href="/event-admission.json">Event admission status</a> · <a href="/app.json">Standard web-app metadata</a></p>
+      <p><a href="/workbench/">Open operator workbench</a> · <a href="/cases.json">Case catalog</a> · <a href="/simulate.json?profile_id=customer_invoice_receipt">Run a read-only simulation</a> · <a href="/wallet-action-plan.json?profile_id=customer_invoice_receipt">Wallet action plan</a> · <a href="/event-admission.json">Event admission status</a> · <a href="/app.json">Standard web-app metadata</a></p>
       <p>Public writes and wallet actions are disabled. See <a href="/evidence/">Evidence Workbench</a>, <a href="/release.json">release.json</a> for the bounded public release document and <a href="/healthz">healthz</a> for runtime readiness.</p>
     </main>
   </body>
@@ -713,9 +1148,116 @@ function hasUnsupportedWorkbenchQuery(parsedUrl) {
   return [...parsedUrl.searchParams.keys()].some((key) => key !== "profile_id");
 }
 
+function buildV9PlatformGatesProjection(release, source = null) {
+  const matrix = source?.matrix ?? readJsonFile(resolve(PROJECT_ROOT, CIRCLE_MATRIX_PATH));
+  const matrixSha = source?.matrix_sha256 ?? sha256File(CIRCLE_MATRIX_PATH);
+  const matrixTargetValid = matrix?.schema_version === "base-circle-platform-isolation-matrix-v1"
+    && matrix?.base_identity?.repository === H219_BASE_TARGET.github_repo
+    && matrix?.base_identity?.render_url === H219_BASE_TARGET.canonical_primary_url;
+  if (!matrixTargetValid || matrixSha !== CIRCLE_MATRIX_SHA256 || !h219BaseTargetEqual(release?.base_target)) {
+    throw new Error("h217_source_invalid_or_circle_collision");
+  }
+  // The isolation matrix itself is intentionally named for BASE/CIRCLE
+  // separation; only the candidate's target identity is subject to the
+  // denylist/word boundary check.
+  const serialized = JSON.stringify({ release: {
+    release_id: release.release_id,
+    release_fingerprint: release.release_fingerprint,
+    bom_fingerprint: release.bom_fingerprint,
+    base_target: release.base_target,
+  } });
+  if (CIRCLE_DENYLIST.some((entry) => serialized.includes(entry)) || /(^|[^a-z])(circle|arc)([^a-z]|$)/i.test(serialized)) {
+    throw new Error("h217_source_invalid_or_circle_collision");
+  }
+  const releaseJoin = {
+    release_id: release.release_id,
+    release_fingerprint: release.release_fingerprint,
+    bom_fingerprint: release.bom_fingerprint,
+    commit_sha: release.git_commit,
+    github_release_url: `https://github.com/${H219_BASE_TARGET.github_repo}/releases/tag/${release.release_id}`,
+    render_release_url: `${H219_BASE_TARGET.canonical_primary_url}/release.json`,
+    render_health_url: `${H219_BASE_TARGET.canonical_primary_url}/healthz`,
+    canonical_dashboard_app_id: H219_BASE_TARGET.dashboard_app_id,
+    canonical_primary_url: H219_BASE_TARGET.canonical_primary_url,
+    dashboard_basedev_one_identity: true,
+    base_app_readiness_only: true,
+    separate_dashboard_basedev_receipt: false,
+    current: true,
+    actual_commit_bound: FULL_COMMIT_PATTERN.test(String(release.git_commit ?? "")),
+  };
+  const makeRow = (platform_row_id, fields) => ({
+    platform_row_id,
+    ...fields,
+    release_join: null,
+    receipt: { native_receipt: null, receipt_kind: fields.receipt_kind, release_receipt: false, observed: false },
+    credit: 0,
+    publication_unit_credit: 0,
+  });
+  const rows = H217_PLATFORM_ROW_IDS.map((platform_row_id) => {
+    switch (platform_row_id) {
+      case "base_sepolia_rehearsal":
+        return makeRow(platform_row_id, {
+          evidence_state: "rehearsal_pending",
+          owner_gate: "owner_authorized_receipt_and_explicit_finality_readback_required",
+          target_identity: { ...BASE_SEPOLIA_DESCRIPTOR },
+          public_context: null,
+          owner_readback: { descriptor_valid: true, transaction_hash_observed: false, receipt_observed: false, finality_stage: null },
+          failure_state: "sepolia_receipt_missing_or_invalid",
+          receipt_kind: "rehearsal_only",
+        });
+      case "talent_native_domain":
+        return makeRow(platform_row_id, {
+          evidence_state: "owner_gate",
+          owner_gate: "exact_project_owner_readback_required",
+          target_identity: { project_id: null, project_url: null, title: null },
+          public_context: { projects_url: "https://talent.app/~/projects", search_query: "Base ERP Settlement Workbench", projects_found: 0 },
+          owner_readback: { project_identity_observed: false, release_mapping_observed: false, owner_auth_required: true },
+          failure_state: "talent_exact_project_absent_or_owner_auth_gate",
+          receipt_kind: "native_domain_outcome",
+        });
+      case "guild_native_domain":
+        return makeRow(platform_row_id, {
+          evidence_state: "context_only",
+          owner_gate: "project_specific_owner_admin_or_visitor_readback_required",
+          target_identity: { guild_slug: null, project_url: null },
+          public_context: { base_guild_url: "https://guild.xyz/base/home", generic_base_page_visible: true, sign_in_or_join_gate_visible: true },
+          owner_readback: { project_identity_observed: false, release_mapping_observed: false, owner_auth_required: true },
+          failure_state: "guild_generic_or_sign_in_gate",
+          receipt_kind: "native_domain_outcome",
+        });
+      case "basename_base_org_identity":
+        return makeRow(platform_row_id, {
+          evidence_state: "identity_only",
+          owner_gate: "owner_gated_primary_or_resolver_readback_required",
+          target_identity: { account_level_singleton: true, primary_name: null, resolver: null, profile_url: null },
+          public_context: { names_url: "https://www.base.org/names", identity_value_omitted: true },
+          owner_readback: { identity_only: true, project_release_mapping_observed: false, owner_auth_required: true },
+          failure_state: "basename_identity_not_project_release",
+          receipt_kind: "account_level_identity",
+        });
+      default:
+        throw new Error("h217_source_invalid_or_circle_collision");
+    }
+  });
+  return Object.freeze({
+    schema_version: "base-erp-h218-platform-gates-public-v1",
+    mode: "visitor_read_only",
+    packet_id: H217_PACKET_ID,
+    readback_id: "base-erp-v9-platform-gates-route-parity",
+    observed_at: release.generated_at_cst ?? "2026-08-16T00:00:00.000Z",
+    release_join: releaseJoin,
+    rows: Object.freeze(rows),
+    aggregate: Object.freeze({ row_count: rows.length, native_receipt_count: 0, release_receipt_count: 0, credit: 0, publication_unit_credit: 0, eight_surface_duplication: false }),
+    isolation: Object.freeze({ circle_collision: false, circle_target_absent: true, state: "base_identity_isolated", fail_closed_on_collision: true, action_enabled: false }),
+    redaction: Object.freeze({ wallet_values_exposed: false, credentials_exposed: false, hidden_identity_exposed: false, raw_calldata_exposed: false, transaction_references_exposed: false, owner_basename_value_exposed: false }),
+    safety: Object.freeze({ external_actions: 0, wallet_write_allowed: false, public_write_authorized: false, deployment_authority: false, execution_authority: EXECUTION_AUTHORITY }),
+  });
+}
+
 function readPlatformGatesProjection(release, platformGatesSourceReader = null) {
   try {
     const source = typeof platformGatesSourceReader === "function" ? platformGatesSourceReader() : null;
+    if (release?.schema_version === V9_PUBLIC_SCHEMA_VERSION) return buildV9PlatformGatesProjection(release, source);
     const matrix = source?.matrix ?? readJsonFile(resolve(PROJECT_ROOT, CIRCLE_MATRIX_PATH));
     const matrixTargetValid = matrix?.schema_version === "base-circle-platform-isolation-matrix-v1"
       && matrix?.base_identity?.repository === "gaysonloser/base-erp-settlement-workbench"
@@ -745,7 +1287,8 @@ function hasRequestBody(request) {
 }
 
 export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = process.env, runtimeReader = null, platformGatesSourceReader = null } = {}) {
-  return createServer((request, response) => {
+  let server;
+  server = createServer((request, response) => {
     const head = request.method === "HEAD";
     if (request.method !== "GET" && !head) {
       writeResponse(response, 405, { error: "method_not_allowed", allowed: ["GET", "HEAD"] }, "application/json; charset=utf-8");
@@ -772,14 +1315,17 @@ export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = proc
       writeResponse(response, 503, { error: "release_unavailable", reason: error instanceof Error ? error.message : "release unavailable" }, "application/json; charset=utf-8", { head });
       return;
     }
+    const candidate = readCandidateJson(releasePath);
+    const releaseReady = currentReleaseReady(release);
+    const unavailable = release.schema_version === V9_PUBLIC_SCHEMA_VERSION ? CURRENT_V9_UNAVAILABLE : CURRENT_V8_UNAVAILABLE;
     if (pathname === "/healthz") {
       const health = readHealth({ release, runtimeReader });
       writeResponse(response, health.ready ? 200 : 503, health, "application/json; charset=utf-8", { head });
       return;
     }
     if (pathname === "/release.json") {
-      if (!currentV8ReleaseReady(release)) {
-        writeResponse(response, 503, CURRENT_V8_UNAVAILABLE, "application/json; charset=utf-8", { head });
+      if (!releaseReady) {
+        writeResponse(response, 503, unavailable, "application/json; charset=utf-8", { head });
         return;
       }
       writeResponse(response, 200, release, "application/json; charset=utf-8", { head });
@@ -801,13 +1347,32 @@ export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = proc
       writeResponse(response, 200, buildRecurringSettlementProjection({ release }), "application/json; charset=utf-8", { head });
       return;
     }
+    if (pathname === "/wallet-action-plan.json") {
+      if (hasUnsupportedWorkbenchQuery(parsedUrl) || hasRequestBody(request)) {
+        writeResponse(response, 400, { error: "wallet_action_plan_input_invalid", reason: "client_binding_not_accepted" }, "application/json; charset=utf-8", { head });
+        return;
+      }
+      if (!releaseReady) {
+        writeResponse(response, 503, unavailable, "application/json; charset=utf-8", { head });
+        return;
+      }
+      try {
+        writeResponse(response, 200, buildWalletErpActionPlanProjection({
+          release,
+          selected_profile_id: parsedUrl.searchParams.get("profile_id") ?? undefined,
+        }), "application/json; charset=utf-8", { head });
+      } catch (error) {
+        writeResponse(response, 400, { error: "wallet_action_plan_input_invalid", reason: error instanceof Error ? error.message : "invalid wallet action plan input" }, "application/json; charset=utf-8", { head });
+      }
+      return;
+    }
     if (pathname === "/platform-gates.json") {
       if (parsedUrl.searchParams.size > 0 || hasRequestBody(request)) {
         writeResponse(response, 400, { error: "client_binding_not_accepted" }, "application/json; charset=utf-8", { head });
         return;
       }
-      if (!currentV8ReleaseReady(release)) {
-        writeResponse(response, 503, CURRENT_V8_UNAVAILABLE, "application/json; charset=utf-8", { head });
+      if (!releaseReady) {
+        writeResponse(response, 503, unavailable, "application/json; charset=utf-8", { head });
         return;
       }
       try {
@@ -822,8 +1387,8 @@ export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = proc
         writeResponse(response, 400, { error: "workbench_input_invalid", reason: "client_binding_not_accepted" }, "application/json; charset=utf-8", { head });
         return;
       }
-      if (!currentV8ReleaseReady(release)) {
-        writeResponse(response, 503, CURRENT_V8_UNAVAILABLE, "application/json; charset=utf-8", { head });
+      if (!releaseReady) {
+        writeResponse(response, 503, unavailable, "application/json; charset=utf-8", { head });
         return;
       }
       try {
@@ -897,6 +1462,51 @@ export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = proc
       }
       return;
     }
+    if (pathname === "/integrity-seal.json") {
+      if (parsedUrl.searchParams.size > 0 || hasRequestBody(request)) {
+        writeResponse(response, 400, { error: "client_binding_not_accepted" }, "application/json; charset=utf-8", { head });
+        return;
+      }
+      if (release.schema_version === V9_PUBLIC_SCHEMA_VERSION && release.v9_candidate_gate?.ok !== true) {
+        const gate = release.v9_candidate_gate ?? { reason: "v9_candidate_gate_unavailable", failure_codes: ["V9-F99"] };
+        const failureCode = Array.isArray(gate.failure_codes) && gate.failure_codes.length > 0 ? gate.failure_codes[0] : "V9-F99";
+        writeResponse(response, 503, v9Failure(gate.reason ?? "v9_candidate_gate_failed", failureCode), "application/json; charset=utf-8", { head });
+        return;
+      }
+      void (async () => {
+        try {
+          const observedAt = new Date().toISOString();
+          const releaseIdentity = v9ReleaseIdentity(release);
+          const address = server.address();
+          const loopbackHost = typeof address === "object" && address !== null
+            ? `${address.address.includes(":") ? `[${address.address}]` : address.address}:${address.port}`
+            : request.headers.host;
+          if (typeof loopbackHost !== "string" || loopbackHost === "") {
+            throw new Error("integrity seal loopback host unavailable");
+          }
+          const routeReadbacks = await fetchV9RouteReadbacks(`http://${loopbackHost}`, { observedAt, releaseIdentity });
+          let runtimeValue = null;
+          try {
+            runtimeValue = typeof runtimeReader === "function" ? runtimeReader() : null;
+          } catch {
+            runtimeValue = null;
+          }
+          const runtimeBinding = v9RuntimeBinding(runtimeValue, releaseIdentity, observedAt);
+          const seal = evaluateReleaseEvidenceSeal(buildV9IntegritySealInput({
+            release,
+            candidate: readCandidateJson(releasePath),
+            routeReadbacks,
+            runtimeBinding,
+            observedAt,
+          }));
+          const body = seal.ok === true ? { ...seal, seal_verified: verifyReleaseEvidenceSeal(seal).ok === true } : seal;
+          writeResponse(response, seal.ok ? 200 : 503, body, "application/json; charset=utf-8", { head });
+        } catch (error) {
+          writeResponse(response, 503, { error: "integrity_seal_unavailable", reason: error instanceof Error ? error.message : "integrity seal unavailable" }, "application/json; charset=utf-8", { head });
+        }
+      })();
+      return;
+    }
     if (pathname === "/evidence" || pathname === "/evidence/") {
       writeResponse(response, 200, renderEvidencePage(readPublicEvidenceDocument({ releasePath, env })), "text/html; charset=utf-8", { head });
       return;
@@ -906,8 +1516,8 @@ export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = proc
         writeResponse(response, 400, { error: "workbench_input_invalid", reason: "client_binding_not_accepted" }, "application/json; charset=utf-8", { head });
         return;
       }
-      if (!currentV8ReleaseReady(release)) {
-        writeResponse(response, 503, CURRENT_V8_UNAVAILABLE, "application/json; charset=utf-8", { head });
+      if (!releaseReady) {
+        writeResponse(response, 503, unavailable, "application/json; charset=utf-8", { head });
         return;
       }
       try {
@@ -928,6 +1538,7 @@ export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = proc
     }
     writeResponse(response, 404, { error: "not_found", path: pathname }, "application/json; charset=utf-8", { head });
   });
+  return server;
 }
 
 function parsePort(value) {

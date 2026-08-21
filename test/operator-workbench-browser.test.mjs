@@ -1,6 +1,10 @@
 import test from "node:test"
 import assert from "node:assert/strict"
 import { createRequire } from "node:module"
+import { createHash } from "node:crypto"
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 
 import { createAppServer } from "../src/server.mjs"
 import { buildOperatorWorkbench } from "../src/base-erp-workbench.mjs"
@@ -71,12 +75,55 @@ function resolveChromiumExecutable() {
   return process.env.H215_CHROME_EXECUTABLE ?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 }
 
+function canonicalH219(value) {
+  if (typeof value === "string") return JSON.stringify(value.normalize("NFC"))
+  if (value === null || typeof value === "boolean") return JSON.stringify(value)
+  if (typeof value === "number") return JSON.stringify(value)
+  if (Array.isArray(value)) return `[${value.map(canonicalH219).join(",")}]`
+  if (value && typeof value === "object") {
+    const keys = Object.keys(value).map((key) => key.normalize("NFC"))
+    keys.sort((left, right) => Buffer.from(left, "utf8").compare(Buffer.from(right, "utf8")))
+    return `{${keys.map((key) => `${JSON.stringify(key)}:${canonicalH219(value[key])}`).join(",")}}`
+  }
+  throw new TypeError("unsupported candidate value")
+}
+
+function sha256(value) {
+  return createHash("sha256").update(value).digest("hex")
+}
+
+function recomputeCurrentV8Candidate() {
+  const candidate = JSON.parse(readFileSync("runtime/release_candidate_2026-08-10.json", "utf8"))
+  // This is a disposable current-v8 projection. Recompute every frozen BOM
+  // entry so the temporary browser candidate follows the current workbench,
+  // route and page bytes while the on-disk v8 evidence remains immutable.
+  candidate.immutable_release_bom = candidate.immutable_release_bom.map((entry) => ({
+    ...entry,
+    digest: sha256(readFileSync(entry.path.slice("projects/2026-08_Base_ERP_Settlement_Workbench/".length))),
+  }))
+  candidate.bom_fingerprint = sha256(Buffer.from(canonicalH219({
+    schema_version: "base-erp-v8-bom-v1",
+    files: candidate.immutable_release_bom.map((entry) => ({ path: entry.path, sha256: entry.digest })),
+  })))
+  candidate.immutable_bom_sha256 = candidate.bom_fingerprint
+  candidate.release_fingerprint = sha256(Buffer.from(canonicalH219({
+    schema_version: "base-erp-v8-release-identity-v1",
+    release_id: candidate.release_id,
+    bom_fingerprint: candidate.bom_fingerprint,
+    base_target: candidate.base_target,
+  })))
+  return candidate
+}
+
 async function launchBrowser() {
   return loadChromium().launch({ headless: true, executablePath: resolveChromiumExecutable() })
 }
 
 async function withServer(run, { env = { ...process.env, GIT_COMMIT_SHA: TEST_COMMIT } } = {}) {
-  const server = createAppServer({ env })
+  const directory = mkdtempSync(join(tmpdir(), "base-erp-h218-browser-candidate-"))
+  const releasePath = join(directory, "release.json")
+  writeFileSync(releasePath, JSON.stringify(recomputeCurrentV8Candidate(), null, 2))
+  const server = createAppServer({ env, releasePath })
   await new Promise((resolve, reject) => {
     server.once("error", reject)
     server.listen(0, "127.0.0.1", resolve)
@@ -87,6 +134,7 @@ async function withServer(run, { env = { ...process.env, GIT_COMMIT_SHA: TEST_CO
     return await run(`http://127.0.0.1:${address.port}`)
   } finally {
     await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()))
+    rmSync(directory, { recursive: true, force: true })
   }
 }
 

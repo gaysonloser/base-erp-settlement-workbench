@@ -1,0 +1,221 @@
+{
+  "schema_version": "base-erp-v9-release-candidate-v1",
+  "candidate_id": "base-erp-v9-local-candidate-20260816",
+  "release_id": "base-erp-public-product-20260816-v9",
+  "release_fingerprint": "263dfceab951cf116e20760fc53adbb15e5b0511f08d72526a2e848f40c8ffa4",
+  "release_fingerprint_algorithm": "sha256(base-erp-v9-canonical-release-identity-v1)",
+  "bom_fingerprint": "4e8d404276226d1c65140e958104ff989e2dfc881a8d1274dc2ed176f099e115",
+  "immutable_bom_sha256": "4e8d404276226d1c65140e958104ff989e2dfc881a8d1274dc2ed176f099e115",
+  "bom_file_count": 22,
+  "immutable_release_bom": [
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/README.md",
+      "digest": "c259da3c0eae7395cb7321c5a55eb265cf41637c5bf40aa70042e0abf6efd7de"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/assets/base-app/base-erp-workbench-screenshot-source.png",
+      "digest": "020ce9f0e79a3228f5ee132c9bb51b12faeccaa2420cb7d2b0522aa4641c53e9"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/assets/base-app/base-erp-workbench-thumbnail-source.png",
+      "digest": "e378d750fbf1e0222b8a66d2842e185a13367d95f955bcc0070f35f30bf2f9a4"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/config/base_erp_product_contract_v1.json",
+      "digest": "aaa157f96b40ac02a415c69f4cc433d974031eaf3bcf4cf10e8ecdd2b4ae90f8"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/config/release_identity_and_exposure_contract_v1.json",
+      "digest": "29a1aa765d40f6660885542955eb4e5605c2e4b549a3b0131bdb63bb100cc269"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/package-lock.json",
+      "digest": "3ee329115a151100a013181c77019890b02ad45ec695558fa6f8f045abc2cdcc"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/package.json",
+      "digest": "eeb44ec3a92bdb410eeb0a1becdce73ce489938e0cdd8d334e0e97f9ea6682b8"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/render.yaml",
+      "digest": "324b437cb9d858d143a11dd458821c79ba2a9741d9476a1abe08896464181010"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-erp-workbench.mjs",
+      "digest": "7261b4f1963213b669e8fe4e7854e1834203fb3abd47da375de448e5341c0949"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-native-platform-evidence-contract.mjs",
+      "digest": "f3c14395e712cb8de881fc50ebaa7b7fbd76a47ba2f04f7739103afa5353bfb6"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-native-platform-execution-gates.mjs",
+      "digest": "96f9839cbebb6bff775a5b0cc84a7ae7d71b0168847f2a1eb08c0b59d6f80b42"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-platform-feasibility-contract.mjs",
+      "digest": "ecb10c73b00c8abaf4f804299cb21cc23dd49763bb4420d10d3d786bb1e7ba5d"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-release-evidence-integrity-seal.mjs",
+      "digest": "f1bb4d9db1c182004d759a793b76ff04d4bec370dcd6d02c8721c2e813729652"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-wallet-erp-action-plan.mjs",
+      "digest": "0fd93ddc73397f85ac640ad9a70ea2cabf613d11b54016f99c0fe25bf2795196"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/operator-workbench-page.mjs",
+      "digest": "3105796894767518bef2847f69becfb6f001b44bd09895b4218121c943824fa5"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/server.mjs",
+      "digest": "52aa2175598e5c7d6faf031646e96e473885a6d313781003b83eb5e4a84628b2"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/test/base-native-platform-execution-gates.test.mjs",
+      "digest": "b26f27c4bcefa4c9fab65f4ee1ea3a88d8088f16dac185cb23c0333c8e55f762"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/test/base-release-evidence-integrity-seal.test.mjs",
+      "digest": "c7b09e60bba1d7644775bcfefbe6c92a31c4ab6853335bcde3611554d0015076"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/test/base-wallet-erp-action-plan.test.mjs",
+      "digest": "cd1c5dfec66c3ffacf201f37ff4a1db02f0f56d61929a4bdaf09f4b94c6c7d5e"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/test/operator-workbench-browser.test.mjs",
+      "digest": "bc110ac2bc7bb9bc77359d268baa46b1e13e81b87110ca5dec755d0acbde0ad5"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/test/operator-workbench-page.test.mjs",
+      "digest": "c3dd5c493a1963c8a1f6f8c8a12a62c84be57965d6586bae2051ac57c9315809"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/test/server.test.mjs",
+      "digest": "19b62c4485afb086329d29fe71a66834c5056c2a705d6a1056b6c98bce0a6090"
+    }
+  ],
+  "source_catalog_fingerprint": "266d6094f1b116493f3bded03d686ed122eb22eebb720c2090aac52a2984b1a4",
+  "source_digest_catalog": {
+    "README.md": "c259da3c0eae7395cb7321c5a55eb265cf41637c5bf40aa70042e0abf6efd7de",
+    "src/base-release-evidence-integrity-seal.mjs": "f1bb4d9db1c182004d759a793b76ff04d4bec370dcd6d02c8721c2e813729652",
+    "test/base-release-evidence-integrity-seal.test.mjs": "c7b09e60bba1d7644775bcfefbe6c92a31c4ab6853335bcde3611554d0015076"
+  },
+  "commit_sha": "PENDING_OWNER_PUBLIC_COMMIT",
+  "commit_placeholder": true,
+  "commit_gate": {
+    "state": "blocked_pending_owner_public_commit",
+    "required": "one owner-confirmed lowercase full 40-hex commit for this exact v9 BOM",
+    "placeholder": "PENDING_OWNER_PUBLIC_COMMIT",
+    "failure_code": "V9-F99"
+  },
+  "base_target": {
+    "github_repo": "gaysonloser/base-erp-settlement-workbench",
+    "render_service_id": "srv-d9t0bsafngtc7387gqo0",
+    "render_domain": "base-erp-settlement-workbench.onrender.com",
+    "dashboard_app_id": "6a7a0717e209a55163497d2d",
+    "canonical_primary_url": "https://base-erp-settlement-workbench.onrender.com"
+  },
+  "circle_isolation": {
+    "checked": true,
+    "collision": false,
+    "target_reuse": false,
+    "external_actions": 0
+  },
+  "generated_at_cst": "2026-08-21T21:44:40+08:00",
+  "h220": {
+    "packet_id": "base-erp-h220-release-evidence-integrity-seal-20260816",
+    "occurrence": 1,
+    "execution_authority": "none_until_02_Build_revalidates",
+    "required_route_count": 10,
+    "required_platform_count": 9,
+    "freshness_max_age_seconds": 900,
+    "generated_by": "code_test_contract",
+    "existing_base_sepolia_rehearsal_only": true
+  },
+  "runtime_binding_snapshot": {
+    "runtime_path": "projects/2026-06_Base_Guild_Onchain_Score/runtime/current_run.json",
+    "runtime_sha256": "6c26b22e28e8af19068e5151530e29acccb3e22792da4b9b95b2b58b53fdca19",
+    "run_id": "02_Build-20260821-212400",
+    "date_cst": "2026-08-21",
+    "status": "awaiting_owner_action",
+    "counters": {
+      "external_trace_units": 0,
+      "public_update_units": 0
+    },
+    "eligible_remaining": 0,
+    "autonomous_remaining": 0,
+    "queue_item": {
+      "id": "BASE-PUBLICATION-V8-20260815-01",
+      "lane": "carried_owner_login",
+      "status": "pending_browser_session",
+      "fingerprint": null,
+      "attempt_count": 0,
+      "next_eligible_at": null,
+      "owner_gate_type": "irreplaceable_login",
+      "reason": "Exact unresolved owner login carried across the CST ledger boundary; resolve the existing-account outcome without credential entry or replay."
+    },
+    "cursor": {
+      "active_item_id": "BASE-PUBLICATION-V8-20260815-01",
+      "resume_token": "BASE-PUBLICATION-V8-TALENT-OWNER-LOGIN-20260815",
+      "text": "Resume BASE-PUBLICATION-V8-TALENT-OWNER-LOGIN-20260815: verify the owner-gate outcome for candidate BASE-PUBLICATION-V8-20260815-01 at https://talent.app/~/projects, then continue that exact candidate without rediscovery or route switching.",
+      "owner_action": {
+        "type": "irreplaceable_login",
+        "surface_open": true,
+        "candidate": "BASE-PUBLICATION-V8-20260815-01",
+        "destination": "https://talent.app/~/projects",
+        "action": "sign_in_to_existing_account_only",
+        "no_data_submission": true
+      }
+    },
+    "writer_idle": true,
+    "runtime_authority_path": "runtime/runtime_authority.json",
+    "runtime_authority_sha256": "61dd31d12c85af34ed1a61fad8a37dc1562f91ffccfb81419bb344871ea7c32b",
+    "runtime_authority_record_sha256": "23e702515acc439d4f0d1477bde1959a47c49df3a77923c348884008ea6abcfc",
+    "runtime_authority_revalidation_required": false,
+    "runctl_sha256": "3bc6e4a095df11cd44f67f53676b357201fd44cbaab31136690dcbb2da0a5aad"
+  },
+  "platform_defaults": {
+    "native_receipt": null,
+    "release_receipt": false,
+    "rehearsal_receipt": null,
+    "attribution_observed": false,
+    "credit": 0,
+    "publication_unit_credit": 0,
+    "mainnet_30_credit": 0,
+    "build_credit_eligible": false,
+    "external_actions": 0
+  },
+  "state": "candidate_local_blocked_commit_placeholder",
+  "execution_authority": "none_until_02_Build_revalidates",
+  "external_actions": 0,
+  "self_hash_rule": "sha256(base-erp-v9-canonical-json-v1 candidate object with self_hash omitted); candidate and readback are excluded from immutable_release_bom",
+  "self_hash": "72f691587406e0eeac6d71dd65bc69424875542fd390bdde6f76fff06666ba29",
+  "independent_review": {
+    "verdict": "pass",
+    "reviewer": "independent_native_openai_reviewer",
+    "model": "gpt-5.6-sol",
+    "reasoning_effort": "medium",
+    "reviewed_at_cst": "2026-08-21T21:51:09+08:00",
+    "scope": "BASE wallet ERP action plan integration, v9 candidate/BOM, runtime and readback binding",
+    "p0": 0,
+    "p1": 0,
+    "p2": 0,
+    "focused_tests": "60 passed / 0 failed",
+    "workspace_writes": 0,
+    "external_actions": 0
+  },
+  "deployment_template": {
+    "mode": "render_env_commit",
+    "required_env": [
+      "RENDER_GIT_COMMIT",
+      "RENDER_GIT_COMMIT_SHA",
+      "GIT_COMMIT_SHA",
+      "SOURCE_VERSION"
+    ],
+    "placeholder": "PENDING_OWNER_PUBLIC_COMMIT",
+    "release_fingerprint_basis": "sha256(base-erp-v9-canonical-release-identity-v1)"
+  }
+}

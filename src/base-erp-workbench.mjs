@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { digest } from "./base-neutral-receipt-controls.mjs";
 import { bindRecurringCase, evaluateStatusAdapter, effectivePeriod } from "./base-recurring-settlement-contract.mjs";
+import { buildWalletErpActionPlan } from "./base-wallet-erp-action-plan.mjs";
 import {
   BASE_SEPOLIA_DESCRIPTOR,
   EXECUTION_AUTHORITY,
@@ -202,6 +203,63 @@ function normalizedCurrency(value) {
   const currency = requiredString(value, "currency").toUpperCase();
   if (!/^[A-Z]{3,8}$/.test(currency)) throw new RangeError("currency must be an uppercase symbol");
   return currency;
+}
+
+function amountMinorFromBlueprint(amount) {
+  const text = requiredString(amount, "amount").replaceAll(",", "");
+  const numeric = text.split(/\s+/u, 1)[0];
+  const [whole, fraction = ""] = numeric.split(".");
+  const minor = Number(whole) * 100 + Number((fraction + "00").slice(0, 2));
+  if (!Number.isSafeInteger(minor) || minor <= 0) throw new RangeError("amount must produce positive minor units");
+  return minor;
+}
+
+function unsupportedWalletActionPlan(reason) {
+  return Object.freeze({
+    schema_version: "base-wallet-erp-action-plan-projection-v1",
+    action_plan_id: null,
+    action_enabled: false,
+    execution_authority: "owner_review_required",
+    wallet: Object.freeze({
+      chain: "eip155:8453",
+      wallet_method: "wallet_sendCalls",
+      account_bound: true,
+      payload_present: false,
+      unsigned: true,
+    }),
+    accounting: Object.freeze({ mainnet_transaction_credit: 0, publication_unit_credit: 0, credit_state: "zero_until_all_required_evidence_passes" }),
+    unavailable_reason: reason,
+  });
+}
+
+export function buildWalletErpActionPlanProjection({ release, selected_profile_id = "customer_invoice_receipt" } = {}) {
+  const profile = profileFor(selected_profile_id);
+  const blueprint = WORKBENCH_CASE_BLUEPRINTS[profile.profile_id];
+  const direction = profile.refund_required
+    ? "refund"
+    : profile.direction === "inbound"
+      ? "receivable"
+      : null;
+  if (!direction) return unsupportedWalletActionPlan("profile_direction_not_supported");
+  const binding = releaseBinding(release);
+  return buildWalletErpActionPlan({
+    release: {
+      release_id: binding.release_id,
+      release_fingerprint: binding.release_fingerprint,
+      bom_fingerprint: binding.bom_fingerprint,
+    },
+    scenario: { direction },
+    wallet: { chain: "eip155:8453", wallet_method: "wallet_sendCalls", account_bound: true },
+    // The plan module deliberately accepts ISO-style three-letter ledger
+    // currencies; this is an unsigned accounting descriptor, not a token
+    // selection or a transfer payload.
+    amount: { amount_minor: amountMinorFromBlueprint(blueprint.amount), currency: "USD" },
+    erp: {
+      target: profile.refund_required
+        ? "journal_entry_draft"
+        : "payment_entry_draft",
+    },
+  });
 }
 
 export function buildVisitorCaseCatalog({ release }) {
@@ -1072,6 +1130,7 @@ export function buildOperatorWorkbench({ release, selected_profile_id = "custome
     }),
   });
   const operator_surface = buildH215OperatorSurface({ binding, queue, selectedCase, server_record });
+  const wallet_action_plan = buildWalletErpActionPlanProjection({ release, selected_profile_id });
   const workbench = {
     schema_version: "base-erp-operator-workbench-v1",
     contract_version: "base-erp-h215-operator-workbench-v1",
@@ -1087,6 +1146,7 @@ export function buildOperatorWorkbench({ release, selected_profile_id = "custome
     ]),
     queue: Object.freeze(queue),
     selected_case: selectedCase,
+    wallet_action_plan,
     operator_surface,
     inspector: Object.freeze({
       tabs: Object.freeze(["evidence", "wallet", "erp_consequence", "recovery"]),
