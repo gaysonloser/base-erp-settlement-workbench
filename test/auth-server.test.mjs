@@ -1,47 +1,26 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createHash, createHmac } from "node:crypto";
+import { createHmac } from "node:crypto";
 import { request as httpRequest } from "node:http";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { V9_SOURCE_CATALOG_FINGERPRINT, computeV9ReleaseFingerprint, createAppServer, readReleaseDocument } from "../src/server.mjs";
+import { createAppServer, readReleaseDocument } from "../src/server.mjs";
 import { buildSiweMessage, createAuthService } from "../src/auth/auth-core.mjs";
-import { digest as h220Digest } from "../src/base-release-evidence-integrity-seal.mjs";
 import { buildWalletErpActionPlanProjection } from "../src/base-erp-workbench.mjs";
 import { buildReleaseBoundUnsignedCallPlan } from "../src/base-account-wallet-bridge.mjs";
+import { buildSyntheticV9Candidate } from "./fixtures/release-fixtures.mjs";
 
 const ORIGIN = "https://base.example";
 const HOST = "base.example";
 const ADDRESS = "0x1111111111111111111111111111111111111111";
 const SECRET = "auth-server-secret-012345678901234567890123";
 
-const PROJECT_PREFIX = "projects/2026-08_Base_ERP_Settlement_Workbench/";
 const TEST_COMMIT = "a".repeat(40);
 
 function readCurrentV9Candidate() {
-  const candidate = JSON.parse(readFileSync("runtime/release_candidate_v9_local_2026-08-16.json", "utf8"));
-  candidate.immutable_release_bom = candidate.immutable_release_bom.map((entry) => ({
-    path: entry.path,
-    digest: createHash("sha256").update(readFileSync(entry.path.slice(PROJECT_PREFIX.length))).digest("hex"),
-  }));
-  candidate.bom_fingerprint = h220Digest(candidate.immutable_release_bom);
-  candidate.immutable_bom_sha256 = candidate.bom_fingerprint;
-  candidate.commit_sha = TEST_COMMIT;
-  candidate.commit_placeholder = false;
-  candidate.commit_gate = { state: "bound_owner_public_commit_for_test", required: "test-only", placeholder: "PENDING_OWNER_PUBLIC_COMMIT", failure_code: null };
-  candidate.release_fingerprint = computeV9ReleaseFingerprint({
-    release_id: candidate.release_id,
-    bom_fingerprint: candidate.bom_fingerprint,
-    base_target: candidate.base_target,
-    commit_sha: candidate.commit_sha,
-    source_catalog_fingerprint: candidate.source_catalog_fingerprint,
-  });
-  const { self_hash: _ignoredSelfHash, ...withoutSelfHash } = candidate;
-  candidate.self_hash = h220Digest(withoutSelfHash);
-  assert.equal(candidate.source_catalog_fingerprint, V9_SOURCE_CATALOG_FINGERPRINT);
-  return candidate;
+  return buildSyntheticV9Candidate({ commit: TEST_COMMIT });
 }
 
 async function withTempV9Candidate(run) {
@@ -181,8 +160,9 @@ test("self-hosted auth SDK asset is served locally and the visitor surface stays
     assert.match(asset.text, /BaseAuthControllerFactory/);
     assert.doesNotMatch(asset.text, /<script\s+src=/i);
     const bridge = await request(baseUrl, "/wallet-action-bridge.json");
-    assert.equal(bridge.status, 503);
+    assert.equal(bridge.status, 200);
     assert.equal(bridge.text.includes("call_template"), false);
     assert.equal(bridge.text.includes("calldata"), false);
+    assert.equal(bridge.json().reason, "owner_auth_required");
   }, { enabled: false });
 });

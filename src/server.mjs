@@ -34,12 +34,29 @@ import { renderOperatorWorkbenchPage } from "./operator-workbench-page.mjs";
 import { evaluateRefundProposal } from "./base-refund-ceiling-guard.mjs";
 import { buildReleaseBoundUnsignedCallPlan } from "./base-account-wallet-bridge.mjs";
 import { authRequestIdentity, createAuthService, redactedAuthError } from "./auth/auth-core.mjs";
+import {
+  V12_MANIFEST_SCHEMA_VERSION,
+  V12_PUBLIC_SCHEMA_VERSION,
+  V12_RELEASE_SCHEMA_VERSION,
+  V12_RELEASE_FINGERPRINT_ALGORITHM,
+  V12_BOM_SCHEMA_VERSION,
+  V12_COMMIT_PLACEHOLDER,
+  canonicalV12ReleaseFingerprintBasis,
+  computeV12ReleaseFingerprint,
+  digestV12,
+  digestV12ManifestForBom,
+  digestV12ManifestSelfHash,
+  resolveV12Commit,
+  validateV12Manifest,
+  buildV12IntegritySeal,
+  verifyV12IntegritySeal,
+} from "./base-release-v12.mjs";
 
 const PROJECT_ROOT = fileURLToPath(new URL("../", import.meta.url));
-// Production must never default to the historical v8 runtime receipt.  The
-// tracked v9 template is intentionally commit-unbound until Render injects
-// the exact full commit through its deployment environment.
-const DEFAULT_RELEASE_PATH = resolve(PROJECT_ROOT, "src/release_candidate_v9_template.json");
+// Production reads only the tracked deployment-safe v12 manifest. Historical
+// v8/v9/v10/v11 candidates remain explicit test/evidence inputs and are never
+// selected by npm start.
+const DEFAULT_RELEASE_PATH = resolve(PROJECT_ROOT, "src/release_manifest_v12.json");
 const PRIMARY_BASE_ACCOUNT = "0xba36d092db2999bb1fabbaf281ac956a97189c25";
 const FULL_COMMIT_PATTERN = /^[0-9a-f]{40}$/;
 const DIGEST_PATTERN = /^[0-9a-f]{64}$/;
@@ -144,6 +161,10 @@ const PUBLIC_ASSETS = Object.freeze({
   }),
   "/assets/base-auth-sdk.bundle.js": Object.freeze({
     file: "public/assets/base-auth-sdk.bundle.js",
+    type: "text/javascript; charset=utf-8",
+  }),
+  "/assets/base-auth-sdk-v12.bundle.js": Object.freeze({
+    file: "public/assets/base-auth-sdk-v12.bundle.js",
     type: "text/javascript; charset=utf-8",
   }),
 });
@@ -437,7 +458,33 @@ function currentV9ReleaseReady(release) {
     && release.source_catalog_fingerprint === V9_SOURCE_CATALOG_FINGERPRINT;
 }
 
+function currentV12ReleaseReady(release) {
+  return release?.schema_version === V12_PUBLIC_SCHEMA_VERSION
+    && release.release_schema_version === V12_RELEASE_SCHEMA_VERSION
+    && /^base-erp-public-product-\d{8}-v12$/i.test(String(release.release_id ?? ""))
+    && release.v12_release_ready === true
+    && release.release_identity_valid === true
+    && release.bom_verified === true
+    && release.bom_fingerprint_valid === true
+    && release.bom_files_verified === true
+    && release.bom_source_bytes_safe === true
+    && typeof release.bom_fingerprint === "string"
+    && DIGEST_PATTERN.test(release.bom_fingerprint)
+    && release.immutable_bom_sha256 === release.bom_fingerprint
+    && typeof release.release_fingerprint === "string"
+    && DIGEST_PATTERN.test(release.release_fingerprint)
+    && typeof release.git_commit === "string"
+    && FULL_COMMIT_PATTERN.test(release.git_commit)
+    && release.commit_placeholder === false
+    && typeof release.source_catalog_fingerprint === "string"
+    && DIGEST_PATTERN.test(release.source_catalog_fingerprint)
+    && release.commit_binding
+    && release.base_target
+    && h219BaseTargetEqual(release.base_target);
+}
+
 function currentReleaseReady(release) {
+  if (release?.schema_version === V12_PUBLIC_SCHEMA_VERSION) return currentV12ReleaseReady(release);
   if (release?.schema_version === V9_PUBLIC_SCHEMA_VERSION) return currentV9ReleaseReady(release);
   return currentV8ReleaseReady(release);
 }
@@ -449,6 +496,10 @@ const CURRENT_V8_UNAVAILABLE = Object.freeze({
 const CURRENT_V9_UNAVAILABLE = Object.freeze({
   error: "release_unavailable",
   reason: "current_v9_identity_unready",
+});
+const CURRENT_V12_UNAVAILABLE = Object.freeze({
+  error: "release_unavailable",
+  reason: "current_v12_identity_unready",
 });
 
 function resolveProjectPath(filePath) {
@@ -575,6 +626,175 @@ function verifyBom(candidate) {
   };
 }
 
+const V12_MANIFEST_RELATIVE_PATH = "src/release_manifest_v12.json";
+const V12_PROJECT_PREFIX = "projects/2026-08_Base_ERP_Settlement_Workbench/";
+
+function v12RelativePath(filePath) {
+  const raw = String(filePath).normalize("NFC");
+  return raw.startsWith(V12_PROJECT_PREFIX) ? raw.slice(V12_PROJECT_PREFIX.length) : raw;
+}
+
+function v12DigestForPath(filePath, manifest) {
+  const relative = v12RelativePath(filePath);
+  if (relative === V12_MANIFEST_RELATIVE_PATH) return digestV12ManifestForBom(manifest);
+  try {
+    const stat = lstatSync(resolveProjectPath(filePath));
+    if (!stat.isFile() || stat.isSymbolicLink()) return null;
+  } catch {
+    return null;
+  }
+  return sha256File(filePath);
+}
+
+function v12SourceDigestCatalog(manifest) {
+  const catalog = {};
+  for (const relative of manifest.source_files ?? []) {
+    const digestValue = v12DigestForPath(relative, manifest);
+    if (!DIGEST_PATTERN.test(String(digestValue ?? ""))) return null;
+    catalog[relative] = digestValue;
+  }
+  return catalog;
+}
+
+function verifyV12ManifestDocument(candidate, env) {
+  const structural = validateV12Manifest(candidate);
+  const commit = resolveV12Commit({ commit_binding: candidate?.commit_binding, env });
+  if (!structural.ok) return {
+    ok: false,
+    identity_ok: false,
+    reason: structural.reason,
+    failure_codes: structural.failure_codes,
+    commit,
+    source_digests: {},
+    expected_bom_fingerprint: null,
+  };
+  const entries = candidate.immutable_release_bom.map((entry) => ({ path: entry.path.normalize("NFC"), digest: entry.digest.toLowerCase() }));
+  const expectedBomFingerprint = digestV12(entries);
+  const bomFingerprintValid = candidate.bom_fingerprint === expectedBomFingerprint && candidate.immutable_bom_sha256 === candidate.bom_fingerprint;
+  const bomFilesVerified = entries.every((entry) => v12DigestForPath(entry.path, candidate) === entry.digest);
+  const bomPathSet = new Set(entries.map((entry) => v12RelativePath(entry.path)));
+  const sourceDigests = v12SourceDigestCatalog(candidate);
+  const sourceCatalogFingerprint = sourceDigests ? digestV12(sourceDigests) : null;
+  const sourceFilesVerified = Boolean(sourceDigests) && candidate.source_files.every((path) => bomPathSet.has(path));
+  const sourceCatalogValid = sourceFilesVerified && sourceCatalogFingerprint === candidate.source_catalog_fingerprint;
+  const manifestSelfHashValid = digestV12ManifestSelfHash(candidate) === candidate.manifest_self_hash;
+  const v12PublicIdentityValues = {
+    release_id: candidate.release_id,
+    project_name: candidate.project_name,
+    material_outcome: candidate.material_outcome,
+    network: candidate.network,
+    base_target: candidate.base_target,
+    public_identity: candidate.public_identity,
+    source_files: candidate.source_files,
+    limitations: candidate.limitations,
+  };
+  const targetValid = h219BaseTargetEqual(candidate.base_target)
+    && !CIRCLE_DENYLIST.some((entry) => JSON.stringify(candidate.base_target).includes(entry))
+    && !/(circle|arc)/i.test(JSON.stringify(candidate.base_target))
+    && !CIRCLE_DENYLIST.some((entry) => JSON.stringify(v12PublicIdentityValues).includes(entry))
+    && !/(^|[^a-z])(circle|arc)([^a-z]|$)/i.test(JSON.stringify(v12PublicIdentityValues));
+  const expectedReleaseFingerprint = computeV12ReleaseFingerprint({
+    release_id: candidate.release_id,
+    bom_fingerprint: candidate.bom_fingerprint,
+    base_target: candidate.base_target,
+    commit_binding: candidate.commit_binding,
+    source_catalog_fingerprint: candidate.source_catalog_fingerprint,
+  });
+  const releaseFingerprintValid = candidate.release_fingerprint === expectedReleaseFingerprint
+    && digestV12(candidate.release_fingerprint_basis) === digestV12(canonicalV12ReleaseFingerprintBasis({
+      release_id: candidate.release_id,
+      bom_fingerprint: candidate.bom_fingerprint,
+      base_target: candidate.base_target,
+      commit_binding: candidate.commit_binding,
+      source_catalog_fingerprint: candidate.source_catalog_fingerprint,
+    }));
+  const identityOk = bomFingerprintValid && bomFilesVerified && sourceCatalogValid && manifestSelfHashValid && targetValid && releaseFingerprintValid;
+  let reason = null;
+  if (!bomFingerprintValid) reason = "v12_bom_fingerprint_mismatch";
+  else if (!bomFilesVerified) reason = "v12_bom_file_drift";
+  else if (!sourceCatalogValid) reason = "v12_source_catalog_fingerprint_mismatch";
+  else if (!manifestSelfHashValid) reason = "v12_manifest_self_hash_mismatch";
+  else if (!targetValid) reason = "v12_base_target_collision";
+  else if (!releaseFingerprintValid) reason = "v12_release_fingerprint_mismatch";
+  else if (commit.placeholder) reason = commit.reason === "V12_COMMIT_CONFLICT" ? "v12_commit_binding_conflict" : "v12_commit_placeholder";
+  const ok = identityOk && !commit.placeholder;
+  return {
+    ok,
+    identity_ok: identityOk,
+    reason: ok ? null : reason ?? "v12_manifest_unready",
+    failure_codes: ok ? [] : [reason ?? "V12-F99"],
+    commit,
+    source_digests: sourceDigests ?? {},
+    expected_bom_fingerprint: expectedBomFingerprint,
+    bom_verified: bomFingerprintValid && bomFilesVerified,
+    bom_fingerprint_valid: bomFingerprintValid,
+    bom_files_verified: bomFilesVerified,
+    bom_source_bytes_safe: true,
+    source_catalog_fingerprint: sourceCatalogFingerprint,
+    source_catalog_valid: sourceCatalogValid,
+    manifest_self_hash_valid: manifestSelfHashValid,
+    release_fingerprint_valid: releaseFingerprintValid,
+    base_target_valid: targetValid,
+  };
+}
+
+function readV12ReleaseDocument({ candidate, env }) {
+  const verification = verifyV12ManifestDocument(candidate, env);
+  const commit = verification.commit;
+  const bom = Array.isArray(candidate.immutable_release_bom)
+    ? candidate.immutable_release_bom.map((entry) => ({ path: entry.path, digest: entry.digest }))
+    : [];
+  const limitations = Array.from(new Set([
+    ...(Array.isArray(candidate.limitations) ? candidate.limitations : []),
+    "This tracked v12 manifest has no Base Mainnet receipt, ERP authoritative readback, or complete eight-surface public receipt.",
+    "Public writes and wallet actions remain disabled until an owner-visible gate and receipt-first revalidation are satisfied.",
+  ]));
+  const publicIdentity = {
+    basename: asNonEmptyString(candidate.public_identity?.basename, "gaysonloser.base.eth"),
+    // v12 deliberately does not carry a wallet/account address in the tracked
+    // manifest or public identity. Keep the field explicitly null for stable
+    // redaction semantics consumed by older workbench projections.
+    primary_base_account: null,
+  };
+  const document = {
+    schema_version: V12_PUBLIC_SCHEMA_VERSION,
+    release_schema_version: V12_RELEASE_SCHEMA_VERSION,
+    project_name: asNonEmptyString(candidate.project_name, "Base ERP Settlement Workbench"),
+    release_id: asNonEmptyString(candidate.release_id, "unbound-release"),
+    release_fingerprint: asNonEmptyString(candidate.release_fingerprint, ""),
+    bom_fingerprint: asNonEmptyString(candidate.bom_fingerprint, ""),
+    immutable_bom_sha256: candidate.immutable_bom_sha256 ?? candidate.bom_fingerprint ?? null,
+    immutable_release_bom: bom,
+    material_outcome: asNonEmptyString(candidate.material_outcome, "Receipt-first ERP settlement preparation"),
+    generated_at_cst: candidate.generated_at_cst ?? null,
+    network: asNonEmptyString(candidate.network, "Base Mainnet preflight contract only; no chain action"),
+    public_identity: Object.freeze(publicIdentity),
+    git_commit: commit.value,
+    commit_placeholder: commit.placeholder,
+    commit_source: commit.source,
+    commit_binding: candidate.commit_binding,
+    ...verifyBom(candidate),
+    bom_schema_version: V12_BOM_SCHEMA_VERSION,
+    bom_verified: verification.bom_verified === true,
+    bom_fingerprint_valid: verification.bom_fingerprint_valid === true,
+    bom_files_verified: verification.bom_files_verified === true,
+    bom_source_bytes_safe: verification.bom_source_bytes_safe === true,
+    expected_bom_fingerprint: verification.expected_bom_fingerprint,
+    source_catalog_fingerprint: candidate.source_catalog_fingerprint,
+    source_catalog_valid: verification.source_catalog_valid === true,
+    manifest_self_hash_valid: verification.manifest_self_hash_valid === true,
+    base_target: Object.freeze({ ...(candidate.base_target ?? {}) }),
+    release_identity_valid: verification.identity_ok === true && !commit.placeholder,
+    v12_release_ready: verification.ok === true,
+    v12_candidate_gate: verification,
+    public_write_authorized: false,
+    publication_status: "local_candidate_non_public_receipt",
+    evidence_level: asNonEmptyString(candidate.evidence_level, "L1_local_tests"),
+    limitations,
+  };
+  return Object.freeze(document);
+}
+
 /**
  * Read only the public, non-secret portion of the current release candidate.
  * Runtime cursor, authority details and wallet capabilities are intentionally
@@ -582,6 +802,7 @@ function verifyBom(candidate) {
  */
 export function readReleaseDocument({ releasePath = DEFAULT_RELEASE_PATH, env = process.env } = {}) {
   const candidate = readJsonFile(releasePath);
+  if (candidate.schema_version === V12_MANIFEST_SCHEMA_VERSION) return readV12ReleaseDocument({ candidate, env });
   const commit = resolveCommit({ candidate, env });
   const bomVerification = verifyBom(candidate);
   const effectiveReleaseFingerprint = candidate.schema_version === V9_CANDIDATE_SCHEMA_VERSION
@@ -1304,6 +1525,17 @@ function readPlatformGatesProjection(release, platformGatesSourceReader = null) 
   try {
     const source = typeof platformGatesSourceReader === "function" ? platformGatesSourceReader() : null;
     if (release?.schema_version === V9_PUBLIC_SCHEMA_VERSION) return buildV9PlatformGatesProjection(release, source);
+    if (release?.schema_version === V12_PUBLIC_SCHEMA_VERSION) {
+      // v12 has a distinct manifest-integrity readiness gate. Reuse only the
+      // already redacted, zero-credit platform shape; do not feed v12 into the
+      // immutable H217/H218 v8 closure validator or weaken that old predicate.
+      const projection = buildV9PlatformGatesProjection(release, source);
+      return Object.freeze({
+        ...projection,
+        schema_version: "base-erp-v12-platform-gates-public-v1",
+        readback_id: "base-erp-v12-manifest-platform-gates-zero-credit",
+      });
+    }
     const matrix = source?.matrix ?? readJsonFile(resolve(PROJECT_ROOT, CIRCLE_MATRIX_PATH));
     const matrixTargetValid = matrix?.schema_version === "base-circle-platform-isolation-matrix-v1"
       && matrix?.base_identity?.repository === "gaysonloser/base-erp-settlement-workbench"
@@ -1338,6 +1570,7 @@ function buildWalletBridgeProjection({ release, actionPlan, env }) {
     release_fingerprint: release.release_fingerprint,
     bom_fingerprint: release.bom_fingerprint,
     commit_sha: release.git_commit,
+    ...(release.commit_binding ? { commit_binding: release.commit_binding } : {}),
     source_catalog_fingerprint: release.source_catalog_fingerprint,
     base_target: release.base_target,
   };
@@ -1487,6 +1720,7 @@ async function handleAuthRoute({ request, response, pathname, head, parsedUrl, a
         release_fingerprint: release.release_fingerprint,
         bom_fingerprint: release.bom_fingerprint,
         commit_sha: release.git_commit,
+        ...(release.commit_binding ? { commit_binding: release.commit_binding } : {}),
         source_catalog_fingerprint: release.source_catalog_fingerprint,
         base_target: release.base_target,
       };
@@ -1545,7 +1779,9 @@ export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = proc
     }
     const candidate = readCandidateJson(releasePath);
     const releaseReady = currentReleaseReady(release);
-    const unavailable = release.schema_version === V9_PUBLIC_SCHEMA_VERSION ? CURRENT_V9_UNAVAILABLE : CURRENT_V8_UNAVAILABLE;
+    const unavailable = release.schema_version === V12_PUBLIC_SCHEMA_VERSION
+      ? CURRENT_V12_UNAVAILABLE
+      : release.schema_version === V9_PUBLIC_SCHEMA_VERSION ? CURRENT_V9_UNAVAILABLE : CURRENT_V8_UNAVAILABLE;
     if (pathname === "/healthz") {
       const health = readHealth({ release, runtimeReader, authReadiness: effectiveAuthService.readiness() });
       writeResponse(response, health.ready ? 200 : 503, health, "application/json; charset=utf-8", { head });
@@ -1713,6 +1949,16 @@ export function createAppServer({ releasePath = DEFAULT_RELEASE_PATH, env = proc
     if (pathname === "/integrity-seal.json") {
       if (parsedUrl.searchParams.size > 0 || hasRequestBody(request)) {
         writeResponse(response, 400, { error: "client_binding_not_accepted" }, "application/json; charset=utf-8", { head });
+        return;
+      }
+      if (release.schema_version === V12_PUBLIC_SCHEMA_VERSION) {
+        if (!releaseReady) {
+          writeResponse(response, 503, { ...CURRENT_V12_UNAVAILABLE, gate: release.v12_candidate_gate ?? null }, "application/json; charset=utf-8", { head });
+          return;
+        }
+        const seal = buildV12IntegritySeal({ release, authReadiness: effectiveAuthService.readiness() });
+        const verified = verifyV12IntegritySeal(seal, { expectedRelease: release });
+        writeResponse(response, verified.ok ? 200 : 503, verified.ok ? seal : { ...seal, ok: false, fail_closed: true, verification: verified }, "application/json; charset=utf-8", { head });
         return;
       }
       if (release.schema_version === V9_PUBLIC_SCHEMA_VERSION && release.v9_candidate_gate?.ok !== true) {

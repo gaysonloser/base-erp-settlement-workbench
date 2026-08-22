@@ -20,6 +20,7 @@ export const BASE_ACCOUNT_METHODS = Object.freeze({
 export const BASE_ACCOUNT_SEND_CALLS_VERSION = "2.0.0";
 export const BASE_ACCOUNT_RELEASE_SCHEMA_VERSION = "base-erp-v9-release-identity-v1";
 export const BASE_ACCOUNT_V11_RELEASE_SCHEMA_VERSION = "base-erp-v11-release-identity-v1";
+export const BASE_ACCOUNT_V12_RELEASE_SCHEMA_VERSION = "base-erp-v12-release-identity-v1";
 export const BASE_ACCOUNT_PHASES = Object.freeze([
   "disconnected",
   "connected",
@@ -45,6 +46,7 @@ const BYTES = /^0x(?:[0-9a-f]{2})*$/i;
 const COMMIT_PLACEHOLDER = "PENDING_OWNER_PUBLIC_COMMIT";
 const BASE_TARGET_FIELDS = new Set(["github_repo", "render_service_id", "render_domain", "dashboard_app_id", "canonical_primary_url"]);
 const CIRCLE_MARKER = /(circle|arc)/i;
+const V12_COMMIT_ENV_NAMES = new Set(["RENDER_GIT_COMMIT", "RENDER_GIT_COMMIT_SHA", "GIT_COMMIT_SHA", "SOURCE_VERSION"]);
 
 function fail(code, details = {}) {
   const error = new Error(code);
@@ -111,8 +113,18 @@ function normalizeBaseTarget(value) {
   return deepFreeze(target);
 }
 
-export function canonicalBridgeReleaseFingerprintBasis({ release_id, bom_fingerprint, base_target, commit_sha, source_catalog_fingerprint } = {}) {
+export function canonicalBridgeReleaseFingerprintBasis({ release_id, bom_fingerprint, base_target, commit_sha, commit_binding, source_catalog_fingerprint } = {}) {
   const schema_version = releaseIdentitySchema(release_id);
+  if (schema_version === BASE_ACCOUNT_V12_RELEASE_SCHEMA_VERSION) {
+    return {
+      schema_version,
+      release_id,
+      bom_fingerprint,
+      base_target,
+      commit_binding: normalizeV12CommitBinding(commit_binding),
+      source_catalog_fingerprint,
+    };
+  }
   return {
     schema_version,
     release_id,
@@ -125,6 +137,7 @@ export function canonicalBridgeReleaseFingerprintBasis({ release_id, bom_fingerp
 
 function releaseIdentitySchema(releaseId) {
   if (typeof releaseId !== "string") fail("BRIDGE_RELEASE_SCHEMA_INVALID");
+  if (/^base-erp-public-product-\d{8}-v12$/i.test(releaseId)) return BASE_ACCOUNT_V12_RELEASE_SCHEMA_VERSION;
   if (/^base-erp-public-product-\d{8}-v11$/i.test(releaseId)) return BASE_ACCOUNT_V11_RELEASE_SCHEMA_VERSION;
   // v10 is a local successor of the v9 identity contract.
   if (/^base-erp-public-product-\d{8}-v(?:9|10)$/i.test(releaseId)) return BASE_ACCOUNT_RELEASE_SCHEMA_VERSION;
@@ -135,6 +148,16 @@ export function computeBridgeReleaseFingerprint(identity) {
   return digest(canonicalBridgeReleaseFingerprintBasis(identity));
 }
 
+function normalizeV12CommitBinding(value) {
+  const source = plainObject(value, "BRIDGE_V12_COMMIT_BINDING_REQUIRED");
+  exactFields(source, new Set(["mode", "env_names", "expected_commit", "require_full_40_hex", "require_consistent_values", "placeholder"]), "BRIDGE_V12_COMMIT_BINDING_UNKNOWN_FIELD");
+  if (source.mode !== "runtime_commit_env" || !Array.isArray(source.env_names) || source.env_names.length === 0 || source.env_names.some((name) => typeof name !== "string" || !V12_COMMIT_ENV_NAMES.has(name))) fail("BRIDGE_V12_COMMIT_BINDING_INVALID");
+  const envNames = [...new Set(source.env_names)].sort();
+  if (envNames.length !== source.env_names.length || source.require_full_40_hex !== true || source.require_consistent_values !== true || source.placeholder !== COMMIT_PLACEHOLDER) fail("BRIDGE_V12_COMMIT_BINDING_INVALID");
+  if (source.expected_commit !== null && source.expected_commit !== undefined && (typeof source.expected_commit !== "string" || !COMMIT.test(source.expected_commit.trim()))) fail("BRIDGE_V12_EXPECTED_COMMIT_INVALID");
+  return deepFreeze({ mode: source.mode, env_names: envNames, expected_commit: source.expected_commit == null ? null : source.expected_commit.trim().toLowerCase(), require_full_40_hex: true, require_consistent_values: true, placeholder: COMMIT_PLACEHOLDER });
+}
+
 function normalizeReleaseBinding(release, { requireCommit = true } = {}) {
   const source = plainObject(release, "BRIDGE_RELEASE_REQUIRED");
   exactFields(source, new Set([
@@ -142,6 +165,7 @@ function normalizeReleaseBinding(release, { requireCommit = true } = {}) {
     "release_fingerprint",
     "bom_fingerprint",
     "commit_sha",
+    "commit_binding",
     "source_catalog_fingerprint",
     "base_target",
     "current",
@@ -159,6 +183,8 @@ function normalizeReleaseBinding(release, { requireCommit = true } = {}) {
     if (commit !== COMMIT_PLACEHOLDER && !COMMIT.test(commit)) fail("BRIDGE_COMMIT_INVALID");
     normalized.commit_sha = commit === COMMIT_PLACEHOLDER ? COMMIT_PLACEHOLDER : commit.toLowerCase();
   }
+  if (normalized.release_id.match(/^base-erp-public-product-\d{8}-v12$/i)) normalized.commit_binding = normalizeV12CommitBinding(source.commit_binding);
+  else if (source.commit_binding !== undefined) fail("BRIDGE_RELEASE_UNKNOWN_FIELD");
   if (typeof source.source_catalog_fingerprint !== "string") fail("BRIDGE_SOURCE_CATALOG_REQUIRED");
   normalized.source_catalog_fingerprint = normalizeDigest(source.source_catalog_fingerprint, "BRIDGE_SOURCE_CATALOG_INVALID");
   normalized.base_target = normalizeBaseTarget(source.base_target);
@@ -212,6 +238,7 @@ export function buildReleaseBoundUnsignedCallPlan({ release, action_plan = null,
       release_fingerprint: actionPlan.release?.release_fingerprint,
       bom_fingerprint: actionPlan.release?.bom_fingerprint,
       commit_sha: binding.commit_sha,
+      commit_binding: binding.commit_binding,
       source_catalog_fingerprint: binding.source_catalog_fingerprint,
       base_target: binding.base_target,
     });
@@ -243,6 +270,7 @@ export function buildReleaseBoundUnsignedCallPlan({ release, action_plan = null,
       release_fingerprint: binding.release_fingerprint,
       bom_fingerprint: binding.bom_fingerprint,
       commit_sha: binding.commit_sha,
+      ...(binding.commit_binding ? { commit_binding: binding.commit_binding } : {}),
     },
     owner_review: {
       required: true,
@@ -296,6 +324,7 @@ export function validateReleaseBoundUnsignedCallPlan({ plan, release } = {}) {
       bom_fingerprint: binding.bom_fingerprint,
       commit_sha: binding.commit_sha,
     };
+    if (binding.commit_binding) expectedReview.commit_binding = binding.commit_binding;
     if (canonicalize(source.review) !== canonicalize(expectedReview)) fail("BRIDGE_REVIEW_BINDING_MISMATCH");
     return deepFreeze({ ok: true, plan: source, execution_ready: binding.commit_sha !== COMMIT_PLACEHOLDER });
   } catch (error) {
@@ -634,19 +663,36 @@ export function renderWalletBridgeBrowserScript({ planUrl = "/wallet-action-brid
     // bridge validator: concatenated identities such as circlepayments are
     // denylisted too.
     && !/(circle|arc)/i.test(JSON.stringify(target));
+  const releaseIdentitySchema = (releaseId) => {
+    if (/^base-erp-public-product-\\d{8}-v12$/i.test(releaseId)) return "base-erp-v12-release-identity-v1";
+    if (/^base-erp-public-product-\\d{8}-v11$/i.test(releaseId)) return "base-erp-v11-release-identity-v1";
+    if (/^base-erp-public-product-\\d{8}-v(?:9|10)$/i.test(releaseId)) return "base-erp-v9-release-identity-v1";
+    throw new Error("release_schema_invalid");
+  };
+  const isV12Release = (releaseId) => /^base-erp-public-product-\\d{8}-v12$/i.test(String(releaseId ?? ""));
+  const normalizeCommitBinding = (binding) => {
+    if (!binding || typeof binding !== "object" || !exactKeys(binding, ["mode", "env_names", "expected_commit", "require_full_40_hex", "require_consistent_values", "placeholder"]) || binding.mode !== "runtime_commit_env" || !Array.isArray(binding.env_names) || binding.env_names.length === 0 || binding.env_names.some((name) => !["RENDER_GIT_COMMIT", "RENDER_GIT_COMMIT_SHA", "GIT_COMMIT_SHA", "SOURCE_VERSION"].includes(name)) || binding.require_full_40_hex !== true || binding.require_consistent_values !== true || binding.placeholder !== COMMIT_PLACEHOLDER || (binding.expected_commit !== null && binding.expected_commit !== undefined && !commitPattern.test(binding.expected_commit))) throw new Error("commit_binding_invalid");
+    const names = [...new Set(binding.env_names)].sort();
+    if (names.length !== binding.env_names.length) throw new Error("commit_binding_invalid");
+    return { mode: binding.mode, env_names: names, expected_commit: binding.expected_commit ?? null, require_full_40_hex: true, require_consistent_values: true, placeholder: COMMIT_PLACEHOLDER };
+  };
   const bindingFromRelease = (release) => ({
     release_id: release?.release_id,
     release_fingerprint: release?.release_fingerprint,
     bom_fingerprint: release?.bom_fingerprint,
     commit_sha: release?.git_commit ?? release?.commit_sha,
+    ...(isV12Release(release?.release_id) ? { commit_binding: release?.commit_binding } : {}),
     source_catalog_fingerprint: release?.source_catalog_fingerprint,
     base_target: release?.base_target,
   });
   const validateBinding = async (binding) => {
-    if (!binding || typeof binding !== "object" || !exactKeys(binding, ["release_id", "release_fingerprint", "bom_fingerprint", "commit_sha", "source_catalog_fingerprint", "base_target"])) throw new Error("release_binding_invalid");
+    const expectedKeys = isV12Release(binding?.release_id) ? ["release_id", "release_fingerprint", "bom_fingerprint", "commit_sha", "commit_binding", "source_catalog_fingerprint", "base_target"] : ["release_id", "release_fingerprint", "bom_fingerprint", "commit_sha", "source_catalog_fingerprint", "base_target"];
+    if (!binding || typeof binding !== "object" || !exactKeys(binding, expectedKeys)) throw new Error("release_binding_invalid");
     if (typeof binding.release_id !== "string" || !digestPattern.test(binding.release_fingerprint ?? "") || !digestPattern.test(binding.bom_fingerprint ?? "") || !digestPattern.test(binding.source_catalog_fingerprint ?? "") || !targetValid(binding.base_target)) throw new Error("release_binding_invalid");
     if (binding.commit_sha !== COMMIT_PLACEHOLDER && !commitPattern.test(binding.commit_sha ?? "")) throw new Error("commit_binding_invalid");
-    const basis = { schema_version: releaseIdentitySchema(binding.release_id), release_id: binding.release_id, bom_fingerprint: binding.bom_fingerprint.toLowerCase(), base_target: binding.base_target, commit_sha: binding.commit_sha, source_catalog_fingerprint: binding.source_catalog_fingerprint.toLowerCase() };
+    const basis = isV12Release(binding.release_id)
+      ? { schema_version: releaseIdentitySchema(binding.release_id), release_id: binding.release_id, bom_fingerprint: binding.bom_fingerprint.toLowerCase(), base_target: binding.base_target, commit_binding: normalizeCommitBinding(binding.commit_binding), source_catalog_fingerprint: binding.source_catalog_fingerprint.toLowerCase() }
+      : { schema_version: releaseIdentitySchema(binding.release_id), release_id: binding.release_id, bom_fingerprint: binding.bom_fingerprint.toLowerCase(), base_target: binding.base_target, commit_sha: binding.commit_sha, source_catalog_fingerprint: binding.source_catalog_fingerprint.toLowerCase() };
     if ((await sha256Hex(canonical(basis))) !== binding.release_fingerprint.toLowerCase()) throw new Error("release_fingerprint_mismatch");
   };
   const validateCallTemplate = async (template) => {
@@ -675,6 +721,7 @@ export function renderWalletBridgeBrowserScript({ planUrl = "/wallet-action-brid
     await validateCallTemplate(candidate.call_template);
     if (!digestPattern.test(candidate.call_template_digest ?? "") || (await sha256Hex(canonical({ to: candidate.call_template.to.toLowerCase(), value: candidate.call_template.value.toLowerCase(), ...(candidate.call_template.data === undefined ? {} : { data: candidate.call_template.data.toLowerCase() }), ...(candidate.call_template.capabilities === undefined ? {} : { capabilities: candidate.call_template.capabilities }) }))) !== candidate.call_template_digest.toLowerCase()) throw new Error("call_template_digest_mismatch");
     const expectedReview = { chain: "Base Mainnet", chain_id: CHAIN_ID, target: candidate.call_template.to.toLowerCase(), value: candidate.call_template.value.toLowerCase(), calldata: candidate.call_template.data?.toLowerCase() ?? "0x", release_id: candidate.release.release_id, release_fingerprint: candidate.release.release_fingerprint, bom_fingerprint: candidate.release.bom_fingerprint, commit_sha: candidate.release.commit_sha };
+    if (isV12Release(candidate.release.release_id)) expectedReview.commit_binding = normalizeCommitBinding(candidate.release.commit_binding);
     if (!candidate.review || canonical(candidate.review) !== canonical(expectedReview)) throw new Error("review_binding_mismatch");
     if (!candidate.owner_review || !exactKeys(candidate.owner_review, ["required", "final_click_owner", "status"]) || candidate.owner_review.required !== true || candidate.owner_review.final_click_owner !== "owner" || candidate.owner_review.status !== "not_started") throw new Error("owner_review_invalid");
     const execution = candidate.execution;

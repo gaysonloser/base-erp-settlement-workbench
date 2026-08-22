@@ -74,10 +74,22 @@ function noCircle(value) {
 
 function releaseIdentitySchema(releaseId) {
   if (typeof releaseId !== "string") fail("auth_owner_plan_release_schema_invalid");
+  if (/^base-erp-public-product-\d{8}-v12$/i.test(releaseId)) return "base-erp-v12-release-identity-v1";
   if (/^base-erp-public-product-\d{8}-v11$/i.test(releaseId)) return "base-erp-v11-release-identity-v1";
   // v10 intentionally retains the accepted v9 canonical identity basis.
   if (/^base-erp-public-product-\d{8}-v(?:9|10)$/i.test(releaseId)) return "base-erp-v9-release-identity-v1";
   fail("auth_owner_plan_release_schema_invalid");
+}
+
+function isV12Release(releaseId) {
+  return /^base-erp-public-product-\d{8}-v12$/i.test(String(releaseId ?? ""));
+}
+
+function normalizeV12CommitBinding(binding) {
+  if (!binding || typeof binding !== "object" || Array.isArray(binding) || Object.keys(binding).length !== 6 || Object.keys(binding).some((key) => !["mode", "env_names", "expected_commit", "require_full_40_hex", "require_consistent_values", "placeholder"].includes(key)) || binding.mode !== "runtime_commit_env" || !Array.isArray(binding.env_names) || binding.env_names.length === 0 || binding.env_names.some((name) => !["RENDER_GIT_COMMIT", "RENDER_GIT_COMMIT_SHA", "GIT_COMMIT_SHA", "SOURCE_VERSION"].includes(name)) || binding.require_full_40_hex !== true || binding.require_consistent_values !== true || binding.placeholder !== COMMIT_PLACEHOLDER || (binding.expected_commit !== null && binding.expected_commit !== undefined && !COMMIT.test(binding.expected_commit))) fail("auth_owner_plan_commit_binding_invalid");
+  const envNames = [...new Set(binding.env_names)].sort();
+  if (envNames.length !== binding.env_names.length) fail("auth_owner_plan_commit_binding_invalid");
+  return { mode: binding.mode, env_names: envNames, expected_commit: binding.expected_commit ?? null, require_full_40_hex: true, require_consistent_values: true, placeholder: COMMIT_PLACEHOLDER };
 }
 
 function validateWalletCapabilities(response) {
@@ -97,14 +109,17 @@ async function validateOwnerPlan(plan, release) {
   try {
     if (!source || source.schema_version !== "base-account-wallet-bridge-plan-v1" || !binding || !calls || !protocol || !review || !ownerReview || !execution) fail("auth_owner_plan_invalid");
     exactFields(source, new Set(["schema_version", "release", "protocol", "from_binding", "call_template", "call_template_digest", "review", "owner_review", "execution"]), "auth_owner_plan_unknown_field");
-    exactFields(binding, new Set(["release_id", "release_fingerprint", "bom_fingerprint", "commit_sha", "source_catalog_fingerprint", "base_target"]), "auth_owner_plan_release_shape");
+    const releaseKeys = isV12Release(binding.release_id) ? new Set(["release_id", "release_fingerprint", "bom_fingerprint", "commit_sha", "commit_binding", "source_catalog_fingerprint", "base_target"]) : new Set(["release_id", "release_fingerprint", "bom_fingerprint", "commit_sha", "source_catalog_fingerprint", "base_target"]);
+    exactFields(binding, releaseKeys, "auth_owner_plan_release_shape");
     exactFields(binding.base_target, new Set(BASE_TARGET_FIELDS), "auth_owner_plan_target_shape");
     if (!BASE_TARGET_FIELDS.every((field) => typeof binding.base_target[field] === "string" && binding.base_target[field].trim() !== "") || !noCircle(binding.base_target)) fail("auth_owner_plan_target_invalid");
     if (!DIGEST.test(binding.release_fingerprint) || !DIGEST.test(binding.bom_fingerprint) || !DIGEST.test(binding.source_catalog_fingerprint)) fail("auth_owner_plan_release_digest_invalid");
     if (binding.commit_sha !== COMMIT_PLACEHOLDER && !COMMIT.test(binding.commit_sha)) fail("auth_owner_plan_commit_invalid");
-    if (release && (binding.release_id !== release.release_id || binding.release_fingerprint !== release.release_fingerprint || binding.bom_fingerprint !== release.bom_fingerprint || binding.commit_sha !== release.git_commit || binding.source_catalog_fingerprint !== release.source_catalog_fingerprint)) fail("auth_owner_plan_release_drift");
+    if (release && (binding.release_id !== release.release_id || binding.release_fingerprint !== release.release_fingerprint || binding.bom_fingerprint !== release.bom_fingerprint || binding.commit_sha !== release.git_commit || binding.source_catalog_fingerprint !== release.source_catalog_fingerprint || (isV12Release(binding.release_id) && canonicalize(binding.commit_binding) !== canonicalize(release.commit_binding)))) fail("auth_owner_plan_release_drift");
     const identitySchema = releaseIdentitySchema(binding.release_id);
-    const expectedFingerprint = await digestValue({ schema_version: identitySchema, release_id: binding.release_id, bom_fingerprint: binding.bom_fingerprint, base_target: binding.base_target, commit_sha: binding.commit_sha, source_catalog_fingerprint: binding.source_catalog_fingerprint });
+    const expectedFingerprint = await digestValue(isV12Release(binding.release_id)
+      ? { schema_version: identitySchema, release_id: binding.release_id, bom_fingerprint: binding.bom_fingerprint, base_target: binding.base_target, commit_binding: normalizeV12CommitBinding(binding.commit_binding), source_catalog_fingerprint: binding.source_catalog_fingerprint }
+      : { schema_version: identitySchema, release_id: binding.release_id, bom_fingerprint: binding.bom_fingerprint, base_target: binding.base_target, commit_sha: binding.commit_sha, source_catalog_fingerprint: binding.source_catalog_fingerprint });
     if (binding.release_fingerprint !== expectedFingerprint) fail("auth_owner_plan_release_fingerprint_invalid");
     exactFields(protocol, new Set(["chain_id", "version", "capability_method", "send_method", "status_method", "atomic_required"]), "auth_owner_plan_protocol_shape");
     if (protocol.chain_id !== BASE_ACCOUNT_CHAIN_ID || protocol.version !== "2.0.0" || protocol.capability_method !== BASE_ACCOUNT_METHODS.capabilities || protocol.send_method !== BASE_ACCOUNT_METHODS.sendCalls || protocol.status_method !== "wallet_getCallsStatus" || protocol.atomic_required !== true) fail("auth_owner_plan_protocol_invalid");
@@ -113,7 +128,7 @@ async function validateOwnerPlan(plan, release) {
     if (!/^0x[0-9a-f]{40}$/i.test(String(calls.to ?? "")) || !QUANTITY.test(String(calls.value ?? "")) || (calls.data !== undefined && !BYTES.test(String(calls.data)))) fail("auth_owner_plan_call_invalid");
     if (calls.capabilities !== undefined && (!calls.capabilities || typeof calls.capabilities !== "object" || Array.isArray(calls.capabilities) || !noCircle(calls.capabilities))) fail("auth_owner_plan_call_capabilities_invalid");
     if (source.call_template_digest !== await digestValue(calls)) fail("auth_owner_plan_call_digest_invalid");
-    const expectedReview = { chain: "Base Mainnet", chain_id: BASE_ACCOUNT_CHAIN_ID, target: calls.to.toLowerCase(), value: calls.value.toLowerCase(), calldata: calls.data ?? "0x", release_id: binding.release_id, release_fingerprint: binding.release_fingerprint, bom_fingerprint: binding.bom_fingerprint, commit_sha: binding.commit_sha };
+    const expectedReview = { chain: "Base Mainnet", chain_id: BASE_ACCOUNT_CHAIN_ID, target: calls.to.toLowerCase(), value: calls.value.toLowerCase(), calldata: calls.data ?? "0x", release_id: binding.release_id, release_fingerprint: binding.release_fingerprint, bom_fingerprint: binding.bom_fingerprint, commit_sha: binding.commit_sha, ...(isV12Release(binding.release_id) ? { commit_binding: normalizeV12CommitBinding(binding.commit_binding) } : {}) };
     if (canonicalize(review) !== canonicalize(expectedReview)) fail("auth_owner_plan_review_invalid");
     exactFields(ownerReview, new Set(["required", "final_click_owner", "status"]), "auth_owner_plan_owner_review_shape");
     if (ownerReview.required !== true || ownerReview.final_click_owner !== "owner" || ownerReview.status !== "not_started") fail("auth_owner_plan_owner_review_invalid");
@@ -339,7 +354,7 @@ export function createBaseAuthBrowserController({ sdkFactory, fetcher = globalTh
 }
 
 /** Inline page adapter; only button events call the controller. */
-export function renderBaseAuthBrowserScript({ bundlePath = "/assets/base-auth-sdk.bundle.js", release = null } = {}) {
+export function renderBaseAuthBrowserScript({ bundlePath = "/assets/base-auth-sdk-v12.bundle.js", release = null } = {}) {
   const path = String(bundlePath).replace(/[\"']/g, "");
   const releaseJson = JSON.stringify({
     release_id: release?.release_id ?? null,

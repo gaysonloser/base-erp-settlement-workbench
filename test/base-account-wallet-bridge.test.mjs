@@ -100,7 +100,7 @@ test("release-bound plans fail closed on BASE/CIRCLE target collision and action
   const concatenatedCircle = { ...release, base_target: { ...baseTarget, github_repo: "circlepayments/base-erp-settlement-workbench" } };
   concatenatedCircle.release_fingerprint = computeBridgeReleaseFingerprint(concatenatedCircle);
   assert.throws(() => buildReleaseBoundUnsignedCallPlan({ release: concatenatedCircle, call_template: callTemplate }), /BRIDGE_BASE_TARGET_CIRCLE_COLLISION/);
-  assert.throws(() => computeBridgeReleaseFingerprint({ ...release, release_id: "base-erp-public-product-20260816-v12" }), /BRIDGE_RELEASE_SCHEMA_INVALID/);
+  assert.throws(() => computeBridgeReleaseFingerprint({ ...release, release_id: "base-erp-public-product-20260816-v13" }), /BRIDGE_RELEASE_SCHEMA_INVALID/);
 });
 
 test("builds only the canonical wallet_sendCalls v2 request and rejects client drift", () => {

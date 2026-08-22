@@ -5,16 +5,16 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { V9_SOURCE_CATALOG_FINGERPRINT, buildV9IntegritySealInput, computeV9ReleaseFingerprint, createAppServer, listenServer, readHealth, readReleaseDocument } from "../src/server.mjs";
+import { V9_SOURCE_CATALOG_FINGERPRINT, buildV9IntegritySealInput, createAppServer, listenServer, readHealth, readReleaseDocument } from "../src/server.mjs";
 import {
   REQUIRED_PLATFORM_IDS,
   REQUIRED_ROUTE_PATHS,
-  digest as h220Digest,
   evaluateReleaseEvidenceSeal,
   verifyReleaseEvidenceSeal,
 } from "../src/base-release-evidence-integrity-seal.mjs";
 import { buildOperatorWorkbench, buildPlatformGatesProjection, buildRecurringSettlementProjection, buildWalletErpActionPlanProjection } from "../src/base-erp-workbench.mjs";
 import { renderOperatorWorkbenchPage } from "../src/operator-workbench-page.mjs";
+import { buildSyntheticV9Candidate } from "./fixtures/release-fixtures.mjs";
 
 const TEST_COMMIT = "a".repeat(40);
 
@@ -77,47 +77,7 @@ function recomputeCurrentCandidate() {
 }
 
 function recomputeV9Candidate({ commit = TEST_COMMIT } = {}) {
-  const candidate = JSON.parse(readFileSync("runtime/release_candidate_v9_local_2026-08-16.json", "utf8"));
-  const additionalV9Files = [
-    "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-wallet-erp-action-plan.mjs",
-    "projects/2026-08_Base_ERP_Settlement_Workbench/test/base-wallet-erp-action-plan.test.mjs",
-  ];
-  const existingPaths = new Set(candidate.immutable_release_bom.map((entry) => entry.path));
-  candidate.immutable_release_bom = [
-    ...candidate.immutable_release_bom,
-    ...additionalV9Files.filter((path) => !existingPaths.has(path)).map((path) => ({ path })),
-  ]
-    .map((entry) => ({
-      path: entry.path,
-      digest: sha256(readFileSync(entry.path.slice("projects/2026-08_Base_ERP_Settlement_Workbench/".length))),
-    }))
-    .sort((left, right) => Buffer.from(left.path, "utf8").compare(Buffer.from(right.path, "utf8")));
-  candidate.bom_fingerprint = h220Digest(candidate.immutable_release_bom);
-  candidate.immutable_bom_sha256 = candidate.bom_fingerprint;
-  candidate.source_digest_catalog = {
-    "README.md": sha256(readFileSync("README.md")),
-    "src/base-release-evidence-integrity-seal.mjs": sha256(readFileSync("src/base-release-evidence-integrity-seal.mjs")),
-    "test/base-release-evidence-integrity-seal.test.mjs": sha256(readFileSync("test/base-release-evidence-integrity-seal.test.mjs")),
-  };
-  candidate.source_catalog_fingerprint = h220Digest(candidate.source_digest_catalog);
-  candidate.commit_sha = commit;
-  candidate.commit_placeholder = false;
-  candidate.commit_gate = {
-    state: "bound_owner_public_commit_for_test",
-    required: "one owner-confirmed lowercase full 40-hex commit for this exact v9 BOM",
-    placeholder: "PENDING_OWNER_PUBLIC_COMMIT",
-    failure_code: null,
-  };
-  candidate.release_fingerprint = computeV9ReleaseFingerprint({
-    release_id: candidate.release_id,
-    bom_fingerprint: candidate.bom_fingerprint,
-    base_target: candidate.base_target,
-    commit_sha: candidate.commit_sha,
-    source_catalog_fingerprint: candidate.source_catalog_fingerprint,
-  });
-  const { self_hash: ignoredSelfHash, ...withoutSelfHash } = candidate;
-  candidate.self_hash = h220Digest(withoutSelfHash);
-  return candidate;
+  return buildSyntheticV9Candidate({ commit });
 }
 
 const TEST_RELEASE = Object.freeze({
@@ -245,40 +205,42 @@ async function assertCurrentV8SurfacesFailClosed(baseUrl) {
   }
 }
 
-test("production default release keeps the immutable v9 template fail-closed while code bytes require a new candidate", () => {
+test("production default release reads the tracked v12 manifest and fails closed without a runtime commit", () => {
   const unbound = readReleaseDocument({ env: {} });
-  assert.equal(unbound.schema_version, "base-erp-v9-public-release-v1");
-  assert.equal(unbound.release_id, "base-erp-public-product-20260816-v9");
+  assert.equal(unbound.schema_version, "base-erp-v12-public-release-v1");
+  assert.equal(unbound.release_id, "base-erp-public-product-20260822-v12");
   assert.equal(unbound.commit_placeholder, true);
-  assert.equal(unbound.v9_release_ready, false);
-  assert.equal(unbound.v9_candidate_gate.reason, "v9_bom_fingerprint_mismatch");
+  assert.equal(unbound.v12_release_ready, false);
+  assert.equal(unbound.v12_candidate_gate.reason, "v12_commit_placeholder");
   assert.equal(readHealth({ release: unbound }).ready, false);
 
   const bound = readReleaseDocument({ env: { GIT_COMMIT_SHA: TEST_COMMIT } });
-  assert.equal(bound.schema_version, "base-erp-v9-public-release-v1");
+  assert.equal(bound.schema_version, "base-erp-v12-public-release-v1");
   assert.equal(bound.commit_placeholder, false);
   assert.equal(bound.git_commit, TEST_COMMIT);
-  assert.equal(bound.v9_release_ready, false);
-  assert.equal(bound.v9_candidate_gate.reason, "v9_bom_fingerprint_mismatch");
-  assert.equal(readHealth({ release: bound }).ready, false);
+  assert.equal(bound.v12_release_ready, true);
+  assert.equal(readHealth({ release: bound }).ready, true);
+  assert.equal(bound.public_identity.primary_base_account, null);
 
   const drifted = readReleaseDocument({ env: { GIT_COMMIT_SHA: "f".repeat(64) } });
   assert.equal(drifted.commit_placeholder, true);
-  assert.equal(drifted.v9_release_ready, false);
-  assert.equal(drifted.v9_candidate_gate.reason, "v9_bom_fingerprint_mismatch");
+  assert.equal(drifted.v12_release_ready, false);
   assert.equal(readHealth({ release: drifted }).ready, false);
 });
 
-test("npm start default listener preserves the immutable v9 gate until a new candidate is selected", async () => {
+test("npm start default listener serves the tracked v12 manifest only when commit binding is complete", async () => {
   const { server, address } = await listenServer({ host: "127.0.0.1", port: 0, env: { GIT_COMMIT_SHA: TEST_COMMIT } });
   assert.equal(typeof address, "object");
   try {
     const releaseResponse = await fetch(`http://127.0.0.1:${address.port}/release.json`);
-    assert.equal(releaseResponse.status, 503);
-    assert.deepEqual(await releaseResponse.json(), { error: "release_unavailable", reason: "current_v9_identity_unready" });
+    assert.equal(releaseResponse.status, 200);
+    const release = await releaseResponse.json();
+    assert.equal(release.schema_version, "base-erp-v12-public-release-v1");
+    assert.equal(release.release_id, "base-erp-public-product-20260822-v12");
+    assert.equal(release.git_commit, TEST_COMMIT);
     const healthResponse = await fetch(`http://127.0.0.1:${address.port}/healthz`);
-    assert.equal(healthResponse.status, 503);
-    assert.equal((await healthResponse.json()).ready, false);
+    assert.equal(healthResponse.status, 200);
+    assert.equal((await healthResponse.json()).ready, true);
   } finally {
     await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
   }
@@ -1521,7 +1483,7 @@ test("v9 integrity seal route rejects client binding and fails closed on runtime
     const body = await response.json();
     assert.ok(body.failure_codes.includes("V9-F37"));
   }, { runtimeReader: () => ({ runtime_sha256: "d".repeat(64), run_id: "drift", cursor: { active_item_id: "" }, writer_idle: false }), releasePath }));
-  await withTempCandidate(JSON.parse(readFileSync("runtime/release_candidate_v9_local_2026-08-16.json", "utf8")), async (releasePath) => withServer(async (baseUrl) => {
+  await withTempCandidate({ ...recomputeV9Candidate(), commit_sha: "f".repeat(64), commit_placeholder: false }, async (releasePath) => withServer(async (baseUrl) => {
     const response = await fetch(`${baseUrl}/integrity-seal.json`);
     assert.equal(response.status, 503);
     const body = await response.json();

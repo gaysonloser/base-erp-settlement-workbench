@@ -1,0 +1,311 @@
+{
+  "schema_version": "base-erp-v12-deployment-manifest-v1",
+  "release_id": "base-erp-public-product-20260822-v12",
+  "release_fingerprint_algorithm": "sha256(base-erp-v12-deterministic-release-identity-v1)",
+  "release_fingerprint_basis": {
+    "schema_version": "base-erp-v12-release-identity-v1",
+    "release_id": "base-erp-public-product-20260822-v12",
+    "bom_fingerprint": "336e64eb19e7876fc9b0d92392867aa000df5527e4803420b5a16448f724fdbf",
+    "base_target": {
+      "github_repo": "gaysonloser/base-erp-settlement-workbench",
+      "render_service_id": "srv-d9t0bsafngtc7387gqo0",
+      "render_domain": "base-erp-settlement-workbench.onrender.com",
+      "dashboard_app_id": "6a7a0717e209a55163497d2d",
+      "canonical_primary_url": "https://base-erp-settlement-workbench.onrender.com"
+    },
+    "commit_binding": {
+      "mode": "runtime_commit_env",
+      "env_names": [
+        "GIT_COMMIT_SHA",
+        "RENDER_GIT_COMMIT",
+        "RENDER_GIT_COMMIT_SHA",
+        "SOURCE_VERSION"
+      ],
+      "expected_commit": null,
+      "require_full_40_hex": true,
+      "require_consistent_values": true,
+      "placeholder": "PENDING_OWNER_PUBLIC_COMMIT"
+    },
+    "source_catalog_fingerprint": "54a8f4a415c8646c5f39ccde56e13fea7ab67eefd7cf6e7c67336ef1625f32f6"
+  },
+  "release_fingerprint": "4504296ac2e19aaa4b9156743ba1a63c68ae8c46d98e362e6e893fa2e2b6db04",
+  "bom_schema_version": "base-erp-v12-bom-v1",
+  "bom_fingerprint": "336e64eb19e7876fc9b0d92392867aa000df5527e4803420b5a16448f724fdbf",
+  "immutable_bom_sha256": "336e64eb19e7876fc9b0d92392867aa000df5527e4803420b5a16448f724fdbf",
+  "bom_file_count": 44,
+  "immutable_release_bom": [
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/.gitignore",
+      "digest": "4d56952b0fb13bf8f9b6c13a6d4c34a075bac3af447636a1df4335d7576e2f97"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/README.md",
+      "digest": "c259da3c0eae7395cb7321c5a55eb265cf41637c5bf40aa70042e0abf6efd7de"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/assets/base-app/base-erp-workbench-screenshot-source.png",
+      "digest": "020ce9f0e79a3228f5ee132c9bb51b12faeccaa2420cb7d2b0522aa4641c53e9"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/assets/base-app/base-erp-workbench-thumbnail-source.png",
+      "digest": "e378d750fbf1e0222b8a66d2842e185a13367d95f955bcc0070f35f30bf2f9a4"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/config/base_erp_product_contract_v1.json",
+      "digest": "aaa157f96b40ac02a415c69f4cc433d974031eaf3bcf4cf10e8ecdd2b4ae90f8"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/config/release_identity_and_exposure_contract_v1.json",
+      "digest": "29a1aa765d40f6660885542955eb4e5605c2e4b549a3b0131bdb63bb100cc269"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/package-lock.json",
+      "digest": "e1c67bdc98fec39aab933850cb133d21f86b3c850860c7313eb72ec52500a2a1"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/package.json",
+      "digest": "808407955017e3bdd692582c3e4dc1e6dc9567d091a01727b6a174ee8ad1078f"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/public/assets/base-auth-sdk-v12.bundle.js",
+      "digest": "4472733000433b19408b689fd36dd935507824b438d9641629dfa194f10de0cb"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/public/assets/base-auth-sdk.bundle.js",
+      "digest": "1ff2906bc7a7b367e6f4156c2cd56b19ff90313cadbbb8c48b8f7cac346fe0e4"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/render.yaml",
+      "digest": "324b437cb9d858d143a11dd458821c79ba2a9741d9476a1abe08896464181010"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/scripts/build-auth-bundle-v12.mjs",
+      "digest": "5c597ccbce27c38dd009eba90c0b1e21091ae26492f59b7ed11c81fc50d32594"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/scripts/build-auth-bundle.mjs",
+      "digest": "f9018d63c6dc3115a3f055ce69c8e14ab8556f8cc4fcd51c9e6d5b5590a0c8ba"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/scripts/build-v12-release.mjs",
+      "digest": "39167d28c3bdfb8536bd26b300736e4d5949d99f27673267be63a10dbbb48156"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/auth/auth-core.mjs",
+      "digest": "7357e609cec17ec898277eec4c88660073460ba87b05c50f20a9f83518227532"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/auth/browser-auth.mjs",
+      "digest": "a4e2609c4e22c98e5284f983a51c826ed2b5c1f62ae2a95f57d54effc9f09aad"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/auth/browser-entry.mjs",
+      "digest": "15e8dc2b04f6be54c260c64a3ebd500dee30c79cf20b8a42c86d17ce22625da7"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-account-wallet-bridge.mjs",
+      "digest": "408ec5d49b0635e1cd7778627ed850e3fadedf76bd6c592f5283ae23e1dd6982"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-erp-workbench.mjs",
+      "digest": "7261b4f1963213b669e8fe4e7854e1834203fb3abd47da375de448e5341c0949"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-native-platform-evidence-contract.mjs",
+      "digest": "f3c14395e712cb8de881fc50ebaa7b7fbd76a47ba2f04f7739103afa5353bfb6"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-native-platform-execution-gates.mjs",
+      "digest": "96f9839cbebb6bff775a5b0cc84a7ae7d71b0168847f2a1eb08c0b59d6f80b42"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-neutral-receipt-controls.mjs",
+      "digest": "44a86546d54bf7d35759de4e7e775c11bf610c1679583aa37f3f36fb80ee6949"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-platform-feasibility-contract.mjs",
+      "digest": "ecb10c73b00c8abaf4f804299cb21cc23dd49763bb4420d10d3d786bb1e7ba5d"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-recurring-settlement-contract.mjs",
+      "digest": "1899acb8147844865d34085b396a0b2f282acbddb7f14823fdaa74b665d4d2ef"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-refund-ceiling-guard.mjs",
+      "digest": "96f21c0007df08d862f93be8ae50e84ee809705cd2564d2b310feb46cbf0b900"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-release-evidence-integrity-seal.mjs",
+      "digest": "f1bb4d9db1c182004d759a793b76ff04d4bec370dcd6d02c8721c2e813729652"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-release-v12.mjs",
+      "digest": "3c544f9adc3baf2d89838fc7d8feb30ab196eeb852f34b95ca8ab525af8ff0cd"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/base-wallet-erp-action-plan.mjs",
+      "digest": "0fd93ddc73397f85ac640ad9a70ea2cabf613d11b54016f99c0fe25bf2795196"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/operator-workbench-page.mjs",
+      "digest": "8dd86bc947afd37e3facf98b6e6a68390cd245cf8777cef6742552cc3e05062a"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/release_manifest_v12.json",
+      "digest": "f8a118f329939e0b9072620c362f181195c33d0e16801552f7e906b3debee509"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/src/server.mjs",
+      "digest": "365692911fe8c9db0c0307d93eb8b94990d0e2deecc4b870d2dd7f412ae3d57f"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/test/auth-core.test.mjs",
+      "digest": "7f3a5d42fec4eb3de08d15d79af5795ea6abcb51a519972da529231a0f148d48"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/test/auth-release-candidate.test.mjs",
+      "digest": "cfc72b740177117c4b93c9fd0b40de553c2d4df9a520e51efb559120568250ca"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/test/auth-server.test.mjs",
+      "digest": "78c7c702b2b3be2f00ff560a98b34bf8bcd78f7ad50253c6f864e59ca40d0062"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/test/base-account-wallet-bridge.test.mjs",
+      "digest": "4122f6b47f95f8e9142e523955ef73cbef9fa043bb5410d4eecd11fc9f7e00f7"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/test/base-native-platform-execution-gates.test.mjs",
+      "digest": "b26f27c4bcefa4c9fab65f4ee1ea3a88d8088f16dac185cb23c0333c8e55f762"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/test/base-release-evidence-integrity-seal.test.mjs",
+      "digest": "c7b09e60bba1d7644775bcfefbe6c92a31c4ab6853335bcde3611554d0015076"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/test/base-release-v12.test.mjs",
+      "digest": "57cfa55d9ce279948ebc2e4f3109c59636e0a4d50326dc4fa39f5a83a6297dd8"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/test/base-wallet-erp-action-plan.test.mjs",
+      "digest": "cd1c5dfec66c3ffacf201f37ff4a1db02f0f56d61929a4bdaf09f4b94c6c7d5e"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/test/browser-auth.test.mjs",
+      "digest": "88a0fa4bc37ccaf02eafc9376c9cfec09b2749967f26a69567a6e150fc0227db"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/test/fixtures/release-fixtures.mjs",
+      "digest": "3018bfeb9be42563aa42dd939c2b86567a76b5d27e253f2afff469156529c8d7"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/test/operator-workbench-browser.test.mjs",
+      "digest": "bc110ac2bc7bb9bc77359d268baa46b1e13e81b87110ca5dec755d0acbde0ad5"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/test/operator-workbench-page.test.mjs",
+      "digest": "c3dd5c493a1963c8a1f6f8c8a12a62c84be57965d6586bae2051ac57c9315809"
+    },
+    {
+      "path": "projects/2026-08_Base_ERP_Settlement_Workbench/test/server.test.mjs",
+      "digest": "53c34b03d01ed505c74d823d330eaf78fc2da42df12bec997d6979d634905f61"
+    }
+  ],
+  "source_files": [
+    ".gitignore",
+    "README.md",
+    "assets/base-app/base-erp-workbench-screenshot-source.png",
+    "assets/base-app/base-erp-workbench-thumbnail-source.png",
+    "config/base_erp_product_contract_v1.json",
+    "config/release_identity_and_exposure_contract_v1.json",
+    "package-lock.json",
+    "package.json",
+    "public/assets/base-auth-sdk-v12.bundle.js",
+    "public/assets/base-auth-sdk.bundle.js",
+    "render.yaml",
+    "scripts/build-auth-bundle-v12.mjs",
+    "scripts/build-auth-bundle.mjs",
+    "scripts/build-v12-release.mjs",
+    "src/auth/auth-core.mjs",
+    "src/auth/browser-auth.mjs",
+    "src/auth/browser-entry.mjs",
+    "src/base-account-wallet-bridge.mjs",
+    "src/base-erp-workbench.mjs",
+    "src/base-native-platform-evidence-contract.mjs",
+    "src/base-native-platform-execution-gates.mjs",
+    "src/base-neutral-receipt-controls.mjs",
+    "src/base-platform-feasibility-contract.mjs",
+    "src/base-recurring-settlement-contract.mjs",
+    "src/base-refund-ceiling-guard.mjs",
+    "src/base-release-evidence-integrity-seal.mjs",
+    "src/base-release-v12.mjs",
+    "src/base-wallet-erp-action-plan.mjs",
+    "src/operator-workbench-page.mjs",
+    "src/release_manifest_v12.json",
+    "src/server.mjs",
+    "test/auth-core.test.mjs",
+    "test/auth-release-candidate.test.mjs",
+    "test/auth-server.test.mjs",
+    "test/base-account-wallet-bridge.test.mjs",
+    "test/base-native-platform-execution-gates.test.mjs",
+    "test/base-release-evidence-integrity-seal.test.mjs",
+    "test/base-release-v12.test.mjs",
+    "test/base-wallet-erp-action-plan.test.mjs",
+    "test/browser-auth.test.mjs",
+    "test/fixtures/release-fixtures.mjs",
+    "test/operator-workbench-browser.test.mjs",
+    "test/operator-workbench-page.test.mjs",
+    "test/server.test.mjs"
+  ],
+  "source_catalog_fingerprint": "54a8f4a415c8646c5f39ccde56e13fea7ab67eefd7cf6e7c67336ef1625f32f6",
+  "commit_binding": {
+    "mode": "runtime_commit_env",
+    "env_names": [
+      "GIT_COMMIT_SHA",
+      "RENDER_GIT_COMMIT",
+      "RENDER_GIT_COMMIT_SHA",
+      "SOURCE_VERSION"
+    ],
+    "expected_commit": null,
+    "require_full_40_hex": true,
+    "require_consistent_values": true,
+    "placeholder": "PENDING_OWNER_PUBLIC_COMMIT"
+  },
+  "project_name": "Base ERP Settlement Workbench",
+  "material_outcome": "Tracked v12 public release identity with deterministic BOM/source binding and fail-closed owner action boundaries",
+  "generated_at_cst": "2026-08-22T00:00:00.000Z",
+  "network": "Base Mainnet preflight contract only; no chain action",
+  "base_target": {
+    "github_repo": "gaysonloser/base-erp-settlement-workbench",
+    "render_service_id": "srv-d9t0bsafngtc7387gqo0",
+    "render_domain": "base-erp-settlement-workbench.onrender.com",
+    "dashboard_app_id": "6a7a0717e209a55163497d2d",
+    "canonical_primary_url": "https://base-erp-settlement-workbench.onrender.com"
+  },
+  "public_identity": {
+    "basename": "gaysonloser.base.eth"
+  },
+  "evidence_level": "L1_local_release_integrity",
+  "deployment": false,
+  "receipt": null,
+  "external_actions": 0,
+  "public_write_authorized": false,
+  "credits": {
+    "mainnet_transaction_credit": 0,
+    "publication_unit_credit": 0
+  },
+  "execution_authority": "none_until_02_Build_revalidates",
+  "circle_isolation": {
+    "checked": true,
+    "collision": false,
+    "target_reuse": false,
+    "external_actions": 0
+  },
+  "limitations": [
+    "No Base Mainnet receipt, ERP authoritative readback or complete eight-surface public receipt is claimed.",
+    "Render must inject one consistent full 40-hex commit from the declared environment binding before readiness becomes healthy.",
+    "Owner authentication and wallet action routes remain fail-closed until separately configured and owner-reviewed."
+  ],
+  "state": "tracked_deployment_manifest_v12",
+  "manifest_self_hash": "a24edb499914de32607d5bd60bc88ac2d2a93f2306e231b1a4b0eb4d183ee8ec"
+}

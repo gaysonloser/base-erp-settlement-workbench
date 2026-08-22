@@ -147,7 +147,7 @@ test("wallet status envelope is exact, numeric, and pending receipts stay empty"
 });
 
 test("unknown release suffixes and concatenated CIRCLE identities fail closed", async () => {
-  const unknownRelease = { ...RELEASE, release_id: "base-erp-public-product-20260822-v12" };
+  const unknownRelease = { ...RELEASE, release_id: "base-erp-public-product-20260822-v13" };
   const unknownPlan = { ...PLAN, release: { ...PLAN.release, release_id: unknownRelease.release_id }, review: { ...PLAN.review, release_id: unknownRelease.release_id } };
   const unknown = await validateOwnerPlan(unknownPlan, unknownRelease);
   assert.equal(unknown.ok, false);
@@ -162,7 +162,7 @@ test("unknown release suffixes and concatenated CIRCLE identities fail closed", 
 
 test("inline auth script is self-hosted, explicit-event only and has no browser storage/logging", () => {
   const script = renderBaseAuthBrowserScript({ release: RELEASE });
-  assert.match(script, /base-auth-sdk\.bundle\.js/);
+  assert.match(script, /base-auth-sdk-v12\.bundle\.js/);
   assert.match(script, /addEventListener\("click"/);
   assert.match(script, /createElement\("script"\)/);
   assert.doesNotMatch(script, /<script\s+src=/i);
